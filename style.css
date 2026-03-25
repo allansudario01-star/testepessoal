@@ -675,28 +675,17 @@ h2 {
     background: white;
   }
 
-  .pallet-card.agendamento {
+  .pallet-card.agendamento-card {
     border-left: 6px solid #f39c12;
     background: linear-gradient(to right, #fffef7, white);
   }
 
-  .pallet-card.agendamento .agendado-badge {
-    background: #f39c12;
-    color: white;
+  .pallet-card.agendamento-card .nf-tag {
+    color: #e67e22;
   }
 
-  #data-agendamento-container {
+  #agendamento-ajustar-container {
     background: #fff3e0;
     border-radius: 12px;
-    padding: 15px;
-    margin-top: 20px;
-  }
-
-  #data-agendamento-container label {
-    color: #e67e22;
-  }
-
-  .agendamento .nf-tag {
-    color: #e67e22;
   }
 }

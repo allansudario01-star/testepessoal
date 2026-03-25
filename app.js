@@ -83,15 +83,28 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('estado').value = '';
     document.getElementById('cidade').value = '';
     document.getElementById('maxVolumes').value = '';
-    document.getElementById('volumes-diversos-checkbox').checked = false;
-    document.getElementById('volumes-fixo-container').style.display = 'block';
+  }
 
-    // Resetar data de agendamento
-    document.querySelectorAll('input[name="data-agendamento-tipo"]').forEach(radio => {
-      if (radio.value === 'aguardando') radio.checked = true;
-    });
-    document.getElementById('data-agendamento-fixa').style.display = 'none';
-    document.getElementById('data-agendamento-fixa').value = '';
+  function resetFormularioAgendamento() {
+    document.getElementById('agendamento-nf').value = '';
+    document.getElementById('agendamento-recebedor').value = '';
+    document.getElementById('agendamento-hub').value = '';
+    document.getElementById('agendamento-estado').value = '';
+    document.getElementById('agendamento-cidade').value = '';
+    document.getElementById('agendamento-maxVolumes').value = '';
+    document.getElementById('agendamento-volumes-texto').value = 'DIVERSOS';
+
+    // Reset volume tipo
+    document.querySelector('input[name="agendamento-volume-tipo"][value="fixo"]').checked = true;
+    document.getElementById('agendamento-volumes-fixo').style.display = 'block';
+    document.getElementById('agendamento-volumes-diversos').style.display = 'none';
+    document.getElementById('agendamento-maxVolumes').setAttribute('required', 'required');
+    document.getElementById('agendamento-volumes-texto').removeAttribute('required');
+
+    // Reset data tipo
+    document.querySelector('input[name="agendamento-data-tipo"][value="aguardando"]').checked = true;
+    document.getElementById('agendamento-data-fixa').style.display = 'none';
+    document.getElementById('agendamento-data-fixa').value = '';
   }
 
   function resetFormularioDiversos() {
@@ -109,13 +122,16 @@ document.addEventListener('DOMContentLoaded', function () {
   async function salvarDataAgendamentoAtual() {
     if (!window.palletAtual) return;
 
+    const pallet = window.palletService.pallets.get(window.palletAtual);
+    if (!pallet || pallet.tipo !== 'AGENDAMENTO') return;
+
     const dataTipo = document.querySelector('input[name="ajustar-data-tipo"]:checked')?.value;
     let dataAgendamento = '';
 
     if (dataTipo === 'fixa') {
-      dataAgendamento = document.getElementById('ajustar-data-fixa').value;
-      if (dataAgendamento) {
-        dataAgendamento = new Date(dataAgendamento).toLocaleDateString('pt-BR');
+      const dataFixa = document.getElementById('ajustar-data-fixa').value;
+      if (dataFixa) {
+        dataAgendamento = new Date(dataFixa).toLocaleDateString('pt-BR');
       }
     } else if (dataTipo === 'aguardando') {
       dataAgendamento = 'AGUARDANDO AGENDAMENTO';
@@ -133,16 +149,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('tipo-volumetria-alta').addEventListener('click', () => {
       document.getElementById('tipo-pallet-modal').classList.add('hidden');
-      document.getElementById('pallet-modal-title').textContent = 'Novo Pallet - Volumetria Alta';
       resetFormularioVolumetriaAlta();
       document.getElementById('pallet-modal').classList.remove('hidden');
     });
 
     document.getElementById('tipo-agendamento').addEventListener('click', () => {
       document.getElementById('tipo-pallet-modal').classList.add('hidden');
-      document.getElementById('pallet-modal-title').textContent = 'Novo Pallet - Agendamento';
-      resetFormularioVolumetriaAlta();
-      document.getElementById('pallet-modal').classList.remove('hidden');
+      resetFormularioAgendamento();
+      document.getElementById('pallet-agendamento-modal').classList.remove('hidden');
     });
 
     document.getElementById('tipo-diversos').addEventListener('click', () => {
@@ -155,22 +169,32 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('tipo-pallet-modal').classList.add('hidden');
     });
 
-    // Checkbox para volumes diversos
-    document.getElementById('volumes-diversos-checkbox').addEventListener('change', (e) => {
-      const volumesFixoContainer = document.getElementById('volumes-fixo-container');
-      if (e.target.checked) {
-        volumesFixoContainer.style.display = 'none';
-        document.getElementById('maxVolumes').removeAttribute('required');
-      } else {
-        volumesFixoContainer.style.display = 'block';
-        document.getElementById('maxVolumes').setAttribute('required', 'required');
-      }
+    // Radio buttons para volume do agendamento
+    document.querySelectorAll('input[name="agendamento-volume-tipo"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const fixoDiv = document.getElementById('agendamento-volumes-fixo');
+        const diversosDiv = document.getElementById('agendamento-volumes-diversos');
+        const maxVolumesInput = document.getElementById('agendamento-maxVolumes');
+        const volumesTextoInput = document.getElementById('agendamento-volumes-texto');
+
+        if (e.target.value === 'fixo') {
+          fixoDiv.style.display = 'block';
+          diversosDiv.style.display = 'none';
+          maxVolumesInput.setAttribute('required', 'required');
+          volumesTextoInput.removeAttribute('required');
+        } else {
+          fixoDiv.style.display = 'none';
+          diversosDiv.style.display = 'block';
+          maxVolumesInput.removeAttribute('required');
+          volumesTextoInput.setAttribute('required', 'required');
+        }
+      });
     });
 
-    // Radio buttons para data de agendamento
-    document.querySelectorAll('input[name="data-agendamento-tipo"]').forEach(radio => {
+    // Radio buttons para data do agendamento
+    document.querySelectorAll('input[name="agendamento-data-tipo"]').forEach(radio => {
       radio.addEventListener('change', (e) => {
-        const dataFixaInput = document.getElementById('data-agendamento-fixa');
+        const dataFixaInput = document.getElementById('agendamento-data-fixa');
         if (e.target.value === 'fixa') {
           dataFixaInput.style.display = 'block';
           dataFixaInput.setAttribute('required', 'required');
@@ -181,23 +205,44 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
+    // Formulário Volumetria Alta (mantido igual)
     document.getElementById('pallet-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const dados = {
+        notaFiscal: document.getElementById('nf').value,
+        recebedor: document.getElementById('recebedor').value,
+        hub: document.getElementById('hub').value,
+        estado: document.getElementById('estado').value,
+        cidade: document.getElementById('cidade').value,
+        maxVolumes: document.getElementById('maxVolumes').value
+      };
+      await window.palletService.create(dados, 'VOLUMETRIA_ALTA');
+      document.getElementById('pallet-modal').classList.add('hidden');
+      renderizarPallets();
+    });
 
-      const volumesDiversos = document.getElementById('volumes-diversos-checkbox').checked;
+    // Formulário Agendamento (novo)
+    document.getElementById('pallet-agendamento-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const volumeTipo = document.querySelector('input[name="agendamento-volume-tipo"]:checked').value;
       let maxVolumes = null;
+      let volumesDiversos = false;
+      let volumesTexto = '';
 
-      if (!volumesDiversos) {
-        maxVolumes = parseInt(document.getElementById('maxVolumes').value);
+      if (volumeTipo === 'fixo') {
+        maxVolumes = parseInt(document.getElementById('agendamento-maxVolumes').value);
+        volumesDiversos = false;
+      } else {
+        volumesDiversos = true;
+        volumesTexto = document.getElementById('agendamento-volumes-texto').value;
       }
 
-      // Pegar data de agendamento
-      const dataTipo = document.querySelector('input[name="data-agendamento-tipo"]:checked').value;
+      const dataTipo = document.querySelector('input[name="agendamento-data-tipo"]:checked').value;
       let dataAgendamento = '';
-      let dataAgendamentoTipo = dataTipo;
 
       if (dataTipo === 'fixa') {
-        const dataFixa = document.getElementById('data-agendamento-fixa').value;
+        const dataFixa = document.getElementById('agendamento-data-fixa').value;
         if (dataFixa) {
           dataAgendamento = new Date(dataFixa).toLocaleDateString('pt-BR');
         }
@@ -206,23 +251,24 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       const dados = {
-        notaFiscal: document.getElementById('nf').value,
-        recebedor: document.getElementById('recebedor').value,
-        hub: document.getElementById('hub').value,
-        estado: document.getElementById('estado').value,
-        cidade: document.getElementById('cidade').value,
+        notaFiscal: document.getElementById('agendamento-nf').value,
+        recebedor: document.getElementById('agendamento-recebedor').value,
+        hub: document.getElementById('agendamento-hub').value,
+        estado: document.getElementById('agendamento-estado').value,
+        cidade: document.getElementById('agendamento-cidade').value,
         maxVolumes: maxVolumes,
         volumesDiversos: volumesDiversos,
+        volumesTexto: volumesTexto,
         dataAgendamento: dataAgendamento,
-        dataAgendamentoTipo: dataAgendamentoTipo
+        dataAgendamentoTipo: dataTipo
       };
 
-      const tipo = document.getElementById('pallet-modal-title').textContent.includes('Agendamento') ? 'AGENDAMENTO' : 'VOLUMETRIA_ALTA';
-      await window.palletService.create(dados, tipo);
-      document.getElementById('pallet-modal').classList.add('hidden');
+      await window.palletService.create(dados, 'AGENDAMENTO');
+      document.getElementById('pallet-agendamento-modal').classList.add('hidden');
       renderizarPallets();
     });
 
+    // Formulário Diversos (mantido igual)
     document.getElementById('pallet-diversos-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const dados = {
@@ -237,6 +283,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('close-modal').addEventListener('click', () => {
       document.getElementById('pallet-modal').classList.add('hidden');
+    });
+
+    document.getElementById('close-agendamento-modal').addEventListener('click', () => {
+      document.getElementById('pallet-agendamento-modal').classList.add('hidden');
     });
 
     document.getElementById('close-diversos-modal').addEventListener('click', () => {
@@ -276,7 +326,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const pallet = window.palletService.pallets.get(window.palletAtual);
       if (!pallet) return;
       document.getElementById('ajustar-modal').classList.add('hidden');
-      if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
+      if (pallet.tipo === 'VOLUMETRIA_ALTA') {
+        document.getElementById('finalizar-modal').classList.remove('hidden');
+      } else if (pallet.tipo === 'AGENDAMENTO') {
         document.getElementById('finalizar-modal').classList.remove('hidden');
       } else {
         finalizarPalletDireto(window.palletAtual, false);
@@ -378,21 +430,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const volumeControls = document.getElementById('volume-controls-container');
     const saveButton = document.getElementById('save-volume');
     const observacaoTextarea = document.getElementById('observacao-pallet');
-    const dataAgendamentoContainer = document.getElementById('data-agendamento-container');
+    const agendamentoContainer = document.getElementById('agendamento-ajustar-container');
 
     if (observacaoTextarea) {
       observacaoTextarea.value = p.observacao || '';
     }
 
     if (isAgendamento) {
-      modalTitle.innerText = `Ajustar Pallet Agendado - ${p.notaFiscal || 'AGENDAMENTO'}`;
+      modalTitle.innerText = `Ajustar Pallet Agendado - ${p.notaFiscal}`;
+      agendamentoContainer.style.display = 'block';
 
-      // Configurar dados de agendamento
-      dataAgendamentoContainer.style.display = 'block';
-      if (p.dataAgendamentoTipo === 'fixa' && p.dataAgendamento) {
+      // Configurar data de agendamento
+      if (p.dataAgendamentoTipo === 'fixa' && p.dataAgendamento && p.dataAgendamento !== 'AGUARDANDO AGENDAMENTO') {
         document.querySelector('input[name="ajustar-data-tipo"][value="fixa"]').checked = true;
         document.getElementById('ajustar-data-fixa').style.display = 'block';
-        // Converter data de volta para formato YYYY-MM-DD
         const partes = p.dataAgendamento.split('/');
         if (partes.length === 3) {
           document.getElementById('ajustar-data-fixa').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
@@ -402,7 +453,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('ajustar-data-fixa').style.display = 'none';
       }
 
-      // Configurar evento para os radios
       document.querySelectorAll('input[name="ajustar-data-tipo"]').forEach(radio => {
         radio.onchange = () => {
           if (radio.value === 'fixa') {
@@ -413,27 +463,27 @@ document.addEventListener('DOMContentLoaded', function () {
         };
       });
     } else {
-      dataAgendamentoContainer.style.display = 'none';
+      agendamentoContainer.style.display = 'none';
     }
 
     if (isVolumetriaAlta || isAgendamento) {
-      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
+      const volumesDisplay = p.volumesDiversos ? p.volumesTexto || 'DIVERSOS' : `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
 
       infoDiv.innerHTML = `
             <div>
-                <strong>Número Fiscal:</strong> ${p.notaFiscal || 'N/A'}<br>
-                <strong>Recebedor:</strong> ${p.recebedor || 'N/A'}<br>
+                <strong>Número Fiscal:</strong> ${p.notaFiscal}<br>
+                <strong>Recebedor:</strong> ${p.recebedor}<br>
                 <strong>Unidade:</strong> ${p.hub}<br>
                 <strong>UF:</strong> ${p.estado}<br>
-                <strong>Cidade:</strong> ${p.cidade || 'N/A'}<br>
+                <strong>Cidade:</strong> ${p.cidade}<br>
                 <strong>Volumes:</strong> ${volumesDisplay}<br>
-                ${isAgendamento && p.dataAgendamento ? `<strong>📅 Data Agendamento:</strong> ${p.dataAgendamento}<br>` : ''}
+                ${isAgendamento && p.dataAgendamento ? `<strong>📅 Data:</strong> ${p.dataAgendamento}<br>` : ''}
                 <strong>Status:</strong> ${p.agendamentoMarcado ? '📅 AGENDADO' : '📦 BOLSÃO'}<br>
                 ${p.observacao ? `<strong>📝 Obs:</strong> ${p.observacao}` : ''}
             </div>
         `;
 
-      if (!p.volumesDiversos) {
+      if (!p.volumesDiversos && !isAgendamento) {
         volumeControls.innerHTML = `
             <button class="btn-volume" data-value="-10">-10</button>
             <button class="btn-volume" data-value="-5">-5</button>
@@ -453,11 +503,10 @@ document.addEventListener('DOMContentLoaded', function () {
           });
         });
       } else {
-        volumeControls.innerHTML = `<div style="text-align: center; color: #7f8c8d;">📦 Volumetria Diversa - sem controle de volumes</div>`;
+        volumeControls.innerHTML = `<div style="text-align: center; color: #7f8c8d;">${p.volumesDiversos ? '📦 Volumetria Diversa - sem controle de volumes' : 'Agendamento'}</div>`;
         saveButton.style.display = 'none';
       }
     } else if (p.tipo === 'DIVERSOS') {
-      dataAgendamentoContainer.style.display = 'none';
       infoDiv.innerHTML = `
             <div>
                 <strong>Unidade:</strong> ${p.hub}<br>
@@ -487,8 +536,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.anexarPallet = async function (id) {
     const palletPrincipal = window.palletService.pallets.get(id);
-    if (!palletPrincipal || (palletPrincipal.tipo !== 'VOLUMETRIA_ALTA' && palletPrincipal.tipo !== 'AGENDAMENTO')) {
-      alert('Só é possível anexar a pallets de volumetria alta ou agendamento.');
+    if (!palletPrincipal || palletPrincipal.tipo !== 'VOLUMETRIA_ALTA') {
+      alert('Só é possível anexar a pallets de volumetria alta.');
       return;
     }
     const novoPallet = await window.palletService.anexarPallet(id);
@@ -524,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.reimprimirEtiqueta = function (id) {
     const pallet = window.palletService.finalizados.get(id);
     if (!pallet) return;
-    const isAgendado = pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO' ? pallet.agendamentoMarcado : false;
+    const isAgendado = pallet.tipo === 'VOLUMETRIA_ALTA' ? pallet.agendamentoMarcado : false;
     window.palletService.imprimirEtiqueta(pallet, isAgendado, null);
   };
 
@@ -546,20 +595,25 @@ document.addEventListener('DOMContentLoaded', function () {
       const anexos = pallets.filter(a => a.palletPrincipalId === p.id);
       const isDiversos = p.tipo === 'DIVERSOS';
       const isAgendamento = p.tipo === 'AGENDAMENTO';
-      const agendado = (p.tipo === 'VOLUMETRIA_ALTA' || p.tipo === 'AGENDAMENTO') ? p.agendamentoMarcado : false;
-      let cardClass = `pallet-card ${agendado ? 'agendado' : ''}`;
-      if (isDiversos) cardClass += ' diversos';
-      if (isAgendamento) cardClass += ' agendamento';
+      const agendado = p.tipo === 'VOLUMETRIA_ALTA' ? p.agendamentoMarcado : false;
+      const cardClass = `pallet-card ${agendado ? 'agendado' : ''} ${isDiversos ? 'diversos' : ''} ${isAgendamento ? 'agendamento-card' : ''}`;
 
       const totalPalletsGrupo = 1 + anexos.length;
 
-      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : (p.tipo === 'DIVERSOS' ? 'DIVERSOS' : `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`);
+      let volumesDisplay = '';
+      if (isDiversos) {
+        volumesDisplay = 'DIVERSOS';
+      } else if (isAgendamento && p.volumesDiversos) {
+        volumesDisplay = p.volumesTexto || 'DIVERSOS';
+      } else {
+        volumesDisplay = `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
+      }
 
       html += `
             <div class="${cardClass}" style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span class="nf-tag">${isDiversos ? 'DIVERSOS' : (isAgendamento ? '📅 AGENDAMENTO' : `NF ${p.notaFiscal}`)}</span>
-                    ${(p.tipo === 'VOLUMETRIA_ALTA' || p.tipo === 'AGENDAMENTO') ? (agendado ? '<span class="agendado-badge">📅 AGENDADO</span>' : '<span class="nao-agendado-badge">📦 BOLSÃO</span>') : ''}
+                    <span class="nf-tag">${isDiversos ? 'DIVERSOS' : (isAgendamento ? '📅 ' + p.notaFiscal : `NF ${p.notaFiscal}`)}</span>
+                    ${p.tipo === 'VOLUMETRIA_ALTA' ? (agendado ? '<span class="agendado-badge">📅 AGENDADO</span>' : '<span class="nao-agendado-badge">📦 BOLSÃO</span>') : ''}
                 </div>
 
                 <div class="info-grid">
@@ -597,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="card-actions">
                     <button onclick="abrirModalAjustar('${p.id}')">Ajustar</button>
                     <button onclick="finalizarPallet('${p.id}')">Finalizar</button>
-                    ${!isDiversos ? `<button onclick="anexarPallet('${p.id}')">Anexar Pallet</button>` : ''}
+                    ${!isDiversos && !isAgendamento ? `<button onclick="anexarPallet('${p.id}')">Anexar Pallet</button>` : ''}
                     <button onclick="imprimirPallet('${p.id}')">Imprimir</button>
                     <button onclick="excluirPallet('${p.id}')">Excluir</button>
                 </div>
@@ -609,24 +663,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let index = 2;
         for (const anexo of anexos) {
-          const agendadoAnexo = anexo.tipo === 'VOLUMETRIA_ALTA' || anexo.tipo === 'AGENDAMENTO' ? anexo.agendamentoMarcado : false;
-          const volumesAnexo = anexo.volumesDiversos ? 'DIVERSOS' : `${anexo.volumesAtuais} / ${anexo.maxVolumes}`;
+          const agendadoAnexo = anexo.tipo === 'VOLUMETRIA_ALTA' ? anexo.agendamentoMarcado : false;
+          const volumesAnexo = `${anexo.volumesAtuais} / ${anexo.maxVolumes}`;
           html += `
                     <div class="pallet-card anexado" style="margin-bottom: 10px; background: #f9f9f9; border-left: 4px solid #f39c12;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span class="nf-tag" style="font-size: 16px;">Anexado ${index}/${totalPalletsGrupo} - ${anexo.tipo === 'AGENDAMENTO' ? '📅 ' : ''}NF ${anexo.notaFiscal}</span>
-                            ${(anexo.tipo === 'VOLUMETRIA_ALTA' || anexo.tipo === 'AGENDAMENTO') ? (agendadoAnexo ? '<span class="agendado-badge" style="font-size: 10px;">📅 AGENDADO</span>' : '<span class="nao-agendado-badge" style="font-size: 10px;">📦 BOLSÃO</span>') : ''}
+                            <span class="nf-tag" style="font-size: 16px;">Anexado ${index}/${totalPalletsGrupo} - NF ${anexo.notaFiscal}</span>
+                            ${anexo.tipo === 'VOLUMETRIA_ALTA' ? (agendadoAnexo ? '<span class="agendado-badge" style="font-size: 10px;">📅 AGENDADO</span>' : '<span class="nao-agendado-badge" style="font-size: 10px;">📦 BOLSÃO</span>') : ''}
                         </div>
                         <div class="info-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
                             <div class="info-item"><small>Recebedor</small><strong>${anexo.recebedor}</strong></div>
                             <div class="info-item"><small>Unidade/UF</small><strong>${anexo.hub} - ${anexo.estado}</strong></div>
                             <div class="info-item"><small>Volumes</small><strong>${volumesAnexo}</strong></div>
                         </div>
-                        ${anexo.dataAgendamento ? `
-                        <div style="margin-top: 8px; padding: 6px; background: #fff3e0; border-radius: 6px; font-size: 11px; color: #e67e22;">
-                            📅 ${anexo.dataAgendamento}
-                        </div>
-                        ` : ''}
                         ${anexo.observacao ? `
                         <div style="margin-top: 8px; padding: 6px; background: #fff3e0; border-radius: 6px; font-size: 11px; color: #e67e22;">
                             📝 ${anexo.observacao}
@@ -695,7 +744,15 @@ document.addEventListener('DOMContentLoaded', function () {
       const dataFinalizacao = new Date(p.finalizadoEm).toLocaleDateString('pt-BR');
       const isDiversos = p.tipo === 'DIVERSOS';
       const isAgendamento = p.tipo === 'AGENDAMENTO';
-      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : (isDiversos ? 'DIVERSOS' : `${p.volumesAtuais}/${p.maxVolumes}`);
+      let volumesDisplay = '';
+
+      if (isDiversos) {
+        volumesDisplay = 'DIVERSOS';
+      } else if (isAgendamento && p.volumesDiversos) {
+        volumesDisplay = p.volumesTexto || 'DIVERSOS';
+      } else {
+        volumesDisplay = `${p.volumesAtuais}/${p.maxVolumes}`;
+      }
 
       html += `
                 <div class="finalizado-card">

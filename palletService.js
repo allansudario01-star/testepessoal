@@ -24,7 +24,7 @@ class PalletService {
     }
 
     verificarAgendamento(pallet) {
-        if (!this.agendamentoService || (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO')) {
+        if (!this.agendamentoService || pallet.tipo !== 'VOLUMETRIA_ALTA') {
             return false;
         }
 
@@ -38,7 +38,7 @@ class PalletService {
 
     atualizarStatusAgendamentoEmTodosPallets() {
         for (const [id, pallet] of this.pallets.entries()) {
-            if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
+            if (pallet.tipo === 'VOLUMETRIA_ALTA') {
                 const isAgendado = this.verificarAgendamento(pallet);
                 if (pallet.agendamentoMarcado !== isAgendado) {
                     pallet.agendamentoMarcado = isAgendado;
@@ -94,7 +94,18 @@ class PalletService {
         };
 
         let novo;
-        if (tipo === 'VOLUMETRIA_ALTA' || tipo === 'AGENDAMENTO') {
+        if (tipo === 'VOLUMETRIA_ALTA') {
+            novo = {
+                ...basePallet,
+                notaFiscal: data.notaFiscal.toUpperCase().trim(),
+                recebedor: data.recebedor.toUpperCase().trim(),
+                hub: data.hub.toUpperCase().trim(),
+                estado: data.estado.toUpperCase().trim(),
+                cidade: data.cidade.toUpperCase().trim(),
+                maxVolumes: parseInt(data.maxVolumes),
+                volumesAtuais: 0
+            };
+        } else if (tipo === 'AGENDAMENTO') {
             novo = {
                 ...basePallet,
                 notaFiscal: data.notaFiscal.toUpperCase().trim(),
@@ -105,6 +116,7 @@ class PalletService {
                 maxVolumes: data.maxVolumes,
                 volumesAtuais: 0,
                 volumesDiversos: data.volumesDiversos || false,
+                volumesTexto: data.volumesTexto || 'DIVERSOS',
                 dataAgendamento: data.dataAgendamento || null,
                 dataAgendamentoTipo: data.dataAgendamentoTipo || null
             };
@@ -117,12 +129,11 @@ class PalletService {
                 estado: data.estado.toUpperCase().trim(),
                 cidade: 'DIVERSOS',
                 maxVolumes: null,
-                volumesAtuais: null,
-                volumesDiversos: true
+                volumesAtuais: null
             };
         }
 
-        if (tipo === 'VOLUMETRIA_ALTA' || tipo === 'AGENDAMENTO') {
+        if (tipo === 'VOLUMETRIA_ALTA') {
             novo.agendamentoMarcado = this.verificarAgendamento(novo);
         }
 
@@ -159,7 +170,7 @@ class PalletService {
 
     async anexarPallet(idPalletPrincipal) {
         const palletPrincipal = this.pallets.get(idPalletPrincipal);
-        if (!palletPrincipal || (palletPrincipal.tipo !== 'VOLUMETRIA_ALTA' && palletPrincipal.tipo !== 'AGENDAMENTO')) {
+        if (!palletPrincipal || palletPrincipal.tipo !== 'VOLUMETRIA_ALTA') {
             return null;
         }
 
@@ -199,8 +210,7 @@ class PalletService {
 
     async updateVolumes(id, novosVolumes) {
         const pallet = this.pallets.get(id);
-        if (!pallet || (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO')) return;
-        if (pallet.volumesDiversos) return;
+        if (!pallet || pallet.tipo !== 'VOLUMETRIA_ALTA') return;
 
         pallet.volumesAtuais = Math.min(novosVolumes, pallet.maxVolumes);
         if (pallet.volumesAtuais < 0) pallet.volumesAtuais = 0;
@@ -252,7 +262,7 @@ class PalletService {
             }
         }
 
-        if ((pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') && pallet.palletsVinculados && pallet.palletsVinculados.length > 0) {
+        if (pallet.tipo === 'VOLUMETRIA_ALTA' && pallet.palletsVinculados && pallet.palletsVinculados.length > 0) {
             for (const anexoId of pallet.palletsVinculados) {
                 const anexo = this.pallets.get(anexoId);
                 if (anexo && anexo.status === 'ativo') {
@@ -338,7 +348,7 @@ class PalletService {
     }
 
     obterTotalPalletsGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO') return 1;
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
 
         if (pallet.palletPrincipalId) {
             const principal = this.pallets.get(pallet.palletPrincipalId);
@@ -351,7 +361,7 @@ class PalletService {
     }
 
     obterIndiceNoGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO') return 1;
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
 
         if (!pallet.palletPrincipalId) {
             return 1;
@@ -385,16 +395,39 @@ class PalletService {
         let isDiversos = pallet.tipo === 'DIVERSOS';
         let isAgendamento = pallet.tipo === 'AGENDAMENTO';
 
-        if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
-            tituloPallet = isAgendamento ? 'NOTA INFORMATIVA | AGENDAMENTO' : 'NOTA INFORMATIVA | +30 VOLUMES';
-            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade || 'N/A'}`;
+        if (pallet.tipo === 'VOLUMETRIA_ALTA') {
+            tituloPallet = 'NOTA INFORMATIVA | +30 VOLUMES';
+            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade}`;
+            volumesDisplay = `
+                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
+                    <div>
+                        <span style="font-size: 26px; font-weight: bold;">${pallet.volumesAtuais}</span>
+                        <span style="font-size: 16px;"> / ${pallet.maxVolumes}</span>
+                    </div>
+                </div>
+            `;
+            const totalPallets = this.obterTotalPalletsGrupo(pallet);
+            const indiceAtual = this.obterIndiceNoGrupo(pallet);
+            palletsDisplay = `
+                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">PALLETS</div>
+                    <div>
+                        <span style="font-size: 26px; font-weight: bold;">${indiceAtual}</span>
+                        <span style="font-size: 16px;"> / ${totalPallets}</span>
+                    </div>
+                </div>
+            `;
+        } else if (pallet.tipo === 'AGENDAMENTO') {
+            tituloPallet = 'NOTA INFORMATIVA | AGENDAMENTO';
+            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade}`;
 
             if (pallet.volumesDiversos) {
                 volumesDisplay = `
                     <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
                         <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
                         <div>
-                            <span style="font-size: 20px; font-weight: bold;">DIVERSOS</span>
+                            <span style="font-size: 20px; font-weight: bold;">${pallet.volumesTexto || 'DIVERSOS'}</span>
                         </div>
                     </div>
                 `;
@@ -409,18 +442,7 @@ class PalletService {
                     </div>
                 `;
             }
-
-            const totalPallets = this.obterTotalPalletsGrupo(pallet);
-            const indiceAtual = this.obterIndiceNoGrupo(pallet);
-            palletsDisplay = `
-                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">PALLETS</div>
-                    <div>
-                        <span style="font-size: 26px; font-weight: bold;">${indiceAtual}</span>
-                        <span style="font-size: 16px;"> / ${totalPallets}</span>
-                    </div>
-                </div>
-            `;
+            palletsDisplay = '';
         } else {
             tituloPallet = 'NOTA INFORMATIVA | DIVERSOS';
             notaFiscalDisplay = 'DIVERSOS';
@@ -437,7 +459,7 @@ class PalletService {
             palletsDisplay = '';
         }
 
-        const marcarAgendamento = (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') && pallet.agendamentoMarcado;
+        const marcarAgendamento = pallet.tipo === 'VOLUMETRIA_ALTA' && pallet.agendamentoMarcado;
         const agendamentoChecked = marcarAgendamento ? 'background-color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact;' : '';
 
         let expedicaoContent = '';
@@ -515,8 +537,8 @@ class PalletService {
             </div>
 
             <div style="margin-bottom: 8mm;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm;">
-                    <div style="flex: 2;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm; flex-wrap: wrap;">
+                    <div style="flex: 2; min-width: 200px;">
                         <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">SERVIÇO</h2>
                         <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm;">
                             <div style="font-size: 11px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm;">
@@ -539,14 +561,16 @@ class PalletService {
                             </div>
                         </div>
                     </div>
-                    <div style="flex: 1;">
+                    ${isAgendamento ? `
+                    <div style="flex: 1; min-width: 150px;">
                         <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">DATA AGENDAMENTO</h2>
-                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm; text-align: center; background: #fff8e7;">
-                            <div style="font-size: 16px; font-weight: bold; color: #e67e22;">
-                                ${isAgendamento && pallet.dataAgendamento ? pallet.dataAgendamento : 'AGUARDANDO AGENDAMENTO'}
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 8mm 5mm; text-align: center; background: #fff8e7;">
+                            <div style="font-size: 18px; font-weight: bold; color: #e67e22;">
+                                ${pallet.dataAgendamento || 'AGUARDANDO AGENDAMENTO'}
                             </div>
                         </div>
                     </div>
+                    ` : ''}
                 </div>
 
                 <div style="margin-top: 6mm;">
