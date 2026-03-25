@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Pallet System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+</head>
+
+<body>
+    <div id="offline-banner" class="offline hidden">⚠️ Modo offline</div>
+
+    <header>
+        <h1>📦 Pallet System</h1>
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="pallets">PALLETS</button>
+            <button class="tab-btn" data-tab="agendamentos">AGENDAMENTOS</button>
+            <button class="tab-btn" data-tab="finalizados">FINALIZADOS</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="pallets-tab" class="tab-content active">
+            <div class="filters">
+                <input type="text" id="search-nf" placeholder="🔍 Buscar Número Fiscal">
+            </div>
+
+            <button id="create-pallet-btn" class="btn-primary">+ NOVO PALLET</button>
+
+            <div id="pallets-list"></div>
+        </section>
+
+        <section id="agendamentos-tab" class="tab-content">
+            <h2>Agendamentos</h2>
+            <div class="filters">
+                <input type="text" id="search-agendamentos" placeholder="🔍 Pesquisar agendamentos...">
+            </div>
+            <div id="agendamentos-list"></div>
+        </section>
+
+        <section id="finalizados-tab" class="tab-content">
+            <h2>Pallets Finalizados</h2>
+            <div class="filters">
+                <input type="text" id="search-finalizados" placeholder="🔍 Buscar NF ou Recebedor">
+                <button id="clear-history" class="btn-secondary">Limpar Histórico</button>
+            </div>
+            <div id="finalizados-list"></div>
+        </section>
+    </main>
+
+    <div id="tipo-pallet-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Selecione o Tipo de Pallet</h3>
+            <div class="tipo-options">
+                <button id="tipo-volumetria-alta" class="btn-primary" style="margin-bottom: 15px;">📦 Volumetria
+                    Alta</button>
+                <button id="tipo-diversos" class="btn-secondary">📦 Diversos</button>
+            </div>
+            <button id="cancel-tipo-modal" class="btn-secondary" style="margin-top: 20px;">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="pallet-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Novo Pallet - Volumetria Alta</h3>
+            <form id="pallet-form">
+                <input type="text" id="nf" placeholder="Número Fiscal" required>
+                <input type="text" id="recebedor" placeholder="Recebedor" required>
+                <input type="text" id="hub" placeholder="Unidade" required>
+                <input type="text" id="estado" placeholder="UF" maxlength="2" required>
+                <input type="text" id="cidade" placeholder="Cidade" required>
+                <input type="number" id="maxVolumes" placeholder="Volumes Totais" min="1" required>
+
+                <div class="form-actions">
+                    <button type="submit">Criar Pallet</button>
+                    <button type="button" id="close-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="pallet-diversos-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Novo Pallet - Diversos</h3>
+            <form id="pallet-diversos-form">
+                <input type="text" id="hub-diversos" placeholder="Unidade" required>
+                <input type="text" id="estado-diversos" placeholder="UF" maxlength="2" required>
+
+                <div class="form-actions">
+                    <button type="submit">Criar Pallet</button>
+                    <button type="button" id="close-diversos-modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="ajustar-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="ajustar-modal-title">Ajustar Pallet</h3>
+            <div id="ajustar-info"></div>
+
+            <div id="volume-controls-container" class="volume-controls">
+            </div>
+
+            <div id="observacao-container" style="margin-top: 20px;">
+                <label for="observacao-pallet"
+                    style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">📝 OBSERVAÇÃO
+                    (opcional)</label>
+                <textarea id="observacao-pallet" rows="3"
+                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-family: inherit; font-size: 14px; resize: vertical;"
+                    placeholder="Digite uma observação sobre este pallet..."></textarea>
+            </div>
+
+            <div class="volume-actions">
+                <button id="save-volume" class="btn-primary" style="display: none;">Salvar Volumes</button>
+                <button id="finalize-from-ajustar" class="btn-warning">Finalizar Pallet</button>
+                <button id="delete-from-ajustar" class="btn-danger">Excluir Pallet</button>
+                <button id="close-ajustar-modal" class="btn-secondary">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="finalizar-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Finalizar Pallet</h3>
+            <p id="finalizar-pergunta">Todos os volumes foram bipados?</p>
+            <div class="finalizar-actions">
+                <button id="confirm-finalizar-sim" class="btn-success">SIM ✅</button>
+                <button id="confirm-finalizar-nao" class="btn-danger">NÃO ❌</button>
+                <button id="cancel-finalizar" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="anexar-imagem-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Anexar Imagem (QR Code)</h3>
+            <p>Deseja anexar uma imagem ao rodapé da etiqueta?</p>
+            <input type="file" id="imagem-qrcode" accept="image/*">
+            <div class="form-actions" style="margin-top: 20px;">
+                <button id="confirmar-imprimir" class="btn-primary">Imprimir com Imagem</button>
+                <button id="imprimir-sem-imagem" class="btn-secondary">Imprimir sem Imagem</button>
+                <button id="cancelar-imagem-modal" class="btn-danger">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="palletService.js"></script>
+    <script src="agendamentoService.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
