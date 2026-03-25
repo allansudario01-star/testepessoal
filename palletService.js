@@ -24,7 +24,7 @@ class PalletService {
     }
 
     verificarAgendamento(pallet) {
-        if (!this.agendamentoService || pallet.tipo !== 'VOLUMETRIA_ALTA') {
+        if (!this.agendamentoService || (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO')) {
             return false;
         }
 
@@ -38,7 +38,7 @@ class PalletService {
 
     atualizarStatusAgendamentoEmTodosPallets() {
         for (const [id, pallet] of this.pallets.entries()) {
-            if (pallet.tipo === 'VOLUMETRIA_ALTA') {
+            if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
                 const isAgendado = this.verificarAgendamento(pallet);
                 if (pallet.agendamentoMarcado !== isAgendado) {
                     pallet.agendamentoMarcado = isAgendado;
@@ -94,7 +94,7 @@ class PalletService {
         };
 
         let novo;
-        if (tipo === 'VOLUMETRIA_ALTA') {
+        if (tipo === 'VOLUMETRIA_ALTA' || tipo === 'AGENDAMENTO') {
             novo = {
                 ...basePallet,
                 notaFiscal: data.notaFiscal.toUpperCase().trim(),
@@ -102,8 +102,11 @@ class PalletService {
                 hub: data.hub.toUpperCase().trim(),
                 estado: data.estado.toUpperCase().trim(),
                 cidade: data.cidade.toUpperCase().trim(),
-                maxVolumes: parseInt(data.maxVolumes),
-                volumesAtuais: 0
+                maxVolumes: data.maxVolumes,
+                volumesAtuais: 0,
+                volumesDiversos: data.volumesDiversos || false,
+                dataAgendamento: data.dataAgendamento || null,
+                dataAgendamentoTipo: data.dataAgendamentoTipo || null
             };
         } else {
             novo = {
@@ -114,11 +117,12 @@ class PalletService {
                 estado: data.estado.toUpperCase().trim(),
                 cidade: 'DIVERSOS',
                 maxVolumes: null,
-                volumesAtuais: null
+                volumesAtuais: null,
+                volumesDiversos: true
             };
         }
 
-        if (tipo === 'VOLUMETRIA_ALTA') {
+        if (tipo === 'VOLUMETRIA_ALTA' || tipo === 'AGENDAMENTO') {
             novo.agendamentoMarcado = this.verificarAgendamento(novo);
         }
 
@@ -133,9 +137,29 @@ class PalletService {
         return novo;
     }
 
+    async salvarDataAgendamento(id, dataAgendamento, dataTipo) {
+        const pallet = this.pallets.get(id);
+        if (!pallet || pallet.tipo !== 'AGENDAMENTO') return;
+
+        pallet.dataAgendamento = dataAgendamento;
+        pallet.dataAgendamentoTipo = dataTipo;
+        pallet.ultimaAtualizacao = new Date().toISOString();
+
+        this.saveToStorage();
+
+        try {
+            await window.db.collection('pallets').doc(id).update({
+                dataAgendamento: pallet.dataAgendamento,
+                dataAgendamentoTipo: pallet.dataAgendamentoTipo,
+                ultimaAtualizacao: pallet.ultimaAtualizacao
+            });
+        } catch (e) {
+        }
+    }
+
     async anexarPallet(idPalletPrincipal) {
         const palletPrincipal = this.pallets.get(idPalletPrincipal);
-        if (!palletPrincipal || palletPrincipal.tipo !== 'VOLUMETRIA_ALTA') {
+        if (!palletPrincipal || (palletPrincipal.tipo !== 'VOLUMETRIA_ALTA' && palletPrincipal.tipo !== 'AGENDAMENTO')) {
             return null;
         }
 
@@ -175,7 +199,8 @@ class PalletService {
 
     async updateVolumes(id, novosVolumes) {
         const pallet = this.pallets.get(id);
-        if (!pallet || pallet.tipo !== 'VOLUMETRIA_ALTA') return;
+        if (!pallet || (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO')) return;
+        if (pallet.volumesDiversos) return;
 
         pallet.volumesAtuais = Math.min(novosVolumes, pallet.maxVolumes);
         if (pallet.volumesAtuais < 0) pallet.volumesAtuais = 0;
@@ -227,7 +252,7 @@ class PalletService {
             }
         }
 
-        if (pallet.tipo === 'VOLUMETRIA_ALTA' && pallet.palletsVinculados && pallet.palletsVinculados.length > 0) {
+        if ((pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') && pallet.palletsVinculados && pallet.palletsVinculados.length > 0) {
             for (const anexoId of pallet.palletsVinculados) {
                 const anexo = this.pallets.get(anexoId);
                 if (anexo && anexo.status === 'ativo') {
@@ -313,7 +338,7 @@ class PalletService {
     }
 
     obterTotalPalletsGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO') return 1;
 
         if (pallet.palletPrincipalId) {
             const principal = this.pallets.get(pallet.palletPrincipalId);
@@ -326,7 +351,7 @@ class PalletService {
     }
 
     obterIndiceNoGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA' && pallet.tipo !== 'AGENDAMENTO') return 1;
 
         if (!pallet.palletPrincipalId) {
             return 1;
@@ -358,19 +383,33 @@ class PalletService {
         let volumesDisplay = '';
         let palletsDisplay = '';
         let isDiversos = pallet.tipo === 'DIVERSOS';
+        let isAgendamento = pallet.tipo === 'AGENDAMENTO';
 
-        if (pallet.tipo === 'VOLUMETRIA_ALTA') {
-            tituloPallet = 'NOTA INFORMATIVA | +30 VOLUMES';
-            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade}`;
-            volumesDisplay = `
-                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
-                    <div>
-                        <span style="font-size: 26px; font-weight: bold;">${pallet.volumesAtuais}</span>
-                        <span style="font-size: 16px;"> / ${pallet.maxVolumes}</span>
+        if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
+            tituloPallet = isAgendamento ? 'NOTA INFORMATIVA | AGENDAMENTO' : 'NOTA INFORMATIVA | +30 VOLUMES';
+            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade || 'N/A'}`;
+
+            if (pallet.volumesDiversos) {
+                volumesDisplay = `
+                    <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                        <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
+                        <div>
+                            <span style="font-size: 20px; font-weight: bold;">DIVERSOS</span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } else {
+                volumesDisplay = `
+                    <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                        <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
+                        <div>
+                            <span style="font-size: 26px; font-weight: bold;">${pallet.volumesAtuais || 0}</span>
+                            <span style="font-size: 16px;"> / ${pallet.maxVolumes || '?'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             const totalPallets = this.obterTotalPalletsGrupo(pallet);
             const indiceAtual = this.obterIndiceNoGrupo(pallet);
             palletsDisplay = `
@@ -398,7 +437,7 @@ class PalletService {
             palletsDisplay = '';
         }
 
-        const marcarAgendamento = (pallet.tipo === 'VOLUMETRIA_ALTA' && pallet.agendamentoMarcado);
+        const marcarAgendamento = (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') && pallet.agendamentoMarcado;
         const agendamentoChecked = marcarAgendamento ? 'background-color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact;' : '';
 
         let expedicaoContent = '';
@@ -476,36 +515,46 @@ class PalletService {
             </div>
 
             <div style="margin-bottom: 8mm;">
-                <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">TRIAGEM</h2>
-
-                <div style="margin-bottom: 5mm; border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm;">
-                    <div style="font-weight: bold; margin-bottom: 4mm; font-size: 12px; color: #555;">SERVIÇO:</div>
-                    <div style="font-size: 11px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm;">
-                        <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                            <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                            Entrega direta para o recebedor
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                            <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                            Envio para unidade ou ponto de encontro
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                            <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                            Interhub / Entrega para o recebedor
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                            <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px; ${agendamentoChecked}"></span>
-                            Agendamento
-                        </label>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm;">
+                    <div style="flex: 2;">
+                        <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">SERVIÇO</h2>
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm;">
+                            <div style="font-size: 11px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm;">
+                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
+                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
+                                    Entrega direta para o recebedor
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
+                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
+                                    Envio para unidade ou ponto de encontro
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
+                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
+                                    Interhub / Entrega para o recebedor
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
+                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px; ${agendamentoChecked}"></span>
+                                    Agendamento
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">DATA AGENDAMENTO</h2>
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm; text-align: center; background: #fff8e7;">
+                            <div style="font-size: 16px; font-weight: bold; color: #e67e22;">
+                                ${isAgendamento && pallet.dataAgendamento ? pallet.dataAgendamento : 'AGUARDANDO AGENDAMENTO'}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin-bottom: 5mm;">
+                <div style="margin-top: 6mm;">
                     <div style="font-weight: bold; font-size: 12px; margin-bottom: 2mm; color: #555;">VINCULAR NF:</div>
                     <div style="border-bottom: 1px solid #999; height: 28px; width: 100%;"></div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 6mm;">
                     <div>
                         <span style="font-size: 10px; font-weight: bold; color: #777;">DATA PREV. EMBARQUE:</span><br>
                         <span style="font-size: 15px; font-weight: bold; letter-spacing: 1px;">${dataEmBranco}</span>

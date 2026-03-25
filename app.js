@@ -83,6 +83,15 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('estado').value = '';
     document.getElementById('cidade').value = '';
     document.getElementById('maxVolumes').value = '';
+    document.getElementById('volumes-diversos-checkbox').checked = false;
+    document.getElementById('volumes-fixo-container').style.display = 'block';
+
+    // Resetar data de agendamento
+    document.querySelectorAll('input[name="data-agendamento-tipo"]').forEach(radio => {
+      if (radio.value === 'aguardando') radio.checked = true;
+    });
+    document.getElementById('data-agendamento-fixa').style.display = 'none';
+    document.getElementById('data-agendamento-fixa').value = '';
   }
 
   function resetFormularioDiversos() {
@@ -97,6 +106,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  async function salvarDataAgendamentoAtual() {
+    if (!window.palletAtual) return;
+
+    const dataTipo = document.querySelector('input[name="ajustar-data-tipo"]:checked')?.value;
+    let dataAgendamento = '';
+
+    if (dataTipo === 'fixa') {
+      dataAgendamento = document.getElementById('ajustar-data-fixa').value;
+      if (dataAgendamento) {
+        dataAgendamento = new Date(dataAgendamento).toLocaleDateString('pt-BR');
+      }
+    } else if (dataTipo === 'aguardando') {
+      dataAgendamento = 'AGUARDANDO AGENDAMENTO';
+    }
+
+    if (dataAgendamento) {
+      await window.palletService.salvarDataAgendamento(window.palletAtual, dataAgendamento, dataTipo);
+    }
+  }
+
   function configurarBotoes() {
     document.getElementById('create-pallet-btn').addEventListener('click', () => {
       document.getElementById('tipo-pallet-modal').classList.remove('hidden');
@@ -104,6 +133,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('tipo-volumetria-alta').addEventListener('click', () => {
       document.getElementById('tipo-pallet-modal').classList.add('hidden');
+      document.getElementById('pallet-modal-title').textContent = 'Novo Pallet - Volumetria Alta';
+      resetFormularioVolumetriaAlta();
+      document.getElementById('pallet-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('tipo-agendamento').addEventListener('click', () => {
+      document.getElementById('tipo-pallet-modal').classList.add('hidden');
+      document.getElementById('pallet-modal-title').textContent = 'Novo Pallet - Agendamento';
       resetFormularioVolumetriaAlta();
       document.getElementById('pallet-modal').classList.remove('hidden');
     });
@@ -118,17 +155,70 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('tipo-pallet-modal').classList.add('hidden');
     });
 
+    // Checkbox para volumes diversos
+    document.getElementById('volumes-diversos-checkbox').addEventListener('change', (e) => {
+      const volumesFixoContainer = document.getElementById('volumes-fixo-container');
+      if (e.target.checked) {
+        volumesFixoContainer.style.display = 'none';
+        document.getElementById('maxVolumes').removeAttribute('required');
+      } else {
+        volumesFixoContainer.style.display = 'block';
+        document.getElementById('maxVolumes').setAttribute('required', 'required');
+      }
+    });
+
+    // Radio buttons para data de agendamento
+    document.querySelectorAll('input[name="data-agendamento-tipo"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const dataFixaInput = document.getElementById('data-agendamento-fixa');
+        if (e.target.value === 'fixa') {
+          dataFixaInput.style.display = 'block';
+          dataFixaInput.setAttribute('required', 'required');
+        } else {
+          dataFixaInput.style.display = 'none';
+          dataFixaInput.removeAttribute('required');
+        }
+      });
+    });
+
     document.getElementById('pallet-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const volumesDiversos = document.getElementById('volumes-diversos-checkbox').checked;
+      let maxVolumes = null;
+
+      if (!volumesDiversos) {
+        maxVolumes = parseInt(document.getElementById('maxVolumes').value);
+      }
+
+      // Pegar data de agendamento
+      const dataTipo = document.querySelector('input[name="data-agendamento-tipo"]:checked').value;
+      let dataAgendamento = '';
+      let dataAgendamentoTipo = dataTipo;
+
+      if (dataTipo === 'fixa') {
+        const dataFixa = document.getElementById('data-agendamento-fixa').value;
+        if (dataFixa) {
+          dataAgendamento = new Date(dataFixa).toLocaleDateString('pt-BR');
+        }
+      } else if (dataTipo === 'aguardando') {
+        dataAgendamento = 'AGUARDANDO AGENDAMENTO';
+      }
+
       const dados = {
         notaFiscal: document.getElementById('nf').value,
         recebedor: document.getElementById('recebedor').value,
         hub: document.getElementById('hub').value,
         estado: document.getElementById('estado').value,
         cidade: document.getElementById('cidade').value,
-        maxVolumes: document.getElementById('maxVolumes').value
+        maxVolumes: maxVolumes,
+        volumesDiversos: volumesDiversos,
+        dataAgendamento: dataAgendamento,
+        dataAgendamentoTipo: dataAgendamentoTipo
       };
-      await window.palletService.create(dados, 'VOLUMETRIA_ALTA');
+
+      const tipo = document.getElementById('pallet-modal-title').textContent.includes('Agendamento') ? 'AGENDAMENTO' : 'VOLUMETRIA_ALTA';
+      await window.palletService.create(dados, tipo);
       document.getElementById('pallet-modal').classList.add('hidden');
       renderizarPallets();
     });
@@ -155,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('close-ajustar-modal').addEventListener('click', async () => {
       await salvarObservacaoAtual();
+      await salvarDataAgendamentoAtual();
       document.getElementById('ajustar-modal').classList.add('hidden');
     });
 
@@ -172,6 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('save-volume').addEventListener('click', async () => {
       if (!window.palletAtual) return;
       await salvarObservacaoAtual();
+      await salvarDataAgendamentoAtual();
       const novosVolumes = parseInt(document.getElementById('manual-volume').value) || 0;
       await window.palletService.updateVolumes(window.palletAtual, novosVolumes);
       document.getElementById('ajustar-modal').classList.add('hidden');
@@ -180,10 +272,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('finalize-from-ajustar').addEventListener('click', async () => {
       await salvarObservacaoAtual();
+      await salvarDataAgendamentoAtual();
       const pallet = window.palletService.pallets.get(window.palletAtual);
       if (!pallet) return;
       document.getElementById('ajustar-modal').classList.add('hidden');
-      if (pallet.tipo === 'VOLUMETRIA_ALTA') {
+      if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
         document.getElementById('finalizar-modal').classList.remove('hidden');
       } else {
         finalizarPalletDireto(window.palletAtual, false);
@@ -279,50 +372,92 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!p) return;
     window.palletAtual = id;
     const isVolumetriaAlta = p.tipo === 'VOLUMETRIA_ALTA';
+    const isAgendamento = p.tipo === 'AGENDAMENTO';
     const modalTitle = document.getElementById('ajustar-modal-title');
     const infoDiv = document.getElementById('ajustar-info');
     const volumeControls = document.getElementById('volume-controls-container');
     const saveButton = document.getElementById('save-volume');
     const observacaoTextarea = document.getElementById('observacao-pallet');
+    const dataAgendamentoContainer = document.getElementById('data-agendamento-container');
 
     if (observacaoTextarea) {
       observacaoTextarea.value = p.observacao || '';
     }
 
-    modalTitle.innerText = isVolumetriaAlta ? `Ajustar Pallet - NF ${p.notaFiscal}` : `Pallet Diversos - ${p.hub} / ${p.estado}`;
+    if (isAgendamento) {
+      modalTitle.innerText = `Ajustar Pallet Agendado - ${p.notaFiscal || 'AGENDAMENTO'}`;
 
-    if (isVolumetriaAlta) {
+      // Configurar dados de agendamento
+      dataAgendamentoContainer.style.display = 'block';
+      if (p.dataAgendamentoTipo === 'fixa' && p.dataAgendamento) {
+        document.querySelector('input[name="ajustar-data-tipo"][value="fixa"]').checked = true;
+        document.getElementById('ajustar-data-fixa').style.display = 'block';
+        // Converter data de volta para formato YYYY-MM-DD
+        const partes = p.dataAgendamento.split('/');
+        if (partes.length === 3) {
+          document.getElementById('ajustar-data-fixa').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+        }
+      } else {
+        document.querySelector('input[name="ajustar-data-tipo"][value="aguardando"]').checked = true;
+        document.getElementById('ajustar-data-fixa').style.display = 'none';
+      }
+
+      // Configurar evento para os radios
+      document.querySelectorAll('input[name="ajustar-data-tipo"]').forEach(radio => {
+        radio.onchange = () => {
+          if (radio.value === 'fixa') {
+            document.getElementById('ajustar-data-fixa').style.display = 'block';
+          } else {
+            document.getElementById('ajustar-data-fixa').style.display = 'none';
+          }
+        };
+      });
+    } else {
+      dataAgendamentoContainer.style.display = 'none';
+    }
+
+    if (isVolumetriaAlta || isAgendamento) {
+      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
+
       infoDiv.innerHTML = `
             <div>
-                <strong>Número Fiscal:</strong> ${p.notaFiscal}<br>
-                <strong>Recebedor:</strong> ${p.recebedor}<br>
+                <strong>Número Fiscal:</strong> ${p.notaFiscal || 'N/A'}<br>
+                <strong>Recebedor:</strong> ${p.recebedor || 'N/A'}<br>
                 <strong>Unidade:</strong> ${p.hub}<br>
                 <strong>UF:</strong> ${p.estado}<br>
-                <strong>Cidade:</strong> ${p.cidade}<br>
-                <strong>Volumes:</strong> ${p.volumesAtuais} / ${p.maxVolumes}<br>
+                <strong>Cidade:</strong> ${p.cidade || 'N/A'}<br>
+                <strong>Volumes:</strong> ${volumesDisplay}<br>
+                ${isAgendamento && p.dataAgendamento ? `<strong>📅 Data Agendamento:</strong> ${p.dataAgendamento}<br>` : ''}
                 <strong>Status:</strong> ${p.agendamentoMarcado ? '📅 AGENDADO' : '📦 BOLSÃO'}<br>
                 ${p.observacao ? `<strong>📝 Obs:</strong> ${p.observacao}` : ''}
             </div>
         `;
-      volumeControls.innerHTML = `
+
+      if (!p.volumesDiversos) {
+        volumeControls.innerHTML = `
             <button class="btn-volume" data-value="-10">-10</button>
             <button class="btn-volume" data-value="-5">-5</button>
             <button class="btn-volume" data-value="-1">-1</button>
-            <input type="number" id="manual-volume" min="0" value="${p.volumesAtuais}" placeholder="0">
+            <input type="number" id="manual-volume" min="0" value="${p.volumesAtuais || 0}" placeholder="0">
             <button class="btn-volume" data-value="1">+1</button>
             <button class="btn-volume" data-value="5">+5</button>
             <button class="btn-volume" data-value="10">+10</button>
         `;
-      saveButton.style.display = 'block';
+        saveButton.style.display = 'block';
 
-      volumeControls.querySelectorAll('.btn-volume').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const valor = parseInt(e.target.dataset.value);
-          const atual = parseInt(document.getElementById('manual-volume').value) || 0;
-          document.getElementById('manual-volume').value = Math.max(0, atual + valor);
+        volumeControls.querySelectorAll('.btn-volume').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const valor = parseInt(e.target.dataset.value);
+            const atual = parseInt(document.getElementById('manual-volume').value) || 0;
+            document.getElementById('manual-volume').value = Math.max(0, atual + valor);
+          });
         });
-      });
-    } else {
+      } else {
+        volumeControls.innerHTML = `<div style="text-align: center; color: #7f8c8d;">📦 Volumetria Diversa - sem controle de volumes</div>`;
+        saveButton.style.display = 'none';
+      }
+    } else if (p.tipo === 'DIVERSOS') {
+      dataAgendamentoContainer.style.display = 'none';
       infoDiv.innerHTML = `
             <div>
                 <strong>Unidade:</strong> ${p.hub}<br>
@@ -335,6 +470,7 @@ document.addEventListener('DOMContentLoaded', function () {
       volumeControls.innerHTML = `<div style="text-align: center; color: #7f8c8d;">Não é possível ajustar volumes para pallets de diversos.</div>`;
       saveButton.style.display = 'none';
     }
+
     document.getElementById('ajustar-modal').classList.remove('hidden');
   };
 
@@ -342,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const p = window.palletService.pallets.get(id);
     if (!p) return;
     window.palletAtual = id;
-    if (p.tipo === 'VOLUMETRIA_ALTA') {
+    if (p.tipo === 'VOLUMETRIA_ALTA' || p.tipo === 'AGENDAMENTO') {
       document.getElementById('finalizar-modal').classList.remove('hidden');
     } else {
       finalizarPalletDireto(id, false);
@@ -351,8 +487,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.anexarPallet = async function (id) {
     const palletPrincipal = window.palletService.pallets.get(id);
-    if (!palletPrincipal || palletPrincipal.tipo !== 'VOLUMETRIA_ALTA') {
-      alert('Só é possível anexar a pallets de volumetria alta.');
+    if (!palletPrincipal || (palletPrincipal.tipo !== 'VOLUMETRIA_ALTA' && palletPrincipal.tipo !== 'AGENDAMENTO')) {
+      alert('Só é possível anexar a pallets de volumetria alta ou agendamento.');
       return;
     }
     const novoPallet = await window.palletService.anexarPallet(id);
@@ -370,7 +506,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.palletAImprimir = id;
 
-    if (pallet.tipo === 'VOLUMETRIA_ALTA') {
+    if (pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO') {
       document.getElementById('anexar-imagem-modal').classList.remove('hidden');
     } else {
       const isAgendado = false;
@@ -388,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function () {
   window.reimprimirEtiqueta = function (id) {
     const pallet = window.palletService.finalizados.get(id);
     if (!pallet) return;
-    const isAgendado = pallet.tipo === 'VOLUMETRIA_ALTA' ? pallet.agendamentoMarcado : false;
+    const isAgendado = pallet.tipo === 'VOLUMETRIA_ALTA' || pallet.tipo === 'AGENDAMENTO' ? pallet.agendamentoMarcado : false;
     window.palletService.imprimirEtiqueta(pallet, isAgendado, null);
   };
 
@@ -409,22 +545,27 @@ document.addEventListener('DOMContentLoaded', function () {
     for (const p of palletsPrincipais) {
       const anexos = pallets.filter(a => a.palletPrincipalId === p.id);
       const isDiversos = p.tipo === 'DIVERSOS';
-      const agendado = p.tipo === 'VOLUMETRIA_ALTA' ? p.agendamentoMarcado : false;
-      const cardClass = `pallet-card ${agendado ? 'agendado' : ''} ${isDiversos ? 'diversos' : ''}`;
+      const isAgendamento = p.tipo === 'AGENDAMENTO';
+      const agendado = (p.tipo === 'VOLUMETRIA_ALTA' || p.tipo === 'AGENDAMENTO') ? p.agendamentoMarcado : false;
+      let cardClass = `pallet-card ${agendado ? 'agendado' : ''}`;
+      if (isDiversos) cardClass += ' diversos';
+      if (isAgendamento) cardClass += ' agendamento';
 
       const totalPalletsGrupo = 1 + anexos.length;
+
+      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : (p.tipo === 'DIVERSOS' ? 'DIVERSOS' : `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`);
 
       html += `
             <div class="${cardClass}" style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span class="nf-tag">${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
-                    ${p.tipo === 'VOLUMETRIA_ALTA' ? (agendado ? '<span class="agendado-badge">📅 AGENDADO</span>' : '<span class="nao-agendado-badge">📦 BOLSÃO</span>') : ''}
+                    <span class="nf-tag">${isDiversos ? 'DIVERSOS' : (isAgendamento ? '📅 AGENDAMENTO' : `NF ${p.notaFiscal}`)}</span>
+                    ${(p.tipo === 'VOLUMETRIA_ALTA' || p.tipo === 'AGENDAMENTO') ? (agendado ? '<span class="agendado-badge">📅 AGENDADO</span>' : '<span class="nao-agendado-badge">📦 BOLSÃO</span>') : ''}
                 </div>
 
                 <div class="info-grid">
                     <div class="info-item">
                         <small>Recebedor</small>
-                        <strong>${p.recebedor}</strong>
+                        <strong>${p.recebedor || 'DIVERSOS'}</strong>
                     </div>
                     <div class="info-item">
                         <small>Unidade/UF</small>
@@ -433,20 +574,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${!isDiversos ? `
                     <div class="info-item">
                         <small>Cidade</small>
-                        <strong>${p.cidade}</strong>
+                        <strong>${p.cidade || 'N/A'}</strong>
                     </div>
                     ` : ''}
                     <div class="info-item">
                         <small>Volumes</small>
-                        <strong>${isDiversos ? 'DIVERSOS' : `${p.volumesAtuais} / ${p.maxVolumes}`}</strong>
+                        <strong>${volumesDisplay}</strong>
                     </div>
                 </div>
+                ${isAgendamento && p.dataAgendamento ? `
+                <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 8px; font-size: 12px; color: #e67e22; border-left: 3px solid #f39c12;">
+                    📅 ${p.dataAgendamento}
+                </div>
+                ` : ''}
                 ${p.observacao ? `
                 <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 8px; font-size: 12px; color: #e67e22; border-left: 3px solid #f39c12;">
                     📝 ${p.observacao}
                 </div>
                 ` : ''}
-                ${!isDiversos && p.volumesAtuais >= p.maxVolumes ? '<div class="completo-alert">✅ PALLET COMPLETO</div>' : ''}
+                ${!isDiversos && !p.volumesDiversos && p.volumesAtuais >= p.maxVolumes ? '<div class="completo-alert">✅ PALLET COMPLETO</div>' : ''}
 
                 <div class="card-actions">
                     <button onclick="abrirModalAjustar('${p.id}')">Ajustar</button>
@@ -463,18 +609,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let index = 2;
         for (const anexo of anexos) {
-          const agendadoAnexo = anexo.tipo === 'VOLUMETRIA_ALTA' ? anexo.agendamentoMarcado : false;
+          const agendadoAnexo = anexo.tipo === 'VOLUMETRIA_ALTA' || anexo.tipo === 'AGENDAMENTO' ? anexo.agendamentoMarcado : false;
+          const volumesAnexo = anexo.volumesDiversos ? 'DIVERSOS' : `${anexo.volumesAtuais} / ${anexo.maxVolumes}`;
           html += `
                     <div class="pallet-card anexado" style="margin-bottom: 10px; background: #f9f9f9; border-left: 4px solid #f39c12;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span class="nf-tag" style="font-size: 16px;">Anexado ${index}/${totalPalletsGrupo} - NF ${anexo.notaFiscal}</span>
-                            ${anexo.tipo === 'VOLUMETRIA_ALTA' ? (agendadoAnexo ? '<span class="agendado-badge" style="font-size: 10px;">📅 AGENDADO</span>' : '<span class="nao-agendado-badge" style="font-size: 10px;">📦 BOLSÃO</span>') : ''}
+                            <span class="nf-tag" style="font-size: 16px;">Anexado ${index}/${totalPalletsGrupo} - ${anexo.tipo === 'AGENDAMENTO' ? '📅 ' : ''}NF ${anexo.notaFiscal}</span>
+                            ${(anexo.tipo === 'VOLUMETRIA_ALTA' || anexo.tipo === 'AGENDAMENTO') ? (agendadoAnexo ? '<span class="agendado-badge" style="font-size: 10px;">📅 AGENDADO</span>' : '<span class="nao-agendado-badge" style="font-size: 10px;">📦 BOLSÃO</span>') : ''}
                         </div>
                         <div class="info-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
                             <div class="info-item"><small>Recebedor</small><strong>${anexo.recebedor}</strong></div>
                             <div class="info-item"><small>Unidade/UF</small><strong>${anexo.hub} - ${anexo.estado}</strong></div>
-                            <div class="info-item"><small>Volumes</small><strong>${anexo.volumesAtuais} / ${anexo.maxVolumes}</strong></div>
+                            <div class="info-item"><small>Volumes</small><strong>${volumesAnexo}</strong></div>
                         </div>
+                        ${anexo.dataAgendamento ? `
+                        <div style="margin-top: 8px; padding: 6px; background: #fff3e0; border-radius: 6px; font-size: 11px; color: #e67e22;">
+                            📅 ${anexo.dataAgendamento}
+                        </div>
+                        ` : ''}
                         ${anexo.observacao ? `
                         <div style="margin-top: 8px; padding: 6px; background: #fff3e0; border-radius: 6px; font-size: 11px; color: #e67e22;">
                             📝 ${anexo.observacao}
@@ -542,21 +694,29 @@ document.addEventListener('DOMContentLoaded', function () {
     finalizados.forEach(p => {
       const dataFinalizacao = new Date(p.finalizadoEm).toLocaleDateString('pt-BR');
       const isDiversos = p.tipo === 'DIVERSOS';
+      const isAgendamento = p.tipo === 'AGENDAMENTO';
+      const volumesDisplay = p.volumesDiversos ? 'DIVERSOS' : (isDiversos ? 'DIVERSOS' : `${p.volumesAtuais}/${p.maxVolumes}`);
+
       html += `
                 <div class="finalizado-card">
                     <div class="finalizado-header">
-                        <span>${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
+                        <span>${isAgendamento ? '📅 ' : ''}${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
                         ${!isDiversos ? `<span class="finalizado-badge ${p.bipado ? 'bipado' : 'nao-bipado'}">
                             ${p.bipado ? '✅ BIPADO' : '⚠️ NÃO BIPADO'}
                         </span>` : ''}
                     </div>
 
                     <div class="finalizado-info">
-                        <div><small>Recebedor</small><br>${p.recebedor}</div>
+                        <div><small>Recebedor</small><br>${p.recebedor || 'DIVERSOS'}</div>
                         <div><small>Unidade/UF</small><br>${p.hub} - ${p.estado}</div>
-                        <div><small>Volumes</small><br>${isDiversos ? 'DIVERSOS' : `${p.volumesAtuais}/${p.maxVolumes}`}</div>
+                        <div><small>Volumes</small><br>${volumesDisplay}</div>
                         <div><small>Finalizado</small><br>${dataFinalizacao}</div>
                     </div>
+                    ${isAgendamento && p.dataAgendamento ? `
+                    <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 8px; font-size: 12px; color: #e67e22;">
+                        📅 ${p.dataAgendamento}
+                    </div>
+                    ` : ''}
                     ${p.observacao ? `
                     <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 8px; font-size: 12px; color: #e67e22;">
                         📝 ${p.observacao}
