@@ -118,7 +118,8 @@ class PalletService {
                 volumesDiversos: data.volumesDiversos || false,
                 volumesTexto: data.volumesTexto || 'DIVERSOS',
                 dataAgendamento: data.dataAgendamento || null,
-                dataAgendamentoTipo: data.dataAgendamentoTipo || null
+                dataAgendamentoTipo: data.dataAgendamentoTipo || null,
+                agendamentoMarcado: true
             };
         } else {
             novo = {
@@ -566,7 +567,7 @@ class PalletService {
                         <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">DATA AGENDAMENTO</h2>
                         <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 8mm 5mm; text-align: center; background: #fff8e7;">
                             <div style="font-size: 18px; font-weight: bold; color: #e67e22;">
-                                ${pallet.dataAgendamento || 'AGUARDANDO AGENDAMENTO'}
+                                ${pallet.dataAgendamento || 'AGUARDANDO DATA DE AGENDAMENTO'}
                             </div>
                         </div>
                     </div>
