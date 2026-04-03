@@ -318,131 +318,213 @@ class PalletService {
 
     gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
-        const dataHora = dataAtual.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        const dataHora = dataAtual.toLocaleString('pt-BR');
+
         const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
+
         const volumesDisplay = pallet.volumesDiversos
             ? (pallet.volumesTexto || 'DIVERSOS')
             : `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || ''}`;
+
         const totalPallets = this.obterTotalPalletsGrupo(pallet);
         const indiceAtual = this.obterIndiceNoGrupo(pallet);
-        const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA' ? `${indiceAtual} / ${totalPallets}` : '';
+        const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
+            ? `${indiceAtual} / ${totalPallets}`
+            : '';
 
         return `
-<style>
-@page { size: A4 portrait; margin: 10mm; }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-</style>
-<div style="
-    width: 190mm;
-    height: 277mm;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    line-height: 1.2;
-    color: #000;
-    background: white;
-    padding: 6mm;
-">
-    <div style="border: 2px solid #000; border-radius: 0; padding: 5mm; height: 100%;">
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Formulário Operacional</title>
+        <style>
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                background: #e0e0e0;
+                display: flex;
+                justify-content: center;
+                font-family: Arial, sans-serif;
+            }
+            @media print {
+                body {
+                    background: white;
+                }
+                .no-print {
+                    display: none;
+                }
+            }
+            .no-print {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                background: #2c3e50;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                z-index: 1000;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            td, th {
+                border: 1px solid black;
+                padding: 4px;
+                vertical-align: top;
+            }
+            .checkbox-square {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border: 1px solid black;
+                margin-right: 4px;
+                background: white;
+            }
+            .section-title {
+                background: #e8e8e8;
+                font-weight: bold;
+                padding: 4px;
+                text-align: center;
+            }
+            .dotted-line {
+                border-bottom: 1px dotted #999;
+                min-width: 100px;
+                display: inline-block;
+            }
+        </style>
+    </head>
+    <body>
+        <div style="
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            background: white;
+        ">
 
-        <!-- TÍTULO -->
-        <div style="text-align: center; margin-bottom: 4mm; font-size: 16px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 2mm;">
-            FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
-        </div>
+            <h2 style="text-align:center; margin-bottom:8px; font-size:16px;">
+                FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
+            </h2>
 
-        <!-- HEADER 3 CAMPOS -->
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3mm; padding: 2mm; background: #f0f0f0;">
-            <div style="width: 32%;"><strong>Nº OS Container:</strong><br><span style="border-bottom: 1px solid #000; display: block; height: 2mm;"></span></div>
-            <div style="width: 32%; text-align: center;"><strong>Data/Hora:</strong> ${dataHora}</div>
-            <div style="width: 32%; text-align: right;"><strong>V01FO02042026</strong></div>
-        </div>
+            <table style="margin-bottom:8px;">
+                <tr>
+                    <td style="width:33%"><strong>Nº OS Container:</strong> _______________</td>
+                    <td style="width:33%"><strong>Data/Hora:</strong> ${dataHora}</td>
+                    <td style="width:33%"><strong>Versão:</strong> V01FO02042026</td>
+                </tr>
+            </table>
 
-        <!-- REGIÃO/SUB/CIDADE/UF -->
-        <div style="display: flex; gap: 3mm; margin-bottom: 3mm; font-size: 9.5px;">
-            <div style="flex: 1;"><strong>REGIÃO:</strong> ${pallet.regiao || ''}</div>
-            <div style="flex: 1;"><strong>SUB:</strong> ${pallet.subregiao || ''}</div>
-            <div style="flex: 1;"><strong>CIDADE:</strong> ${pallet.cidade || ''}</div>
-            <div style="flex: 1;"><strong>UF:</strong> ${pallet.estado || ''}</div>
-        </div>
+            <table style="margin-bottom:8px;">
+                <tr>
+                    <td style="width:25%"><strong>REGIÃO:</strong> ${pallet.regiao || ''}</td>
+                    <td style="width:25%"><strong>SUB:</strong> ${pallet.subregiao || ''}</td>
+                    <td style="width:25%"><strong>CIDADE:</strong> ${pallet.cidade || ''}</td>
+                    <td style="width:25%"><strong>UF:</strong> ${pallet.estado || ''}</td>
+                </tr>
+             </table>
 
-        <!-- EMBARCADOR -->
-        <div style="margin-bottom: 3mm;">
-            <strong>Embarcador:</strong> <span style="border-bottom: 1px dotted #000; width: 70%; display: inline-block;"></span>
-        </div>
-
-        <!-- RECEBEDOR + QR -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3mm; padding: 2mm; background: #fff8e1;">
-            <div style="flex: 1; font-size: 11px; font-weight: bold;">Recebedor: ${pallet.recebedor || ''}</div>
-            <div style="width: 60px; height: 60px; border: 1px solid #000; ${qrCodeUrl ? `background: url(${qrCodeUrl}) center/contain no-repeat;` : 'background: #f9f9f9;'}"></div>
-        </div>
-
-        <!-- GRID 2x4 -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2mm; margin-bottom: 3mm; padding: 2mm; background: #e6f3ff; font-size: 9px;">
-            <div>Volumes: <strong>${volumesDisplay}</strong></div>
-            <div>Pallets: <strong>${palletsDisplay}</strong></div>
-            <div>CONFERÊNCIA: ☐ Completo ☐ Parcial</div>
-            <div>Perecíveis: ☐ SIM ☐ NÃO</div>
-            <div>Único Destinatário: ☐ SIM ☐ NÃO</div>
-            <div>Nº NF: ${pallet.notaFiscal || ''}</div>
-        </div>
-
-        <!-- RESPONSÁVEL SEPARAÇÃO -->
-        <div style="margin-bottom: 4mm;">
-            <strong>Responsável Separação:</strong> <span style="border-bottom: 1px dotted #000; width: 65%; display: inline-block;"></span>
-        </div>
-
-        <!-- SERVIÇO -->
-        <div style="margin: 3mm 0; background: #333; color: white; padding: 2mm; text-align: center; font-weight: bold; font-size: 10px;">
-            SERVIÇO
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm; margin-bottom: 4mm; padding: 2mm; background: #f9f9f9; font-size: 9px;">
-            <div>☐ Entrega direta não exclusivo - alta volumetria (+30)</div>
-            <div>☐ Entrega direta não exclusivo - fracionado (-30)</div>
-            <div>☐ Entrega direta exclusivo (EPI)</div>
-            <div>☐ Crossdocking</div>
-            <div>☐ Ponto de encontro</div>
-            <div></div>
-        </div>
-
-        <!-- TRECHOS OPERACIONAIS -->
-        <div style="margin: 3mm 0 2mm 0; background: #333; color: white; padding: 2mm; text-align: center; font-weight: bold; font-size: 10px;">
-            TRECHOS OPERACIONAIS
-        </div>
-
-        ${[1, 2, 3, 4].map(i => `
-        <div style="border: 1px solid #ccc; border-radius: 3px; padding: 3mm; margin-bottom: 2.5mm; background: #fafafa; page-break-inside: avoid; font-size: 9px;">
-            <div style="background: #e9e9e9; padding: 1.5mm 3mm; margin: -3mm -3mm 2mm -3mm; font-weight: bold;">
-                TRECHO ${i}
+            <div style="margin-bottom:8px;">
+                <strong>Embarcador:</strong> <span class="dotted-line" style="width:80%">_________________________</span>
             </div>
-            <div style="display: flex; gap: 4mm; flex-wrap: wrap; margin-bottom: 1.5mm;">
-                <span>Data/Hora: <u>______</u></span>
-                <span>Viagem: <u>______</u></span>
-                <span>Doca: <u>______</u></span>
-            </div>
-            <div style="display: flex; gap: 4mm; flex-wrap: wrap; margin-bottom: 1.5mm;">
-                <span>Origem: <u>________________</u></span>
-                <span>Destino: <u>________________</u></span>
-            </div>
-            <div style="margin-bottom: 1.5mm;">Linha: <u>____________________________</u></div>
-            <div style="margin-bottom: 1.5mm;">Atividade: <u>________________________________________________</u></div>
-            <div style="display: flex; gap: 4mm; flex-wrap: wrap; margin-bottom: 1.5mm;">
-                <span>H.Chegada: <u>___</u></span>
-                <span>H.Partida: <u>___</u></span>
-            </div>
-            <div style="display: flex; gap: 4mm; flex-wrap: wrap;">
-                <span>Motorista: <u>________________</u></span>
-                <span>Placa: <u>___</u></span>
-                <span>Veículo: <u>________________</u></span>
-            </div>
-        </div>
-        `).join('')}
 
-        <!-- RODAPÉ -->
-        <div style="border-top: 1px solid #000; padding-top: 2mm; text-align: right; font-size: 10px; margin-top: 2mm;">
-            <strong>Responsável Planejamento:</strong> <span style="border-bottom: 1px dotted #000; width: 50%; display: inline-block;"></span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div><strong>Recebedor:</strong> ${pallet.recebedor || ''}</div>
+                <div>${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80" style="border:1px solid #ccc;"/>` : ''}</div>
+            </div>
+
+            <table style="margin-bottom:8px;">
+                <tr>
+                    <td style="width:50%"><strong>Volumes:</strong> ${volumesDisplay}</td>
+                    <td style="width:50%"><strong>Pallets:</strong> ${palletsDisplay}</td>
+                </tr>
+                <tr>
+                    <td><strong>CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</td>
+                    <td><strong>Perecíveis:</strong> ☐ SIM ☐ NÃO</td>
+                </tr>
+                <tr>
+                    <td><strong>Único Destinatário:</strong> ☐ SIM ☐ NÃO</td>
+                    <td><strong>Nº NF:</strong> ${pallet.notaFiscal || ''}</td>
+                </tr>
+             </table>
+
+            <div style="margin-bottom:12px;">
+                <strong>Responsável Separação:</strong> <span class="dotted-line" style="width:70%">_________________________</span>
+            </div>
+
+            <table style="margin-bottom:12px; width:100%;">
+                <tr class="section-title">
+                    <td colspan="2">SERVIÇO</td>
+                </tr>
+                <tr>
+                    <td style="width:50%">☐ Entrega direta não exclusivo - alta volumetria (+30)</td>
+                    <td style="width:50%">☐ Crossdocking</td>
+                </tr>
+                <tr>
+                    <td>☐ Entrega direta não exclusivo - fracionado (-30)</td>
+                    <td>☐ Ponto de encontro</td>
+                </tr>
+                <tr>
+                    <td colspan="2">☐ Entrega direta exclusivo (EPI)</td>
+                </tr>
+             </table>
+
+            ${[1, 2, 3, 4].map(i => `
+            <table style="margin-bottom:8px; width:100%;">
+                <tr class="section-title">
+                    <td colspan="3">Trecho 0${i}</td>
+                </tr>
+                <tr>
+                    <td style="width:33%"><strong>Data/Hora:</strong> __________</td>
+                    <td style="width:33%"><strong>Viagem:</strong> __________</td>
+                    <td style="width:33%"><strong>Doca:</strong> __________</td>
+                </tr>
+                <tr>
+                    <td><strong>Origem:</strong> __________</td>
+                    <td><strong>Destino:</strong> __________</td>
+                    <td><strong>Linha:</strong> __________</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><strong>Atividade:</strong> ____________________</td>
+                </tr>
+                <tr>
+                    <td><strong>Hora Chegada:</strong> __________</td>
+                    <td><strong>Hora Partida:</strong> __________</td>
+                    <td></td>
+                 </tr>
+                <tr>
+                    <td><strong>Motorista:</strong> __________</td>
+                    <td><strong>Placa:</strong> __________</td>
+                    <td><strong>Veículo:</strong> __________</td>
+                 </tr>
+             </table>
+            `).join('')}
+
+            <div style="margin-top:8px;">
+                <strong>Responsável Planejamento:</strong> <span class="dotted-line" style="width:60%">_________________________</span>
+            </div>
+
         </div>
 
-    </div>
-</div>`;
+        <button onclick="window.print()" class="no-print">🖨️ IMPRIMIR</button>
+    </body>
+    </html>
+    `;
     }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
