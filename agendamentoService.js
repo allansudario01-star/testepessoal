@@ -67,6 +67,7 @@ class AgendamentoService {
     a.hub = (a.hub || '').toUpperCase().trim();
     a.recebedor = (a.recebedor || '').toUpperCase().trim();
     a.tipo = (a.tipo || '').toUpperCase().trim();
+    a.subrota = a.subrota || '';
 
     a.id = a.id || `${a.uf}-${a.hub}-${a.recebedor}${a.tipo ? '-' + a.tipo : ''}`.replace(/\s/g, '_');
     a.displayString = `${a.uf}/${a.hub}/${a.recebedor}${a.tipo ? '/' + a.tipo : ''}`;
@@ -74,11 +75,12 @@ class AgendamentoService {
     this.agendamentos.set(a.id, a);
   }
 
-  async create(uf, hub, recebedor, tipo = '') {
+  async create(uf, hub, recebedor, tipo = '', subrota = '') {
     uf = uf.toUpperCase().trim();
     hub = hub.toUpperCase().trim();
     recebedor = recebedor.toUpperCase().trim();
     tipo = tipo ? tipo.toUpperCase().trim() : '';
+    subrota = subrota ? subrota.trim() : '';
 
     let baseId = `${uf}-${hub}-${recebedor}`;
     if (tipo) {
@@ -91,6 +93,7 @@ class AgendamentoService {
       hub,
       recebedor,
       tipo: tipo || '',
+      subrota: subrota,
       displayString: `${uf}/${hub}/${recebedor}${tipo ? '/' + tipo : ''}`,
       criadoEm: new Date().toISOString()
     };
@@ -128,6 +131,7 @@ class AgendamentoService {
         const hub = partes[1].toUpperCase();
         const recebedor = partes[2].toUpperCase();
         const tipo = partes.length >= 4 && partes[3] ? partes[3].toUpperCase().trim() : '';
+        const subrota = partes.length >= 5 && partes[4] ? partes[4].trim() : '';
 
         let id = `${uf}-${hub}-${recebedor}`;
         if (tipo) {
@@ -141,6 +145,7 @@ class AgendamentoService {
           hub,
           recebedor,
           tipo: tipo,
+          subrota: subrota,
           displayString: `${uf}/${hub}/${recebedor}${tipo ? '/' + tipo : ''}`,
           criadoEm: new Date().toISOString()
         };

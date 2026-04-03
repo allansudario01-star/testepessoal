@@ -179,40 +179,11 @@ h2 {
   touch-action: manipulation;
 }
 
-.pallet-card.agendado {
-  border-left: 6px solid #f39c12;
-  background: linear-gradient(to right, #fffef7, white);
-}
-
-.pallet-card.diversos {
-  border-left: 6px solid #7f8c8d;
-  background: #fcfcfc;
-}
-
 .nf-tag {
   font-size: 20px;
   font-weight: 700;
   color: #2c3e50;
   letter-spacing: -0.2px;
-}
-
-.agendado-badge,
-.nao-agendado-badge {
-  padding: 6px 12px;
-  border-radius: 24px;
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.agendado-badge {
-  background: #f39c12;
-  color: white;
-}
-
-.nao-agendado-badge {
-  background: #7f8c8d;
-  color: white;
 }
 
 .info-grid {
@@ -241,27 +212,6 @@ h2 {
   font-size: 16px;
   color: #2c3e50;
   font-weight: 600;
-}
-
-.volume-display {
-  font-size: 28px;
-  font-weight: 700;
-  color: #3498db;
-}
-
-.progress-bar {
-  height: 8px;
-  background: #ecf0f1;
-  border-radius: 10px;
-  margin: 12px 0;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3498db, #2980b9);
-  border-radius: 10px;
-  transition: width 0.3s ease;
 }
 
 .completo-alert {
@@ -370,7 +320,8 @@ h2 {
 }
 
 .modal-content input,
-.modal-content select {
+.modal-content select,
+.modal-content textarea {
   width: 100%;
   padding: 16px;
   margin: 8px 0;
@@ -382,8 +333,14 @@ h2 {
   touch-action: manipulation;
 }
 
+.modal-content textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
 .modal-content input:focus,
-.modal-content select:focus {
+.modal-content select:focus,
+.modal-content textarea:focus {
   outline: none;
   border-color: #3498db;
   background: white;
@@ -595,6 +552,14 @@ h2 {
   border-radius: 10px;
 }
 
+#camera-video {
+  width: 100%;
+  border-radius: 12px;
+  background: #000;
+  max-height: 400px;
+  object-fit: cover;
+}
+
 @media (max-width: 480px) {
   body {
     padding: 8px;
@@ -673,19 +638,5 @@ h2 {
     margin: 0;
     padding: 0;
     background: white;
-  }
-
-  .pallet-card.agendamento-card {
-    border-left: 6px solid #f39c12;
-    background: linear-gradient(to right, #fffef7, white);
-  }
-
-  .pallet-card.agendamento-card .nf-tag {
-    color: #e67e22;
-  }
-
-  #agendamento-ajustar-container {
-    background: #fff3e0;
-    border-radius: 12px;
   }
 }

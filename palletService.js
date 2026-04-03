@@ -9,42 +9,15 @@ class PalletService {
 
     setAgendamentoService(service) {
         this.agendamentoService = service;
-        this.atualizarStatusAgendamentoEmTodosPallets();
     }
 
     setupRealtimeListener() {
         if (window.db) {
             window.db.collection('agendamentos').onSnapshot(() => {
                 if (window.renderizarPallets) {
-                    this.atualizarStatusAgendamentoEmTodosPallets();
                     window.renderizarPallets();
                 }
             });
-        }
-    }
-
-    verificarAgendamento(pallet) {
-        if (!this.agendamentoService || pallet.tipo !== 'VOLUMETRIA_ALTA') {
-            return false;
-        }
-
-        const agendamentos = this.agendamentoService.listar();
-        return agendamentos.some(a =>
-            a.uf === pallet.estado &&
-            a.hub === pallet.hub &&
-            a.recebedor === pallet.recebedor
-        );
-    }
-
-    atualizarStatusAgendamentoEmTodosPallets() {
-        for (const [id, pallet] of this.pallets.entries()) {
-            if (pallet.tipo === 'VOLUMETRIA_ALTA') {
-                const isAgendado = this.verificarAgendamento(pallet);
-                if (pallet.agendamentoMarcado !== isAgendado) {
-                    pallet.agendamentoMarcado = isAgendado;
-                    this.saveToStorage();
-                }
-            }
         }
     }
 
@@ -89,7 +62,6 @@ class PalletService {
             bipado: false,
             palletsVinculados: [],
             palletPrincipalId: null,
-            agendamentoMarcado: false,
             observacao: ''
         };
 
@@ -102,8 +74,11 @@ class PalletService {
                 hub: data.hub.toUpperCase().trim(),
                 estado: data.estado.toUpperCase().trim(),
                 cidade: data.cidade.toUpperCase().trim(),
+                regiao: data.regiao.toUpperCase().trim(),
+                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
                 maxVolumes: parseInt(data.maxVolumes),
-                volumesAtuais: 0
+                volumesAtuais: 0,
+                volumesDiversos: false
             };
         } else if (tipo === 'AGENDAMENTO') {
             novo = {
@@ -113,13 +88,12 @@ class PalletService {
                 hub: data.hub.toUpperCase().trim(),
                 estado: data.estado.toUpperCase().trim(),
                 cidade: data.cidade.toUpperCase().trim(),
+                regiao: data.regiao.toUpperCase().trim(),
+                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
                 maxVolumes: data.maxVolumes,
                 volumesAtuais: 0,
                 volumesDiversos: data.volumesDiversos || false,
-                volumesTexto: data.volumesTexto || 'DIVERSOS',
-                dataAgendamento: data.dataAgendamento || null,
-                dataAgendamentoTipo: data.dataAgendamentoTipo || null,
-                agendamentoMarcado: true
+                volumesTexto: data.volumesTexto || 'DIVERSOS'
             };
         } else {
             novo = {
@@ -129,13 +103,11 @@ class PalletService {
                 hub: data.hub.toUpperCase().trim(),
                 estado: data.estado.toUpperCase().trim(),
                 cidade: 'DIVERSOS',
+                regiao: data.regiao.toUpperCase().trim(),
+                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
                 maxVolumes: null,
                 volumesAtuais: null
             };
-        }
-
-        if (tipo === 'VOLUMETRIA_ALTA') {
-            novo.agendamentoMarcado = this.verificarAgendamento(novo);
         }
 
         this.pallets.set(id, novo);
@@ -147,26 +119,6 @@ class PalletService {
         }
 
         return novo;
-    }
-
-    async salvarDataAgendamento(id, dataAgendamento, dataTipo) {
-        const pallet = this.pallets.get(id);
-        if (!pallet || pallet.tipo !== 'AGENDAMENTO') return;
-
-        pallet.dataAgendamento = dataAgendamento;
-        pallet.dataAgendamentoTipo = dataTipo;
-        pallet.ultimaAtualizacao = new Date().toISOString();
-
-        this.saveToStorage();
-
-        try {
-            await window.db.collection('pallets').doc(id).update({
-                dataAgendamento: pallet.dataAgendamento,
-                dataAgendamentoTipo: pallet.dataAgendamentoTipo,
-                ultimaAtualizacao: pallet.ultimaAtualizacao
-            });
-        } catch (e) {
-        }
     }
 
     async anexarPallet(idPalletPrincipal) {
@@ -184,8 +136,7 @@ class PalletService {
             ultimaAtualizacao: new Date().toISOString(),
             status: 'ativo',
             volumesAtuais: 0,
-            palletsVinculados: [],
-            agendamentoMarcado: palletPrincipal.agendamentoMarcado
+            palletsVinculados: []
         };
 
         this.pallets.set(novoId, palletAnexado);
@@ -211,7 +162,8 @@ class PalletService {
 
     async updateVolumes(id, novosVolumes) {
         const pallet = this.pallets.get(id);
-        if (!pallet || pallet.tipo !== 'VOLUMETRIA_ALTA') return;
+        if (!pallet || pallet.tipo === 'DIVERSOS') return;
+        if (pallet.volumesDiversos) return;
 
         pallet.volumesAtuais = Math.min(novosVolumes, pallet.maxVolumes);
         if (pallet.volumesAtuais < 0) pallet.volumesAtuais = 0;
@@ -227,26 +179,6 @@ class PalletService {
             });
         } catch (e) {
         }
-    }
-
-    async salvarObservacao(id, observacao) {
-        const pallet = this.pallets.get(id);
-        if (!pallet) return;
-
-        pallet.observacao = observacao ? observacao.trim() : '';
-        pallet.ultimaAtualizacao = new Date().toISOString();
-
-        this.saveToStorage();
-
-        try {
-            await window.db.collection('pallets').doc(id).update({
-                observacao: pallet.observacao,
-                ultimaAtualizacao: pallet.ultimaAtualizacao
-            });
-        } catch (e) {
-        }
-
-        return pallet.observacao;
     }
 
     async finalizar(id, bipado = false) {
@@ -379,322 +311,240 @@ class PalletService {
         return 1;
     }
 
-    gerarEtiquetaHTML(pallet, isAgendado, imagemBase64 = null) {
+    gerarQRCode(codigo) {
+        if (!codigo) return null;
+        return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(codigo)}`;
+    }
+
+    gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
         const dataSeparacao = dataAtual.toLocaleDateString('pt-BR');
         const horaAtual = dataAtual.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const dataEmBranco = '__/__/____';
-        const horaEmBranco = '__:__';
 
-        let tituloPallet = 'PALLET';
-        let notaFiscalDisplay = pallet.notaFiscal;
-        let recebedorDisplay = pallet.recebedor;
-        let hubDisplay = pallet.hub;
-        let ufCidadeDisplay = '';
+        const volumesCompletos = (pallet.volumesAtuais === pallet.maxVolumes && pallet.maxVolumes > 0);
+        const statusVolumes = volumesCompletos ? 'COMPLETOS' : 'PARCIAL';
+
         let volumesDisplay = '';
         let palletsDisplay = '';
-        let isDiversos = pallet.tipo === 'DIVERSOS';
-        let isAgendamento = pallet.tipo === 'AGENDAMENTO';
+
+        if (pallet.tipo === 'DIVERSOS') {
+            volumesDisplay = 'DIVERSOS';
+        } else if (pallet.volumesDiversos) {
+            volumesDisplay = pallet.volumesTexto || 'DIVERSOS';
+        } else {
+            volumesDisplay = `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || '?'}`;
+        }
+
+        const totalPallets = this.obterTotalPalletsGrupo(pallet);
+        const indiceAtual = this.obterIndiceNoGrupo(pallet);
 
         if (pallet.tipo === 'VOLUMETRIA_ALTA') {
-            tituloPallet = 'NOTA INFORMATIVA | +30 VOLUMES';
-            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade}`;
-            volumesDisplay = `
-                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
-                    <div>
-                        <span style="font-size: 26px; font-weight: bold;">${pallet.volumesAtuais}</span>
-                        <span style="font-size: 16px;"> / ${pallet.maxVolumes}</span>
-                    </div>
-                </div>
-            `;
-            const totalPallets = this.obterTotalPalletsGrupo(pallet);
-            const indiceAtual = this.obterIndiceNoGrupo(pallet);
-            palletsDisplay = `
-                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">PALLETS</div>
-                    <div>
-                        <span style="font-size: 26px; font-weight: bold;">${indiceAtual}</span>
-                        <span style="font-size: 16px;"> / ${totalPallets}</span>
-                    </div>
-                </div>
-            `;
-        } else if (pallet.tipo === 'AGENDAMENTO') {
-            tituloPallet = 'NOTA INFORMATIVA | AGENDAMENTO';
-            ufCidadeDisplay = `${pallet.estado} - ${pallet.cidade}`;
-
-            if (pallet.volumesDiversos) {
-                volumesDisplay = `
-                    <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                        <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
-                        <div>
-                            <span style="font-size: 20px; font-weight: bold;">${pallet.volumesTexto || 'DIVERSOS'}</span>
-                        </div>
-                    </div>
-                `;
-            } else {
-                volumesDisplay = `
-                    <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                        <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
-                        <div>
-                            <span style="font-size: 26px; font-weight: bold;">${pallet.volumesAtuais || 0}</span>
-                            <span style="font-size: 16px;"> / ${pallet.maxVolumes || '?'}</span>
-                        </div>
-                    </div>
-                `;
-            }
-            palletsDisplay = '';
-        } else {
-            tituloPallet = 'NOTA INFORMATIVA | DIVERSOS';
-            notaFiscalDisplay = 'DIVERSOS';
-            recebedorDisplay = 'DIVERSOS';
-            ufCidadeDisplay = `${pallet.estado} - DIVERSOS`;
-            volumesDisplay = `
-                <div style="text-align: center; background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
-                    <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">VOLUMES</div>
-                    <div>
-                        <span style="font-size: 20px; font-weight: bold;">DIVERSOS</span>
-                    </div>
-                </div>
-            `;
-            palletsDisplay = '';
+            palletsDisplay = `${indiceAtual} / ${totalPallets}`;
         }
 
-        const marcarAgendamento = pallet.tipo === 'VOLUMETRIA_ALTA' && pallet.agendamentoMarcado;
-        const agendamentoChecked = marcarAgendamento ? 'background-color: #333; -webkit-print-color-adjust: exact; print-color-adjust: exact;' : '';
-
-        let expedicaoContent = '';
-
-        if (imagemBase64) {
-            expedicaoContent = `
-                <div style="display: flex; gap: 8mm; align-items: flex-start;">
-                    <div style="flex: 2;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5mm;">
-                            <div><span style="font-size: 10px; color: #777;">UNIDADE</span><br><strong style="font-size: 16px;">${hubDisplay}</strong></div>
-                            <div><span style="font-size: 10px; color: #777;">NÚMERO FISCAL</span><br><strong style="font-size: 16px;">${notaFiscalDisplay}</strong></div>
-                            <div><span style="font-size: 10px; color: #777;">RECEBEDOR</span><br><strong style="font-size: 16px;">${recebedorDisplay}</strong></div>
-                            <div><span style="font-size: 10px; color: #777;">UF/CIDADE</span><br><strong style="font-size: 16px;">${ufCidadeDisplay}</strong></div>
-                        </div>
-                    </div>
-                    <div style="width: 1px; background: #ddd; align-self: stretch;"></div>
-                    <div style="flex: 1; text-align: center;">
-                        <img src="${imagemBase64}" style="width: 100%; max-width: 140px; height: auto; object-fit: contain; margin: 0 auto; display: block;" />
-                    </div>
-                </div>
-            `;
-        } else {
-            expedicaoContent = `
-                <div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; max-width: 400px;">
-                        <div><span style="font-size: 10px; color: #777;">UNIDADE</span><br><strong style="font-size: 16px;">${hubDisplay}</strong></div>
-                        <div><span style="font-size: 10px; color: #777;">NÚMERO FISCAL</span><br><strong style="font-size: 16px;">${notaFiscalDisplay}</strong></div>
-                        <div><span style="font-size: 10px; color: #777;">RECEBEDOR</span><br><strong style="font-size: 16px;">${recebedorDisplay}</strong></div>
-                        <div><span style="font-size: 10px; color: #777;">UF/CIDADE</span><br><strong style="font-size: 16px;">${ufCidadeDisplay}</strong></div>
-                    </div>
-                </div>
-            `;
-        }
+        const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
 
         return `
-        <div style="
-            font-family: Arial, sans-serif;
-            width: 100%;
-            max-width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
-            padding: 15mm;
-            border: 1px solid #ccc;
-            background: white;
-            box-sizing: border-box;
-            font-size: 14px;
-            page-break-after: avoid;
-            page-break-inside: avoid;
-        ">
-            <div style="text-align: center; margin-bottom: 8mm; border-bottom: 1px solid #ddd; padding-bottom: 4mm;">
-                <h1 style="margin: 0; font-size: 26px; font-weight: bold;">${tituloPallet}</h1>
-                <p style="color: #888; margin: 4px 0 0 0; font-size: 11px;">${dataSeparacao} ${horaAtual}</p>
-            </div>
-
-            <div style="margin-bottom: 8mm;">
-                <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #2c3e50;">EXPEDIÇÃO</h2>
-
-                ${expedicaoContent}
-
-                <div style="display: flex; gap: 8mm; justify-content: center; margin-top: 6mm;">
-                    ${volumesDisplay}
-                    ${palletsDisplay}
-                </div>
-
-                <div style="display: flex; gap: 10mm; margin-top: 6mm; flex-wrap: wrap;">
-                    <div style="min-width: 120px;">
-                        <span style="font-size: 10px; color: #777;">DATA SEPARAÇÃO</span><br>
-                        <strong style="font-size: 14px;">${dataSeparacao}</strong>
+            <div class="etiqueta-a4" style="
+                font-family: Arial, sans-serif;
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0;
+                padding: 15mm;
+                background: white;
+                box-sizing: border-box;
+                font-size: 12px;
+                position: relative;
+            ">
+                <div style="margin-bottom: 8mm;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 5mm; margin-bottom: 8mm;">
+                        <div style="font-size: 24px; font-weight: bold;">NOTA INFORMATIVA</div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 11px; color: #666;">Data/Hora: ${dataSeparacao} ${horaAtual}</div>
+                        </div>
                     </div>
-                    <div style="flex: 1;">
-                        <span style="font-size: 10px; color: #777;">RESPONSÁVEL SEPARAÇÃO</span><br>
-                        <div style="border-bottom: 1px solid #999; width: 100%; height: 24px;"></div>
-                    </div>
-                </div>
-            </div>
 
-            <div style="margin-bottom: 8mm;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm; flex-wrap: wrap;">
-                    <div style="flex: 2; min-width: 200px;">
-                        <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">SERVIÇO</h2>
-                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 5mm;">
-                            <div style="font-size: 11px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 3mm;">
-                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                                    Entrega direta para o recebedor
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                                    Envio para unidade ou ponto de encontro
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px;"></span>
-                                    Interhub / Entrega para o recebedor
-                                </label>
-                                <label style="display: flex; align-items: center; gap: 3mm; cursor: default;">
-                                    <span style="border: 1.5px solid #333; display: inline-block; width: 12px; height: 12px; ${agendamentoChecked}"></span>
-                                    Agendamento
-                                </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">NÚMERO OS CONTAINER</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">DATA/HORA</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">REGIÃO</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.regiao || ''}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">SUB-REGIÃO</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.subregiao || ''}</strong></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">CIDADE</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.cidade || ''}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">UF</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.estado || ''}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">EMBARCADOR</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">RECEBEDOR</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.recebedor || ''}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">NÚMERO NF</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.notaFiscal || ''}</strong></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">VOLUMES</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${volumesDisplay}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">PALLETS</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${palletsDisplay}</strong></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">CONFERÊNCIA VOLUMES</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${statusVolumes}</strong></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">CONTÉM PERECÍVEIS</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">RESPONSÁVEL SEPARAÇÃO</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">QR CODE LISTA CONTAINER</div>
+                            <div style="text-align: center;">
+                                ${qrCodeUrl ? `<img src="${qrCodeUrl}" style="width: 60px; height: 60px; margin-top: 5px;" />` : '<div style="border-bottom: 1px solid #000; height: 20px;"></div>'}
                             </div>
                         </div>
                     </div>
-                    ${isAgendamento ? `
-                    <div style="flex: 1; min-width: 150px;">
-                        <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #f39c12;">DATA AGENDAMENTO</h2>
-                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 8mm 5mm; text-align: center; background: #fff8e7;">
-                            <div style="font-size: 18px; font-weight: bold; color: #e67e22;">
-                                ${pallet.dataAgendamento || 'AGUARDANDO DATA DE AGENDAMENTO'}
-                            </div>
+                </div>
+
+                <div style="margin-bottom: 8mm;">
+                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">SERVIÇO</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4mm;">
+                        <div><input type="checkbox" style="margin-right: 5px;"> Entrega direta para o recebedor</div>
+                        <div><input type="checkbox" style="margin-right: 5px;"> Interhub / Entrega para o recebedor</div>
+                        <div><input type="checkbox" style="margin-right: 5px;"> Envio para unidade ou ponto de encontro</div>
+                        <div><input type="checkbox" style="margin-right: 5px;"> Agendamento</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 8mm;">
+                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">TRECHOS</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm;">
+                        <div>
+                            <div style="font-size: 9px; color: #999;">TRECHO 1</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">TRECHO 2</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">TRECHO 3</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">TRECHO 4</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size: 9px; color: #999;">+1</div>
+                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
                         </div>
                     </div>
-                    ` : ''}
                 </div>
 
-                <div style="margin-top: 6mm;">
-                    <div style="font-weight: bold; font-size: 12px; margin-bottom: 2mm; color: #555;">VINCULAR NF:</div>
-                    <div style="border-bottom: 1px solid #999; height: 28px; width: 100%;"></div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 6mm;">
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">DATA PREV. EMBARQUE:</span><br>
-                        <span style="font-size: 15px; font-weight: bold; letter-spacing: 1px;">${dataEmBranco}</span>
-                    </div>
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">LIBERADO:</span><br>
-                        <div style="display: flex; gap: 8mm; margin-top: 2px;">
-                            <label style="display: flex; align-items: center; gap: 2mm; cursor: default;">
-                                <span style="border: 1.5px solid #333; display: inline-block; width: 14px; height: 14px;"></span>
-                                <span style="font-size: 12px;">SIM</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 2mm; cursor: default;">
-                                <span style="border: 1.5px solid #333; display: inline-block; width: 14px; height: 14px;"></span>
-                                <span style="font-size: 12px;">NÃO</span>
-                            </label>
-                        </div>
-                    </div>
+                <div>
+                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">RESPONSÁVEL PLANEJAMENTO</div>
+                    <div style="border-bottom: 1px solid #000; height: 20px;"></div>
                 </div>
             </div>
-
-            <div style="margin-bottom: 8mm;">
-                <h2 style="background: #f0f0f0; color: #333; padding: 4px 10px; border-radius: 4px; font-size: 15px; font-weight: bold; margin-bottom: 5mm; border-left: 3px solid #27ae60;">TRANSPORTE</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-bottom: 5mm;">
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">MOTORISTA PREVISTO:</span><br>
-                        <div style="border-bottom: 1px solid #999; height: 28px;"></div>
-                    </div>
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">LIBERADO POR:</span><br>
-                        <div style="border-bottom: 1px solid #999; height: 28px;"></div>
-                    </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8mm;">
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">DATA REALIZADA ENTREGA:</span><br>
-                        <span style="font-size: 14px; font-weight: bold; letter-spacing: 1px;">${dataEmBranco}</span>
-                    </div>
-                    <div>
-                        <span style="font-size: 10px; font-weight: bold; color: #777;">HORA:</span><br>
-                        <span style="font-size: 14px; font-weight: bold; letter-spacing: 1px;">${horaEmBranco}</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top: 5mm;">
-                <div style="font-weight: bold; font-size: 12px; margin-bottom: 3mm; color: #555;">OBSERVAÇÃO:</div>
-                <div style="border: 1px solid #ddd; min-height: 80px; border-radius: 4px; padding: 8px;">
-                    ${pallet.observacao ? `<div style="color: #2c3e50; font-size: 12px; white-space: pre-wrap;">${pallet.observacao}</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
+        `;
     }
 
-    imprimirEtiqueta(pallet, isAgendado, imagemBase64 = null) {
-        const html = this.gerarEtiquetaHTML(pallet, isAgendado, imagemBase64);
+    imprimirEtiqueta(pallet, codigoLista = null) {
+        const html = this.gerarEtiquetaHTML(pallet, codigoLista);
 
         const janela = window.open('', '_blank');
         janela.document.write(`
-        <html>
-            <head>
-                <title>Etiqueta Pallet - ${pallet.notaFiscal}</title>
-                <style>
-                    @page {
-                        size: A4;
-                        margin: 0;
-                    }
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        min-height: 100vh;
-                        background: #f0f0f0;
-                        font-family: Arial, sans-serif;
-                        padding: 20px;
-                    }
-                    @media print {
-                        body {
-                            background: white;
+            <html>
+                <head>
+                    <title>Etiqueta Pallet - ${pallet.notaFiscal || 'DIVERSOS'}</title>
+                    <style>
+                        @page {
+                            size: A4;
+                            margin: 0;
+                        }
+                        * {
+                            margin: 0;
                             padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
                             display: flex;
-                            align-items: flex-start;
-                            min-height: auto;
+                            justify-content: center;
+                            background: #f0f0f0;
+                            font-family: Arial, sans-serif;
                         }
-                        button {
-                            display: none;
+                        @media print {
+                            body {
+                                background: white;
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .no-print {
+                                display: none;
+                            }
                         }
-                    }
-                </style>
-            </head>
-            <body>
-                ${html}
-                <button onclick="window.print()" style="
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    padding: 12px 24px;
-                    background: #3498db;
-                    color: white;
-                    border: none;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                    z-index: 1000;
-                ">🖨️ IMPRIMIR</button>
-            </body>
-        </html>
-    `);
+                        .no-print {
+                            position: fixed;
+                            bottom: 20px;
+                            right: 20px;
+                            padding: 12px 24px;
+                            background: #3498db;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            font-size: 16px;
+                            font-weight: bold;
+                            cursor: pointer;
+                            z-index: 1000;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${html}
+                    <button onclick="window.print()" class="no-print">🖨️ IMPRIMIR</button>
+                </body>
+            </html>
+        `);
         janela.document.close();
     }
 }

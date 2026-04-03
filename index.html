@@ -57,8 +57,8 @@
         <div class="modal-content">
             <h3>Selecione o Tipo de Pallet</h3>
             <div class="tipo-options">
-                <button id="tipo-volumetria-alta" class="btn-primary" style="margin-bottom: 15px;">📦 Volumetria
-                    Alta</button>
+                <button id="tipo-volumetria-alta" class="btn-primary" style="margin-bottom: 15px;">📦 +20
+                    VOLUMES</button>
                 <button id="tipo-agendamento" class="btn-warning" style="margin-bottom: 15px;">📅 Agendamento</button>
                 <button id="tipo-diversos" class="btn-secondary">📦 Diversos</button>
             </div>
@@ -68,15 +68,20 @@
 
     <div id="pallet-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Novo Pallet - Volumetria Alta</h3>
+            <h3>Novo Pallet - +20 Volumes</h3>
             <form id="pallet-form">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button type="button" id="scan-btn-modal" class="btn-secondary" style="flex: 1; margin: 0;">📷
+                        ESCANEAR SELO</button>
+                </div>
                 <input type="text" id="nf" placeholder="Número Fiscal" required>
                 <input type="text" id="recebedor" placeholder="Recebedor" required>
                 <input type="text" id="hub" placeholder="Unidade" required>
                 <input type="text" id="estado" placeholder="UF" maxlength="2" required>
                 <input type="text" id="cidade" placeholder="Cidade" required>
+                <input type="text" id="regiao" placeholder="Região" required>
+                <input type="text" id="subregiao" placeholder="Sub-região" required>
                 <input type="number" id="maxVolumes" placeholder="Volumes Totais" min="1" required>
-
                 <div class="form-actions">
                     <button type="submit">Criar Pallet</button>
                     <button type="button" id="close-modal">Cancelar</button>
@@ -89,11 +94,17 @@
         <div class="modal-content">
             <h3>Novo Pallet - Agendamento</h3>
             <form id="pallet-agendamento-form">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button type="button" id="scan-btn-agendamento" class="btn-secondary" style="flex: 1; margin: 0;">📷
+                        ESCANEAR SELO</button>
+                </div>
                 <input type="text" id="agendamento-nf" placeholder="Número Fiscal" required>
                 <input type="text" id="agendamento-recebedor" placeholder="Recebedor" required>
                 <input type="text" id="agendamento-hub" placeholder="Unidade" required>
                 <input type="text" id="agendamento-estado" placeholder="UF" maxlength="2" required>
                 <input type="text" id="agendamento-cidade" placeholder="Cidade" required>
+                <input type="text" id="agendamento-regiao" placeholder="Região" required>
+                <input type="text" id="agendamento-subregiao" placeholder="Sub-região" required>
 
                 <div style="margin: 15px 0;">
                     <label style="display: block; margin-bottom: 8px; font-weight: bold;">📦 Tipo de Volume</label>
@@ -118,21 +129,6 @@
                         value="DIVERSOS">
                 </div>
 
-                <div style="margin: 15px 0;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">📅 Data do Agendamento</label>
-                    <div style="display: flex; gap: 15px; margin-bottom: 10px;">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="radio" name="agendamento-data-tipo" value="aguardando" checked>
-                            <span>⏳ Aguardando Agendamento</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="radio" name="agendamento-data-tipo" value="fixa">
-                            <span>📆 Data Fixa</span>
-                        </label>
-                    </div>
-                    <input type="date" id="agendamento-data-fixa" style="width: 100%; display: none;">
-                </div>
-
                 <div class="form-actions">
                     <button type="submit">Criar Pallet</button>
                     <button type="button" id="close-agendamento-modal">Cancelar</button>
@@ -147,7 +143,8 @@
             <form id="pallet-diversos-form">
                 <input type="text" id="hub-diversos" placeholder="Unidade" required>
                 <input type="text" id="estado-diversos" placeholder="UF" maxlength="2" required>
-
+                <input type="text" id="regiao-diversos" placeholder="Região" required>
+                <input type="text" id="subregiao-diversos" placeholder="Sub-região" required>
                 <div class="form-actions">
                     <button type="submit">Criar Pallet</button>
                     <button type="button" id="close-diversos-modal">Cancelar</button>
@@ -162,33 +159,6 @@
             <div id="ajustar-info"></div>
 
             <div id="volume-controls-container" class="volume-controls">
-            </div>
-
-            <div id="agendamento-ajustar-container"
-                style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 12px; display: none;">
-                <label style="display: block; margin-bottom: 8px; font-weight: bold; color: #e67e22;">📅 DATA DO
-                    AGENDAMENTO</label>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-                    <label style="display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="ajustar-data-tipo" value="aguardando">
-                        <span>⏳ Aguardando Agendamento</span>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 5px;">
-                        <input type="radio" name="ajustar-data-tipo" value="fixa">
-                        <span>📆 Data Fixa</span>
-                    </label>
-                </div>
-                <input type="date" id="ajustar-data-fixa"
-                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
-            </div>
-
-            <div id="observacao-container" style="margin-top: 20px;">
-                <label for="observacao-pallet"
-                    style="display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50;">📝 OBSERVAÇÃO
-                    (opcional)</label>
-                <textarea id="observacao-pallet" rows="3"
-                    style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-family: inherit; font-size: 14px; resize: vertical;"
-                    placeholder="Digite uma observação sobre este pallet..."></textarea>
             </div>
 
             <div class="volume-actions">
@@ -212,15 +182,29 @@
         </div>
     </div>
 
-    <div id="anexar-imagem-modal" class="modal hidden">
+    <div id="codigo-lista-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Anexar Imagem (QR Code)</h3>
-            <p>Deseja anexar uma imagem ao rodapé da etiqueta?</p>
-            <input type="file" id="imagem-qrcode" accept="image/*">
-            <div class="form-actions" style="margin-top: 20px;">
-                <button id="confirmar-imprimir" class="btn-primary">Imprimir com Imagem</button>
-                <button id="imprimir-sem-imagem" class="btn-secondary">Imprimir sem Imagem</button>
-                <button id="cancelar-imagem-modal" class="btn-danger">Cancelar</button>
+            <h3>Código da Lista de QR Codes</h3>
+            <p>Digite o código da lista gerada pelo aplicativo (opcional)</p>
+            <input type="text" id="codigo-lista-input" placeholder="Ex: 100000095216969"
+                style="width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 12px; font-size: 16px; font-family: monospace;">
+            <div class="form-actions">
+                <button id="confirmar-imprimir-codigo" class="btn-primary">Imprimir com Código</button>
+                <button id="imprimir-sem-codigo" class="btn-secondary">Imprimir sem Código</button>
+                <button id="cancelar-codigo-modal" class="btn-danger">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="camera-modal" class="modal hidden">
+        <div class="modal-content" style="padding: 20px;">
+            <h3>📷 Escanear Selo</h3>
+            <video id="camera-video" autoplay playsinline
+                style="width: 100%; border-radius: 12px; margin: 10px 0;"></video>
+            <canvas id="camera-canvas" style="display: none;"></canvas>
+            <div class="form-actions">
+                <button id="capture-photo" class="btn-primary">📸 TIRAR FOTO</button>
+                <button id="close-camera" class="btn-secondary">FECHAR</button>
             </div>
         </div>
     </div>
@@ -228,6 +212,7 @@
     <script src="firebase-config.js"></script>
     <script src="palletService.js"></script>
     <script src="agendamentoService.js"></script>
+    <script src="ocr-service.js"></script>
     <script src="app.js"></script>
 </body>
 

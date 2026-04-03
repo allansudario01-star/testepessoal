@@ -158,13 +158,20 @@
             color: #2c3e50;
         }
 
-        .modal-content input {
+        .modal-content input,
+        .modal-content textarea {
             width: 100%;
             padding: 12px;
             margin: 8px 0;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
+            font-family: inherit;
+        }
+
+        .modal-content textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         .modal-actions {
@@ -302,7 +309,8 @@
         <div class="import-area">
             <h3>📥 Importar Agendamentos</h3>
             <p>Selecione um arquivo CSV com os agendamentos</p>
-            <p style="font-size: 12px; color: #7f8c8d;">Formato: UF,Hub,Recebedor,Tipo</p>
+            <p style="font-size: 12px; color: #7f8c8d;">Formato: UF,Hub,Recebedor,Tipo,Subrota</p>
+            <p style="font-size: 12px; color: #7f8c8d;">Exemplo: MG,BET,EMPRESA X,PADRÃO,ZONA SUL</p>
             <input type="file" id="import-csv" accept=".csv, .txt">
             <button id="import-btn" class="btn-primary" style="margin-top: 10px;">Importar</button>
         </div>
@@ -328,6 +336,7 @@
                 <input type="text" id="modal-hub" placeholder="Hub (ex: SAO)" required>
                 <input type="text" id="modal-recebedor" placeholder="Recebedor" required>
                 <input type="text" id="modal-tipo" placeholder="Tipo" value="PADRÃO">
+                <textarea id="modal-subrota" placeholder="Subrota / Subregião" rows="3"></textarea>
                 <div class="modal-actions">
                     <button type="submit" class="save-btn">Salvar</button>
                     <button type="button" id="close-modal-btn" class="cancel-btn">Cancelar</button>
@@ -421,6 +430,7 @@
                 document.getElementById('modal-hub').value = '';
                 document.getElementById('modal-recebedor').value = '';
                 document.getElementById('modal-tipo').value = 'PADRÃO';
+                document.getElementById('modal-subrota').value = '';
                 document.getElementById('agendamento-modal').classList.remove('hidden');
             });
 
@@ -435,6 +445,7 @@
                 const hub = document.getElementById('modal-hub').value;
                 const recebedor = document.getElementById('modal-recebedor').value;
                 const tipo = document.getElementById('modal-tipo').value;
+                const subrota = document.getElementById('modal-subrota').value;
 
                 if (!agendamentoService) {
                     alert('❌ Serviço não disponível.');
@@ -444,9 +455,9 @@
                 try {
                     if (editingAgendamentoId) {
                         await agendamentoService.delete(editingAgendamentoId);
-                        await agendamentoService.create(uf, hub, recebedor, tipo);
+                        await agendamentoService.create(uf, hub, recebedor, tipo, subrota);
                     } else {
-                        await agendamentoService.create(uf, hub, recebedor, tipo);
+                        await agendamentoService.create(uf, hub, recebedor, tipo, subrota);
                     }
 
                     document.getElementById('agendamento-modal').classList.add('hidden');
@@ -483,7 +494,7 @@
                         atualizarStats();
                         fileInput.value = '';
                     } catch (error) {
-                        alert('❌ Erro ao importar. Verifique o formato do arquivo.\n\nFormato esperado:\nUF,Hub,Recebedor,Tipo\nMG,BET,EMPRESA X,PADRÃO');
+                        alert('❌ Erro ao importar. Verifique o formato do arquivo.\n\nFormato esperado:\nUF,Hub,Recebedor,Tipo,Subrota\nMG,BET,EMPRESA X,PADRÃO,ZONA SUL');
                     }
                 };
                 reader.readAsText(file);
@@ -556,7 +567,7 @@
             let agendamentos = agendamentoService.listar();
 
             if (busca) {
-                agendamentos = agendamentos.filter(a => a.displayString.toLowerCase().includes(busca));
+                agendamentos = agendamentos.filter(a => a.displayString.toLowerCase().includes(busca) || (a.subrota && a.subrota.toLowerCase().includes(busca)));
             }
 
             const listaDiv = document.getElementById('agendamentos-list');
@@ -572,6 +583,7 @@
                         <div class="agendamento-card">
                             <div>
                                 <strong>${a.displayString}</strong>
+                                ${a.subrota ? `<div style="font-size: 12px; color: #e67e22; margin-top: 4px;">📍 ${a.subrota}</div>` : ''}
                                 <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
                                     Tipo: ${a.tipo} | Criado: ${new Date(a.criadoEm).toLocaleString()}
                                 </div>
@@ -610,6 +622,7 @@
                 document.getElementById('modal-hub').value = agendamento.hub;
                 document.getElementById('modal-recebedor').value = agendamento.recebedor;
                 document.getElementById('modal-tipo').value = agendamento.tipo;
+                document.getElementById('modal-subrota').value = agendamento.subrota || '';
                 document.getElementById('agendamento-modal').classList.remove('hidden');
             }
         };
