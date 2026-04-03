@@ -319,13 +319,10 @@ class PalletService {
     gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
         const dataHora = dataAtual.toLocaleString('pt-BR');
-
         const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
-
         const volumesDisplay = pallet.volumesDiversos
             ? (pallet.volumesTexto || 'DIVERSOS')
             : `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || ''}`;
-
         const totalPallets = this.obterTotalPalletsGrupo(pallet);
         const indiceAtual = this.obterIndiceNoGrupo(pallet);
         const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
@@ -333,195 +330,195 @@ class PalletService {
             : '';
 
         return `
+<div style="
+    width: 210mm;
+    min-height: 297mm;
+    padding: 15mm;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    box-sizing: border-box;
+    background: white;
+    color: #1a1a1a;
+">
     <div style="
-        width: 210mm;
-        min-height: 297mm;
-        padding: 15mm;
-        font-family: 'Segoe UI', 'Arial', sans-serif;
-        font-size: 11px;
-        box-sizing: border-box;
-        background: white;
-        color: #1a1a1a;
+        border: 2px solid #2c3e50;
+        border-radius: 8px;
+        padding: 8mm;
+        height: 100%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     ">
+        <h2 style="
+            text-align: center;
+            margin: 0 0 8mm 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: #2c3e50;
+            letter-spacing: 1px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 5px;
+        ">
+            📋 FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
+        </h2>
 
         <div style="
-            border: 2px solid #2c3e50;
-            border-radius: 8px;
-            padding: 8mm;
-            height: 100%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6mm;
+            background: #ecf0f1;
+            padding: 4mm;
+            border-radius: 6px;
         ">
+            <div style="width: 30%;"><strong>📦 Nº OS Container:</strong> ____________________</div>
+            <div style="width: 35%; text-align: center;"><strong>📅 Data/Hora:</strong> ${dataHora}</div>
+            <div style="width: 30%; text-align: right;"><strong>🔖 Versão:</strong> V01FO02042026</div>
+        </div>
 
-            <h2 style="
-                text-align: center;
-                margin: 0 0 8mm 0;
-                font-size: 18px;
-                font-weight: 800;
-                color: #2c3e50;
-                letter-spacing: 1px;
-                border-bottom: 3px solid #3498db;
-                display: inline-block;
-                width: 100%;
-                padding-bottom: 5px;
-            ">
-                📋 FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
-            </h2>
+        <div style="
+            background: #f8f9fa;
+            padding: 5mm;
+            border-radius: 6px;
+            margin-bottom: 5mm;
+            border-left: 4px solid #3498db;
+        ">
+            <div style="display: flex; gap: 8mm; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 120px;"><strong>📍 REGIÃO:</strong> <span style="color:#2c3e50;">${pallet.regiao || ''}</span></div>
+                <div style="flex: 1; min-width: 80px;"><strong>📌 SUB:</strong> <span style="color:#2c3e50;">${pallet.subregiao || ''}</span></div>
+                <div style="flex: 1; min-width: 100px;"><strong>🏙️ CIDADE:</strong> <span style="color:#2c3e50;">${pallet.cidade || ''}</span></div>
+                <div style="flex: 1; min-width: 60px;"><strong>🇧🇷 UF:</strong> <span style="color:#2c3e50;">${pallet.estado || ''}</span></div>
+            </div>
+        </div>
 
+        <div style="margin-bottom: 4mm;">
+            <strong>🚛 Embarcador:</strong> <span style="border-bottom: 1px dotted #999; min-width: 250px; display: inline-block; width: 75%;">_________________________</span>
+        </div>
+
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5mm;
+            background: #fff3e0;
+            padding: 4mm;
+            border-radius: 6px;
+        ">
+            <div style="font-size: 13px; flex: 1;"><strong>🏢 Recebedor:</strong> ${pallet.recebedor || ''}</div>
+            <div>${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80" style="border: 1px solid #bdc3c7; border-radius: 4px; padding: 2px; background: white;"/>` : ''}</div>
+        </div>
+
+        <div style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4mm;
+            margin-bottom: 5mm;
+            background: #e8f4f8;
+            padding: 4mm;
+            border-radius: 6px;
+        ">
+            <div><strong>📦 Volumes:</strong> <span style="font-weight: bold; font-size: 13px;">${volumesDisplay}</span></div>
+            <div><strong>📦 Pallets:</strong> <span style="font-weight: bold; font-size: 13px;">${palletsDisplay}</span></div>
+            <div style="line-height: 1.4;"><strong>✅ CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</div>
+            <div style="line-height: 1.4;"><strong>❄️ Perecíveis:</strong> ☐ SIM ☐ NÃO</div>
+            <div style="line-height: 1.4;"><strong>🎯 Único Destinatário:</strong> ☐ SIM ☐ NÃO</div>
+            <div><strong>📄 Nº NF:</strong> ${pallet.notaFiscal || ''}</div>
+        </div>
+
+        <div style="margin-bottom: 6mm;">
+            <strong>👤 Responsável Separação:</strong> <span style="border-bottom: 1px dotted #999; display: inline-block; width: 70%;">_________________________</span>
+        </div>
+
+        <div style="
+            margin: 6mm 0 5mm 0;
+            background: #2c3e50;
+            color: white;
+            padding: 3mm;
+            border-radius: 4px;
+            text-align: center;
+        ">
+            <strong style="font-size: 13px;">🛠️ SERVIÇO</strong>
+        </div>
+
+        <div style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3mm;
+            margin-bottom: 6mm;
+            padding: 3mm;
+            background: #f9f9f9;
+            border-radius: 6px;
+        ">
+            <div>☐ Entrega direta não exclusivo - alta volumetria (+30)</div>
+            <div>☐ Entrega direta não exclusivo - fracionado (-30)</div>
+            <div>☐ Entrega direta exclusivo (EPI)</div>
+            <div>☐ Crossdocking</div>
+            <div>☐ Ponto de encontro</div>
+        </div>
+
+        <div style="
+            margin: 6mm 0 5mm 0;
+            background: #2c3e50;
+            color: white;
+            padding: 3mm;
+            border-radius: 4px;
+            text-align: center;
+        ">
+            <strong style="font-size: 13px;">🗺️ TRECHOS OPERACIONAIS</strong>
+        </div>
+
+        ${[1, 2, 3, 4].map(i => `
+        <div style="
+            margin-bottom: 5mm;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            padding: 4mm;
+            background: #fefefe;
+            page-break-inside: avoid;
+        ">
             <div style="
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 6mm;
                 background: #ecf0f1;
-                padding: 4mm;
-                border-radius: 6px;
+                padding: 2mm 4mm;
+                border-radius: 4px 4px 0 0;
+                margin: -4mm -4mm 3mm -4mm;
+                font-weight: bold;
+                color: #2c3e50;
             ">
-                <div style="width: 33%;"><strong>📦 Nº OS Container:</strong> ____________________</div>
-                <div style="width: 33%;"><strong>📅 Data/Hora:</strong> ${dataHora}</div>
-                <div style="width: 33%; text-align: right;"><strong>🔖 Versão:</strong> V01FO02042026</div>
+                🚚 TRECHO ${i}
             </div>
-
-            <div style="
-                background: #f8f9fa;
-                padding: 5mm;
-                border-radius: 6px;
-                margin-bottom: 5mm;
-                border-left: 4px solid #3498db;
-            ">
-                <div style="display: flex; gap: 8mm; margin-bottom: 4mm;">
-                    <div style="flex: 1;"><strong>📍 REGIÃO:</strong> <span style="color:#2c3e50;">${pallet.regiao || ''}</span></div>
-                    <div style="flex: 1;"><strong>📌 SUB:</strong> <span style="color:#2c3e50;">${pallet.subregiao || ''}</span></div>
-                    <div style="flex: 1;"><strong>🏙️ CIDADE:</strong> <span style="color:#2c3e50;">${pallet.cidade || ''}</span></div>
-                    <div style="flex: 1;"><strong>🇧🇷 UF:</strong> <span style="color:#2c3e50;">${pallet.estado || ''}</span></div>
-                </div>
+            <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
+                <span><strong>📅 Data/Hora:</strong> __________</span>
+                <span><strong>✈️ Viagem:</strong> __________</span>
+                <span><strong>🚪 Doca:</strong> __________</span>
             </div>
-
-            <div style="margin-bottom: 4mm; padding: 2mm 0;">
-                <strong>🚛 Embarcador:</strong> <span style="border-bottom: 1px dotted #999; min-width: 200px; display: inline-block; width: 80%;">_________________________</span>
+            <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
+                <span><strong>📍 Origem:</strong> __________</span>
+                <span><strong>📍 Destino:</strong> __________</span>
+                <span><strong>🛣️ Linha:</strong> __________</span>
             </div>
-
-            <div style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 5mm;
-                background: #fff3e0;
-                padding: 4mm;
-                border-radius: 6px;
-            ">
-                <div style="font-size: 13px;"><strong>🏢 Recebedor:</strong> ${pallet.recebedor || ''}</div>
-                <div>
-                    ${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80" style="border: 1px solid #bdc3c7; border-radius: 4px; padding: 2px; background: white;"/>` : ''}
-                </div>
+            <div style="margin-bottom: 3mm;"><strong>📋 Atividade:</strong> ____________________</div>
+            <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
+                <span><strong>⏱️ Hora Chegada:</strong> __________</span>
+                <span><strong>⏱️ Hora Partida:</strong> __________</span>
             </div>
-
-            <div style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 5mm;
-                margin-bottom: 5mm;
-                background: #e8f4f8;
-                padding: 4mm;
-                border-radius: 6px;
-            ">
-                <div><strong>📦 Volumes:</strong> <span style="font-weight: bold; font-size: 13px;">${volumesDisplay}</span></div>
-                <div><strong>📦 Pallets:</strong> <span style="font-weight: bold; font-size: 13px;">${palletsDisplay}</span></div>
-                <div><strong>✅ CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</div>
-                <div><strong>❄️ Perecíveis:</strong> ☐ SIM ☐ NÃO</div>
-                <div><strong>🎯 Único Destinatário:</strong> ☐ SIM ☐ NÃO</div>
-                <div><strong>📄 Nº NF:</strong> ${pallet.notaFiscal || ''}</div>
+            <div style="display: flex; gap: 5mm; flex-wrap: wrap;">
+                <span><strong>👨‍✈️ Motorista:</strong> __________</span>
+                <span><strong>🚛 Placa:</strong> __________</span>
+                <span><strong>🚛 Veículo:</strong> __________</span>
             </div>
+        </div>
+        `).join('')}
 
-            <div style="margin-bottom: 6mm; padding: 2mm 0;">
-                <strong>👤 Responsável Separação:</strong> <span style="border-bottom: 1px dotted #999; display: inline-block; width: 70%;">_________________________</span>
-            </div>
-
-            <div style="
-                margin: 6mm 0 5mm 0;
-                background: #2c3e50;
-                color: white;
-                padding: 3mm;
-                border-radius: 4px;
-                text-align: center;
-            ">
-                <strong style="font-size: 13px;">🛠️ SERVIÇO</strong>
-            </div>
-
-            <div style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 3mm;
-                margin-bottom: 6mm;
-                padding: 3mm;
-                background: #f9f9f9;
-                border-radius: 6px;
-            ">
-                <div>☐ Entrega direta não exclusivo - alta volumetria (+30)</div>
-                <div>☐ Entrega direta não exclusivo - fracionado (-30)</div>
-                <div>☐ Entrega direta exclusivo (EPI)</div>
-                <div>☐ Crossdocking</div>
-                <div>☐ Ponto de encontro</div>
-            </div>
-
-            <div style="margin: 6mm 0 5mm 0; background: #2c3e50; color: white; padding: 3mm; border-radius: 4px; text-align: center;">
-                <strong style="font-size: 13px;">🗺️ TRECHOS OPERACIONAIS</strong>
-            </div>
-
-            ${[1, 2, 3, 4].map(i => `
-            <div style="
-                margin-bottom: 5mm;
-                border: 1px solid #dcdde1;
-                border-radius: 6px;
-                padding: 4mm;
-                background: #fefefe;
-                page-break-inside: avoid;
-            ">
-                <div style="
-                    background: #ecf0f1;
-                    padding: 2mm 4mm;
-                    border-radius: 4px;
-                    margin-bottom: 3mm;
-                    font-weight: bold;
-                    color: #2c3e50;
-                ">
-                    🚚 TRECHO ${i}
-                </div>
-                <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
-                    <span><strong>📅 Data/Hora:</strong> __________</span>
-                    <span><strong>✈️ Viagem:</strong> __________</span>
-                    <span><strong>🚪 Doca:</strong> __________</span>
-                </div>
-                <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
-                    <span><strong>📍 Origem:</strong> __________</span>
-                    <span><strong>📍 Destino:</strong> __________</span>
-                    <span><strong>🛣️ Linha:</strong> __________</span>
-                </div>
-                <div style="margin-bottom: 3mm;"><strong>📋 Atividade:</strong> ____________________</div>
-                <div style="display: flex; gap: 5mm; flex-wrap: wrap; margin-bottom: 3mm;">
-                    <span><strong>⏱️ Hora Chegada:</strong> __________</span>
-                    <span><strong>⏱️ Hora Partida:</strong> __________</span>
-                </div>
-                <div style="display: flex; gap: 5mm; flex-wrap: wrap;">
-                    <span><strong>👨‍✈️ Motorista:</strong> __________</span>
-                    <span><strong>🚛 Placa:</strong> __________</span>
-                    <span><strong>🚛 Veículo:</strong> __________</span>
-                </div>
-            </div>
-            `).join('')}
-
-            <div style="
-                margin-top: 6mm;
-                padding-top: 4mm;
-                border-top: 2px solid #bdc3c7;
-                text-align: right;
-                font-style: italic;
-                color: #7f8c8d;
-            ">
-                <strong>📝 Responsável Planejamento:</strong> _________________________
-            </div>
-
+        <div style="
+            margin-top: 6mm;
+            padding-top: 4mm;
+            border-top: 2px solid #bdc3c7;
+            text-align: right;
+            font-style: italic;
+            color: #7f8c8d;
+        ">
+            <strong>📝 Responsável Planejamento:</strong> _________________________
         </div>
     </div>
-    `;
+</div>`;
     }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
