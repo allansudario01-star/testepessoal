@@ -668,13 +668,13 @@ class PalletService {
 </html>`;
     }
 
-    imprimirFormulario(pallet, codigoLista = null) {
-        const html = this.gerarFormularioHTML(pallet, codigoLista);
+    // imprimirFormulario(pallet, codigoLista = null) {
+    //     const html = this.gerarFormularioHTML(pallet, codigoLista);
 
-        const janela = window.open('', '_blank');
-        janela.document.write(html);
-        janela.document.close();
-    }
+    //     const janela = window.open('', '_blank');
+    //     janela.document.write(html);
+    //     janela.document.close();
+    // }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarFormularioHTML(pallet, codigoLista);
