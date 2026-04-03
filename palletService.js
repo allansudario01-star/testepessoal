@@ -336,280 +336,212 @@ class PalletService {
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Formulário Operacional</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 0;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            background: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-        }
-        @media print {
-            body {
-                background: white;
-            }
-            .no-print {
-                display: none;
-            }
-        }
-        .no-print {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 1000;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        td, th {
-            border: 1px solid black;
-            padding: 3px;
-            vertical-align: top;
-        }
-        .checkbox-square {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border: 1px solid black;
-            margin-right: 3px;
-            background: white;
-        }
-        .section-title {
-            background: #e8e8e8;
-            font-weight: bold;
-            padding: 3px;
-            text-align: center;
-            font-size: 10px;
-        }
-        .dotted-line {
-            border-bottom: 1px dotted #999;
-            min-width: 80px;
-            display: inline-block;
-        }
-        .vertical-text {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-            text-align: center;
-            font-weight: bold;
-            font-size: 12px;
-            letter-spacing: 2px;
-        }
-        .sidebar-cell {
-            width: 35px;
-            text-align: center;
-            vertical-align: top;
-            background: #f5f5f5;
-            border-left: 2px solid #ccc;
-        }
-        .main-content {
-            flex: 1;
-            padding-right: 5px;
-        }
-        .sidebar-container {
-            width: 35px;
-            padding-left: 5px;
-        }
-        .sidebar-item {
-            text-align: center;
-        }
-        /* Alturas específicas para alinhamento com as seções */
-        .sidebar-separacao {
-            height: 54px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 8px;
-        }
-        .sidebar-servico {
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 5px;
-        }
-        .sidebar-transferencia {
-            height: 67px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 5px;
-        }
-        .sidebar-lastmile {
-            height: 54px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 5px;
-        }
-        .container-flex {
-            display: flex;
-            height: 100%;
-        }
-    </style>
+<meta charset="UTF-8">
+<style>
+@page { size: A4; margin: 0; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fff;
+}
+
+.page {
+    width: 210mm;
+    height: 297mm;
+    padding: 6mm;
+    font-size: 9px;
+    position: relative;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: top;
+}
+
+.title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.section {
+    background: #eaeaea;
+    text-align: center;
+    font-weight: bold;
+    font-size: 9px;
+}
+
+.line {
+    border-bottom: 1px dotted #000;
+    display: inline-block;
+    width: 100%;
+}
+
+.checkbox {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border: 1px solid #000;
+    margin-right: 3px;
+}
+
+.qr {
+    border: 1px solid #ccc;
+}
+
+.sidebar {
+    position: absolute;
+    right: 5mm;
+    width: 25px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 10px;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+.sep { top: 95mm; }
+.serv { top: 115mm; }
+.transf { top: 135mm; }
+.last { top: 165mm; }
+
+.no-print {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    padding: 8px 12px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+@media print {
+    .no-print { display: none; }
+}
+</style>
 </head>
+
 <body>
-    <div style="
-        width: 210mm;
-        height: 297mm;
-        padding: 8mm;
-        font-family: Arial, sans-serif;
-        font-size: 10px;
-        background: white;
-        position: relative;
-    ">
 
-        <div class="container-flex">
-            <div class="main-content">
+<div class="page">
 
-                <h2 style="text-align:center; margin-bottom:5px; font-size:14px;">
-                    FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
-                </h2>
+<!-- SIDE LABELS -->
+<div class="sidebar sep">SEPARAÇÃO</div>
+<div class="sidebar serv">SERVIÇO</div>
+<div class="sidebar transf">TRANSFERÊNCIA</div>
+<div class="sidebar last">LAST MILE</div>
 
-                <table style="margin-bottom:5px;">
-                    <tr>
-                        <td style="width:33%"><strong>Nº OS Container:</strong> _______________</td>
-                        <td style="width:33%"><strong>Data/Hora:</strong> ${dataHora}</td>
-                        <td style="width:33%"><strong>Versão:</strong> V01FO02042026</td>
-                    </tr>
-                </table>
+<div style="padding-right:30px;">
 
-                <table style="margin-bottom:5px;">
-                    <tr>
-                        <td style="width:25%"><strong>REGIÃO:</strong> ${pallet.regiao || ''}</td>
-                        <td style="width:25%"><strong>SUB:</strong> ${pallet.subregiao || ''}</td>
-                        <td style="width:25%"><strong>CIDADE:</strong> ${pallet.cidade || ''}</td>
-                        <td style="width:25%"><strong>UF:</strong> ${pallet.estado || ''}</td>
-                    </tr>
-                </table>
+<div class="title">
+FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
+</div>
 
-                <div style="margin-bottom:4px;">
-                    <strong>Embarcador:</strong> <span class="dotted-line" style="width:75%">_________________________</span>
-                </div>
+<table>
+<tr>
+<td><b>Nº OS Container:</b></td>
+<td><b>Data/Hora:</b> ${dataHora}</td>
+<td><b>Versão:</b> V01FO02042026</td>
+</tr>
+</table>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <div><strong>Recebedor:</strong> ${pallet.recebedor || ''}</div>
-                    <div>${qrCodeUrl ? `<img src="${qrCodeUrl}" width="60" style="border:1px solid #ccc;"/>` : ''}</div>
-                </div>
+<table>
+<tr>
+<td><b>REGIÃO:</b> ${pallet.regiao || ''}</td>
+<td><b>SUB:</b> ${pallet.subregiao || ''}</td>
+<td><b>CIDADE:</b> ${pallet.cidade || ''}</td>
+<td><b>UF:</b> ${pallet.estado || ''}</td>
+</tr>
+</table>
 
-                <table style="margin-bottom:5px;">
-                    <tr>
-                        <td style="width:50%"><strong>Volumes:</strong> ${volumesDisplay}</td>
-                        <td style="width:50%"><strong>Pallets:</strong> ${palletsDisplay}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</td>
-                        <td><strong>Perecíveis:</strong> ☐ SIM ☐ NÃO</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Único Destinatário:</strong> ☐ SIM ☐ NÃO</td>
-                        <td><strong>Nº NF:</strong> ${pallet.notaFiscal || ''}</td>
-                    </tr>
-                </table>
+<div><b>Embarcador:</b> <span class="line"></span></div>
 
-                <div style="margin-bottom:6px;">
-                    <strong>Responsável Separação:</strong> <span class="dotted-line" style="width:65%">_________________________</span>
-                </div>
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<div><b>Recebedor:</b> ${pallet.recebedor || ''}</div>
+${qrCodeUrl ? `<img src="${qrCodeUrl}" width="55" class="qr"/>` : ''}
+</div>
 
-                <table style="margin-bottom:5px; width:100%;">
-                    <tr class="section-title">
-                        <td colspan="2">SERVIÇO</td>
-                    </tr>
-                    <tr>
-                        <td style="width:50%">☐ Entrega direta não exclusivo - alta volumetria (+30)</td>
-                        <td style="width:50%">☐ Crossdocking</td>
-                    </tr>
-                    <tr>
-                        <td>☐ Entrega direta não exclusivo - fracionado (-30)</td>
-                        <td>☐ Ponto de encontro</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">☐ Entrega direta exclusivo (EPI)</td>
-                    </tr>
-                </table>
+<table>
+<tr>
+<td><b>Volumes:</b> ${volumesDisplay}</td>
+<td><b>Pallets:</b> ${palletsDisplay}</td>
+</tr>
+<tr>
+<td><b>CONFERÊNCIA:</b> ☐ Completo ☐ Parcial</td>
+<td><b>Perecíveis:</b> ☐ SIM ☐ NÃO</td>
+</tr>
+<tr>
+<td><b>Único Destinatário:</b> ☐ SIM ☐ NÃO</td>
+<td><b>Nº NF:</b> ${pallet.notaFiscal || ''}</td>
+</tr>
+</table>
 
-                ${[1, 2, 3, 4].map(i => `
-                <table style="margin-bottom:4px; width:100%;">
-                    <tr class="section-title">
-                        <td colspan="3">Trecho 0${i}</td>
-                    </tr>
-                    <tr>
-                        <td style="width:33%"><strong>Data/Hora:</strong> ______</td>
-                        <td style="width:33%"><strong>Viagem:</strong> ______</td>
-                        <td style="width:33%"><strong>Doca:</strong> ______</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Origem:</strong> ______</td>
-                        <td><strong>Destino:</strong> ______</td>
-                        <td><strong>Linha:</strong> ______</td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"><strong>Atividade:</strong> ________________</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Hora Chegada:</strong> ______</td>
-                        <td><strong>Hora Partida:</strong> ______</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Motorista:</strong> ______</td>
-                        <td><strong>Placa:</strong> ______</td>
-                        <td><strong>Veículo:</strong> ______</td>
-                    </tr>
-                </table>
-                `).join('')}
+<div><b>Responsável Separação:</b> <span class="line"></span></div>
 
-                <div style="margin-top:4px;">
-                    <strong>Responsável Planejamento:</strong> <span class="dotted-line" style="width:55%">_________________________</span>
-                </div>
+<table>
+<tr class="section"><td colspan="2">SERVIÇO</td></tr>
+<tr>
+<td>☐ Alta volumetria (+30)</td>
+<td>☐ Crossdocking</td>
+</tr>
+<tr>
+<td>☐ Fracionado (-30)</td>
+<td>☐ Ponto de encontro</td>
+</tr>
+<tr>
+<td colspan="2">☐ Exclusivo (EPI)</td>
+</tr>
+</table>
 
-            </div>
+${[1, 2, 3, 4].map(i => `
+<table>
+<tr class="section"><td colspan="3">Trecho 0${i}</td></tr>
+<tr>
+<td>Data/Hora:</td>
+<td>Viagem:</td>
+<td>Doca:</td>
+</tr>
+<tr>
+<td>Origem:</td>
+<td>Destino:</td>
+<td>Linha:</td>
+</tr>
+<tr>
+<td colspan="3">Atividade:</td>
+</tr>
+<tr>
+<td>Hora Chegada:</td>
+<td>Hora Partida:</td>
+<td></td>
+</tr>
+<tr>
+<td>Motorista:</td>
+<td>Placa:</td>
+<td>Veículo:</td>
+</tr>
+</table>
+`).join('')}
 
-            <div class="sidebar-container">
-                <div class="sidebar-item sidebar-separacao">
-                    <div class="vertical-text">SEPARAÇÃO</div>
-                </div>
-                <div class="sidebar-item sidebar-servico">
-                    <div class="vertical-text">SERVIÇO</div>
-                </div>
-                <div class="sidebar-item sidebar-transferencia">
-                    <div class="vertical-text">TRANSFERÊNCIA</div>
-                </div>
-                <div class="sidebar-item sidebar-lastmile">
-                    <div class="vertical-text">LAST MILE</div>
-                </div>
-            </div>
-        </div>
+<div><b>Responsável Planejamento:</b> <span class="line"></span></div>
 
-    </div>
+</div>
+</div>
 
-    <button onclick="window.print()" class="no-print">🖨️ IMPRIMIR</button>
+<button onclick="window.print()" class="no-print">IMPRIMIR</button>
+
 </body>
 </html>
-    `;
+`;
     }
-
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarEtiquetaHTML(pallet, codigoLista);
 
