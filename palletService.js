@@ -337,101 +337,100 @@ class PalletService {
         width: 210mm;
         min-height: 297mm;
         padding: 10mm;
-        font-family: Arial;
+        font-family: 'Arial', sans-serif;
         font-size: 11px;
         box-sizing: border-box;
+        background: white;
     ">
 
-        <h2 style="text-align:center; margin-bottom:10px;">
+        <h2 style="text-align:center; margin:0 0 12px 0; font-size:16px; font-weight:bold;">
             FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
         </h2>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr;">
-            <div><strong>Nº OS Container:</strong></div>
-            <div><strong>Data/Hora:</strong> ${dataHora}</div>
-            <div><strong>Versão:</strong> V01FO02042026</div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <div style="width:33%;"><strong>Nº OS Container:</strong> ____________________</div>
+            <div style="width:33%;"><strong>Data/Hora:</strong> ${dataHora}</div>
+            <div style="width:33%; text-align:right;"><strong>Versão:</strong> V01FO02042026</div>
         </div>
 
-        <hr/>
+        <hr style="margin:6px 0;" />
 
-        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:5px;">
-            <div><strong>REGIÃO:</strong> ${pallet.regiao || ''}</div>
-            <div><strong>SUB:</strong> ${pallet.subregiao || ''}</div>
-            <div><strong>CIDADE:</strong> ${pallet.cidade || ''}</div>
-            <div><strong>UF:</strong> ${pallet.estado || ''}</div>
+        <div style="display:flex; gap:12px; margin:8px 0;">
+            <div style="width:25%;"><strong>REGIÃO:</strong> ${pallet.regiao || ''}</div>
+            <div style="width:25%;"><strong>SUB:</strong> ${pallet.subregiao || ''}</div>
+            <div style="width:25%;"><strong>CIDADE:</strong> ${pallet.cidade || ''}</div>
+            <div style="width:25%;"><strong>UF:</strong> ${pallet.estado || ''}</div>
         </div>
 
-        <div style="margin-top:5px;">
+        <div style="margin:6px 0;">
             <strong>Embarcador:</strong> __________________________
         </div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <strong>Recebedor:</strong> ${pallet.recebedor || ''}
-            </div>
-            <div>
-                ${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80"/>` : ''}
-            </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:6px 0;">
+            <div><strong>Recebedor:</strong> ${pallet.recebedor || ''}</div>
+            <div>${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80" style="border:1px solid #ccc;"/>` : ''}</div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+        <div style="display:flex; gap:20px; margin:6px 0;">
             <div><strong>Volumes:</strong> ${volumesDisplay}</div>
             <div><strong>Pallets:</strong> ${palletsDisplay}</div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+        <div style="display:flex; gap:20px; margin:6px 0;">
             <div><strong>CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</div>
             <div><strong>Perecíveis:</strong> ☐ SIM ☐ NÃO</div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+        <div style="display:flex; gap:20px; margin:6px 0;">
             <div><strong>Único Destinatário:</strong> ☐ SIM ☐ NÃO</div>
             <div><strong>Nº NF:</strong> ${pallet.notaFiscal || ''}</div>
         </div>
 
-        <div>
+        <div style="margin:6px 0;">
             <strong>Responsável Separação:</strong> __________________________
         </div>
 
-        <hr/>
+        <hr style="margin:12px 0;" />
 
-        <h3>SERVIÇO</h3>
+        <h3 style="margin:8px 0 6px 0; font-size:12px;">SERVIÇO</h3>
 
-        <div>
-            ☐ Entrega direta não exclusivo - alta volumetria (+30)
-        </div>
-        <div>
-            ☐ Entrega direta não exclusivo - fracionado (-30)
-        </div>
-        <div>
-            ☐ Entrega direta exclusivo (EPI)
-        </div>
-        <div>
-            ☐ Crossdocking
-        </div>
-        <div>
-            ☐ Ponto de encontro
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+            <div>☐ Entrega direta não exclusivo - alta volumetria (+30)</div>
+            <div>☐ Entrega direta não exclusivo - fracionado (-30)</div>
+            <div>☐ Entrega direta exclusivo (EPI)</div>
+            <div>☐ Crossdocking</div>
+            <div>☐ Ponto de encontro</div>
         </div>
 
-        <hr/>
+        <hr style="margin:12px 0;" />
 
         ${[1, 2, 3, 4].map(i => `
-        <div style="margin-top:10px;">
-            <h3>Trecho ${i}</h3>
-
-            <div><strong>Data/Hora:</strong> ________ <strong>Viagem:</strong> ________ <strong>Doca:</strong> ________</div>
-
-            <div><strong>Origem:</strong> ________ <strong>Destino:</strong> ________ <strong>Linha:</strong> ________</div>
-
-            <div><strong>Atividade:</strong> ________</div>
-
-            <div><strong>Hora Chegada:</strong> ________ <strong>Hora Partida:</strong> ________</div>
-
-            <div><strong>Motorista:</strong> ________ <strong>Placa:</strong> ________ <strong>Veículo:</strong> ________</div>
+        <div style="margin:12px 0 0 0;">
+            <h3 style="margin:0 0 6px 0; font-size:12px;">Trecho ${i}</h3>
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <span><strong>Data/Hora:</strong> ________</span>
+                <span><strong>Viagem:</strong> ________</span>
+                <span><strong>Doca:</strong> ________</span>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                <span><strong>Origem:</strong> ________</span>
+                <span><strong>Destino:</strong> ________</span>
+                <span><strong>Linha:</strong> ________</span>
+            </div>
+            <div style="margin-top:4px;"><strong>Atividade:</strong> ________</div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                <span><strong>Hora Chegada:</strong> ________</span>
+                <span><strong>Hora Partida:</strong> ________</span>
+            </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                <span><strong>Motorista:</strong> ________</span>
+                <span><strong>Placa:</strong> ________</span>
+                <span><strong>Veículo:</strong> ________</span>
+            </div>
         </div>
         `).join('')}
 
-        <hr/>
+        <hr style="margin:16px 0 8px 0;" />
 
         <div>
             <strong>Responsável Planejamento:</strong> __________________________
@@ -440,6 +439,7 @@ class PalletService {
     </div>
     `;
     }
+
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarEtiquetaHTML(pallet, codigoLista);
 
