@@ -319,7 +319,6 @@ class PalletService {
     gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
         const dataHora = dataAtual.toLocaleString('pt-BR');
-
         const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
 
         const volumesDisplay = pallet.volumesDiversos
@@ -328,7 +327,6 @@ class PalletService {
 
         const totalPallets = this.obterTotalPalletsGrupo(pallet);
         const indiceAtual = this.obterIndiceNoGrupo(pallet);
-
         const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
             ? `${indiceAtual} / ${totalPallets}`
             : '';
@@ -338,223 +336,322 @@ class PalletService {
 <html>
 <head>
 <meta charset="UTF-8">
+<title>Formulário de Controle - ${pallet.notaFiscal || 'DIVERSOS'}</title>
 <style>
-@page { size: A4; margin: 0; }
-
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
-
-.page {
-    position: relative;
-    width: 210mm;
-    height: 297mm;
-}
-
-/* CHECKBOX */
-.checkbox {
-    width: 4mm;
-    height: 4mm;
-    border: 1px solid #000;
-    display: inline-block;
-    margin-right: 2mm;
-}
-
-/* LINHA */
-.line {
-    border-bottom: 1px solid #000;
-    width: 100%;
-    height: 4mm;
-}
-
-/* SIDEBAR */
-.sidebar {
-    position: absolute;
-    right: 0;
-    width: 8mm;
-    text-align: center;
-    font-size: 9px;
-    font-weight: bold;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-}
-
-.sep { top: 90mm; }
-.serv { top: 120mm; }
-.transf { top: 150mm; }
-.last { top: 200mm; }
-
-.no-print {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-}
-
-@media print {
-    .no-print { display: none; }
-}
+    @page {
+        size: A4;
+        margin: 0;
+    }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        font-family: Arial, sans-serif;
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+    .page {
+        width: 210mm;
+        height: 297mm;
+        position: relative;
+        page-break-after: avoid;
+        background: white;
+    }
+    /* Layout principal em grid */
+    .container {
+        padding: 10mm 12mm;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    /* Sidebars verticais à direita */
+    .sidebar-container {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 10mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        font-size: 10px;
+        font-weight: bold;
+        text-align: center;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+    }
+    .sidebar-item {
+        margin: 15mm 0;
+    }
+    /* Cabeçalho */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8mm;
+        font-size: 10px;
+    }
+    .campo-linha {
+        border-bottom: 1px solid #000;
+        min-width: 60mm;
+        display: inline-block;
+    }
+    /* Grid de informações principais */
+    .info-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 10mm;
+    }
+    .info-item {
+        margin-bottom: 5mm;
+    }
+    .info-label {
+        font-size: 8px;
+        margin-bottom: 2mm;
+    }
+    .info-value {
+        font-size: 18px;
+        font-weight: bold;
+        border-bottom: 1px solid #000;
+        min-width: 50mm;
+        padding: 2mm 0;
+    }
+    /* Seções de checkboxes */
+    .section {
+        margin-bottom: 8mm;
+    }
+    .section-title {
+        font-weight: bold;
+        font-size: 12px;
+        margin-bottom: 4mm;
+    }
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8mm;
+        margin-bottom: 4mm;
+    }
+    .checkbox-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 2mm;
+    }
+    .checkbox {
+        width: 5mm;
+        height: 5mm;
+        border: 1px solid black;
+        display: inline-block;
+        background: white;
+    }
+    .linha-campo {
+        border-bottom: 1px solid #000;
+        min-width: 40mm;
+        display: inline-block;
+    }
+    /* QR Code */
+    .qrcode-area {
+        text-align: right;
+        margin-bottom: 5mm;
+    }
+    .qrcode-img {
+        width: 35mm;
+        height: 35mm;
+        border: 1px solid #ccc;
+    }
+    /* Tabela de trechos */
+    .trechos-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5mm;
+    }
+    .trechos-table td {
+        padding: 2mm 0;
+        vertical-align: top;
+    }
+    .trecho-titulo {
+        font-weight: bold;
+        width: 20%;
+    }
+    .trecho-campo {
+        border-bottom: 1px solid #000;
+        min-width: 30mm;
+        display: inline-block;
+    }
+    .no-print {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        z-index: 1000;
+    }
+    @media print {
+        .no-print {
+            display: none;
+        }
+        .page {
+            margin: 0;
+            box-shadow: none;
+        }
+    }
 </style>
 </head>
-
 <body>
-
 <div class="page">
+    <div class="sidebar-container">
+        <div class="sidebar-item">SEPARAÇÃO</div>
+        <div class="sidebar-item">SERVIÇO</div>
+        <div class="sidebar-item">TRANSFERÊNCIA</div>
+        <div class="sidebar-item">LAST MILE</div>
+    </div>
 
-<!-- SIDEBARS -->
-<div class="sidebar sep">SEPARAÇÃO</div>
-<div class="sidebar serv">SERVIÇO</div>
-<div class="sidebar transf">TRANSFERÊNCIA</div>
-<div class="sidebar last">LAST MILE</div>
+    <div class="container">
+        <!-- CABEÇALHO -->
+        <div>
+            <div class="header">
+                <div>Nº Container: <span class="campo-linha"></span></div>
+                <div>Data/Hora: ${dataHora}</div>
+            </div>
 
-<!-- HEADER -->
-<div style="position:absolute; top:10mm; left:10mm; font-size:10px;">
-    Nº Container:
+            <!-- INFORMAÇÕES PRINCIPAIS -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">REGIÃO</div>
+                    <div class="info-value">${pallet.regiao || ''}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">SUB-REGIÃO</div>
+                    <div class="info-value">${pallet.subregiao || ''}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">CIDADE</div>
+                    <div class="info-value" style="font-size:14px;">${pallet.cidade || ''}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">UF</div>
+                    <div class="info-value">${pallet.estado || ''}</div>
+                </div>
+            </div>
+
+            <!-- EMBARCADOR / RECEBEDOR / QRCODE -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8mm;">
+                <div style="flex: 2;">
+                    <div>Embarcador:</div>
+                    <div class="linha-campo" style="width: 100%; margin-top: 2mm;"></div>
+                    <div style="margin-top: 5mm;">Recebedor: ${pallet.recebedor || ''}</div>
+                </div>
+                <div class="qrcode-area" style="flex: 1; text-align: right;">
+                    ${qrCodeUrl ? `<img src="${qrCodeUrl}" class="qrcode-img" />` : '<div style="width:35mm;height:35mm;border:1px solid #ccc;"></div>'}
+                </div>
+            </div>
+
+            <!-- VOLUMES / PALLETS -->
+            <div style="display: flex; gap: 20mm; margin-bottom: 8mm;">
+                <div>Volumes: ${volumesDisplay}</div>
+                <div>Pallets: ${palletsDisplay}</div>
+            </div>
+
+            <!-- CONFERÊNCIA / PERECÍVEIS -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8mm;">
+                <div>
+                    CONFERÊNCIA:
+                    <span class="checkbox-item"><span class="checkbox"></span> Completo</span>
+                    <span class="checkbox-item"><span class="checkbox"></span> Parcial</span>
+                </div>
+                <div>
+                    CONTÉM PERECÍVEIS:
+                    <span class="checkbox-item"><span class="checkbox"></span> Sim</span>
+                    <span class="checkbox-item"><span class="checkbox"></span> Não</span>
+                </div>
+            </div>
+
+            <!-- ÚNICO DESTINATÁRIO / NF -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8mm;">
+                <div>
+                    ÚNICO DESTINATÁRIO:
+                    <span class="checkbox-item"><span class="checkbox"></span> Sim</span>
+                    <span class="checkbox-item"><span class="checkbox"></span> Não</span>
+                </div>
+                <div>Nº da NF: ${pallet.notaFiscal || ''}</div>
+            </div>
+
+            <!-- RESPONSÁVEL POR SEPARAR -->
+            <div style="margin-bottom: 8mm;">
+                Responsável por separar:
+                <div class="linha-campo" style="width: 100%; margin-top: 2mm;"></div>
+            </div>
+        </div>
+
+        <!-- SERVIÇO (TRIAGEM) -->
+        <div class="section">
+            <div class="section-title">SERVIÇO</div>
+            <div class="checkbox-group">
+                <span class="checkbox-item"><span class="checkbox"></span> Entrega direta ao recebedor não exclusivo - alta volumetria (+30)</span>
+                <span>Data/Hora: <span class="linha-campo" style="width: 30mm;"></span></span>
+            </div>
+            <div class="checkbox-group">
+                <span class="checkbox-item"><span class="checkbox"></span> Entrega direta ao recebedor não exclusivo - fracionado (-30)</span>
+            </div>
+            <div class="checkbox-group">
+                <span class="checkbox-item"><span class="checkbox"></span> Entrega direta ao recebedor exclusivo (EPI)</span>
+            </div>
+            <div class="checkbox-group">
+                <span class="checkbox-item"><span class="checkbox"></span> Crossdocking (quando há necessidade de seguir mais trechos na viagem)</span>
+            </div>
+            <div class="checkbox-group">
+                <span class="checkbox-item"><span class="checkbox"></span> Ponto de Encontro (quando não há necessidade de seguir outros trechos)</span>
+            </div>
+        </div>
+
+        <!-- TRANSFERÊNCIA e LAST MILE (Trechos) -->
+        <div>
+            <div class="section-title">TRANSFERÊNCIA / LAST MILE</div>
+            ${[1, 2, 3, 4].map(i => `
+                <table class="trechos-table">
+                    <tr>
+                        <td class="trecho-titulo">Trecho 0${i}</td>
+                        <td>Data/Hora: <span class="trecho-campo"></span></td>
+                        <td>Nº Viagem: <span class="trecho-campo"></span></td>
+                        <td>Doca: <span class="trecho-campo"></span></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="3">Origem: <span class="trecho-campo" style="width: 40mm;"></span> &nbsp;&nbsp; Destino: <span class="trecho-campo" style="width: 40mm;"></span> &nbsp;&nbsp; Linha: <span class="trecho-campo"></span></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="3">Atividade: <span class="trecho-campo"></span> &nbsp;&nbsp; Hora Chegada (carregar): <span class="trecho-campo"></span> &nbsp;&nbsp; Hora Partida (corte): <span class="trecho-campo"></span></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="3">Motorista: <span class="trecho-campo"></span> &nbsp;&nbsp; Placa: <span class="trecho-campo"></span> &nbsp;&nbsp; Tipo Veiculo: <span class="trecho-campo"></span></td>
+                    </tr>
+                </table>
+                ${i < 4 ? '<hr style="margin: 2mm 0;" />' : ''}
+            `).join('')}
+        </div>
+
+        <!-- RESPONSÁVEL PLANEJAMENTO -->
+        <div style="margin-top: 8mm;">
+            Responsável Planejamento:
+            <div class="linha-campo" style="width: 100%; margin-top: 2mm;"></div>
+        </div>
+    </div>
 </div>
-<div style="position:absolute; top:15mm; left:10mm; width:60mm; border-bottom:1px solid #000;"></div>
-
-<div style="position:absolute; top:10mm; right:10mm; font-size:10px;">
-    ${dataHora}
-</div>
-
-<!-- REGIAO -->
-<div style="position:absolute; top:25mm; left:10mm; font-size:8px;">REGIÃO</div>
-<div style="position:absolute; top:30mm; left:10mm; font-size:20px; font-weight:bold;">
-    ${pallet.regiao || ''}
-</div>
-
-<!-- SUB -->
-<div style="position:absolute; top:25mm; left:80mm; font-size:8px;">SUB</div>
-<div style="position:absolute; top:30mm; left:80mm; font-size:20px; font-weight:bold;">
-    ${pallet.subregiao || ''}
-</div>
-
-<!-- CIDADE -->
-<div style="position:absolute; top:25mm; left:130mm; font-size:8px;">CIDADE</div>
-<div style="position:absolute; top:30mm; left:130mm; font-size:14px;">
-    ${pallet.cidade || ''}
-</div>
-
-<!-- UF -->
-<div style="position:absolute; top:25mm; right:10mm; font-size:8px;">UF</div>
-<div style="position:absolute; top:30mm; right:10mm; font-size:20px; font-weight:bold;">
-    ${pallet.estado || ''}
-</div>
-
-<!-- EMBARCADOR -->
-<div style="position:absolute; top:50mm; left:10mm;">Embarcador:</div>
-<div style="position:absolute; top:55mm; left:10mm; width:120mm;" class="line"></div>
-
-<!-- RECEBEDOR -->
-<div style="position:absolute; top:65mm; left:10mm;">
-    Recebedor: ${pallet.recebedor || ''}
-</div>
-
-<!-- QR -->
-${qrCodeUrl ? `
-<img src="${qrCodeUrl}"
-style="position:absolute; top:55mm; right:10mm; width:35mm; height:35mm;" />
-` : ''}
-
-<!-- VOLUMES -->
-<div style="position:absolute; top:80mm; left:10mm;">
-    Volumes: ${volumesDisplay}
-</div>
-
-<!-- PALLETS -->
-<div style="position:absolute; top:80mm; left:80mm;">
-    Pallets: ${palletsDisplay}
-</div>
-
-<!-- CONFERENCIA -->
-<div style="position:absolute; top:90mm; left:10mm;">
-    CONFERÊNCIA:
-    <span class="checkbox"></span> Completo
-    <span class="checkbox"></span> Parcial
-</div>
-
-<!-- PERECIVEIS -->
-<div style="position:absolute; top:90mm; left:100mm;">
-    Perecíveis:
-    <span class="checkbox"></span> Sim
-    <span class="checkbox"></span> Não
-</div>
-
-<!-- DESTINATARIO -->
-<div style="position:absolute; top:100mm; left:10mm;">
-    Único Destinatário:
-    <span class="checkbox"></span> Sim
-    <span class="checkbox"></span> Não
-</div>
-
-<!-- NF -->
-<div style="position:absolute; top:100mm; left:120mm;">
-    Nº NF: ${pallet.notaFiscal || ''}
-</div>
-
-<!-- RESPONSAVEL -->
-<div style="position:absolute; top:115mm; left:10mm;">
-    Responsável Separação:
-</div>
-<div style="position:absolute; top:120mm; left:10mm; width:120mm;" class="line"></div>
-
-<!-- SERVIÇO -->
-<div style="position:absolute; top:130mm; left:10mm;">
-    <span class="checkbox"></span> Alta volumetria (+30)
-</div>
-
-<div style="position:absolute; top:130mm; left:100mm;">
-    Data/Hora:
-</div>
-
-<div style="position:absolute; top:140mm; left:10mm;">
-    <span class="checkbox"></span> Fracionado (-30)
-</div>
-
-<div style="position:absolute; top:150mm; left:10mm;">
-    <span class="checkbox"></span> Exclusivo (EPI)
-</div>
-
-<div style="position:absolute; top:160mm; left:10mm;">
-    <span class="checkbox"></span> Crossdocking
-</div>
-
-<div style="position:absolute; top:170mm; left:10mm;">
-    <span class="checkbox"></span> Ponto de encontro
-</div>
-
-<!-- TRANSFERENCIA / LAST MILE SIMPLIFICADO -->
-${[1, 2, 3, 4].map((i, idx) => `
-<div style="position:absolute; top:${180 + (idx * 25)}mm; left:10mm; font-weight:bold;">
-    Trecho 0${i}
-</div>
-
-<div style="position:absolute; top:${185 + (idx * 25)}mm; left:10mm;">
-    Data/Hora:
-</div>
-
-<div style="position:absolute; top:${185 + (idx * 25)}mm; left:70mm;">
-    Viagem:
-</div>
-
-<div style="position:absolute; top:${185 + (idx * 25)}mm; left:120mm;">
-    Doca:
-</div>
-`).join('')}
-
-<!-- RESPONSAVEL FINAL -->
-<div style="position:absolute; bottom:15mm; left:10mm;">
-    Responsável Planejamento:
-</div>
-<div style="position:absolute; bottom:10mm; left:10mm; width:150mm;" class="line"></div>
-
-</div>
-
-<button onclick="window.print()" class="no-print">IMPRIMIR</button>
-
+<button class="no-print" onclick="window.print()">🖨️ IMPRIMIR</button>
 </body>
 </html>
-`;
+    `;
     }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
