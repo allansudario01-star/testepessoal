@@ -677,7 +677,7 @@ class PalletService {
     }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
-        const html = this.gerarEtiquetaHTML(pallet, codigoLista);
+        const html = this.gerarFormularioHTML(pallet, codigoLista);
 
         const janela = window.open('', '_blank');
         janela.document.write(`
