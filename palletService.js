@@ -328,6 +328,7 @@ class PalletService {
 
         const totalPallets = this.obterTotalPalletsGrupo(pallet);
         const indiceAtual = this.obterIndiceNoGrupo(pallet);
+
         const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
             ? `${indiceAtual} / ${totalPallets}`
             : '';
@@ -343,85 +344,51 @@ class PalletService {
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #fff;
 }
 
 .page {
+    position: relative;
     width: 210mm;
     height: 297mm;
-    padding: 6mm;
-    font-size: 9px;
-    position: relative;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-td {
-    border: 1px solid #000;
-    padding: 2px 4px;
-    vertical-align: top;
-}
-
-.title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 12px;
-    margin-bottom: 4px;
-}
-
-.section {
-    background: #eaeaea;
-    text-align: center;
-    font-weight: bold;
-    font-size: 9px;
-}
-
-.line {
-    border-bottom: 1px dotted #000;
-    display: inline-block;
-    width: 100%;
-}
-
+/* CHECKBOX */
 .checkbox {
-    display: inline-block;
-    width: 9px;
-    height: 9px;
+    width: 4mm;
+    height: 4mm;
     border: 1px solid #000;
-    margin-right: 3px;
+    display: inline-block;
+    margin-right: 2mm;
 }
 
-.qr {
-    border: 1px solid #ccc;
+/* LINHA */
+.line {
+    border-bottom: 1px solid #000;
+    width: 100%;
+    height: 4mm;
 }
 
+/* SIDEBAR */
 .sidebar {
     position: absolute;
-    right: 5mm;
-    width: 25px;
+    right: 0;
+    width: 8mm;
     text-align: center;
+    font-size: 9px;
     font-weight: bold;
-    font-size: 10px;
     writing-mode: vertical-rl;
     transform: rotate(180deg);
 }
 
-.sep { top: 95mm; }
-.serv { top: 115mm; }
-.transf { top: 135mm; }
-.last { top: 165mm; }
+.sep { top: 90mm; }
+.serv { top: 120mm; }
+.transf { top: 150mm; }
+.last { top: 200mm; }
 
 .no-print {
     position: fixed;
     bottom: 10px;
     right: 10px;
-    padding: 8px 12px;
-    background: #000;
-    color: #fff;
-    border: none;
-    cursor: pointer;
 }
 
 @media print {
@@ -434,106 +401,153 @@ td {
 
 <div class="page">
 
-<!-- SIDE LABELS -->
+<!-- SIDEBARS -->
 <div class="sidebar sep">SEPARAÇÃO</div>
 <div class="sidebar serv">SERVIÇO</div>
 <div class="sidebar transf">TRANSFERÊNCIA</div>
 <div class="sidebar last">LAST MILE</div>
 
-<div style="padding-right:30px;">
+<!-- HEADER -->
+<div style="position:absolute; top:10mm; left:10mm; font-size:10px;">
+    Nº Container:
+</div>
+<div style="position:absolute; top:15mm; left:10mm; width:60mm; border-bottom:1px solid #000;"></div>
 
-<div class="title">
-FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
+<div style="position:absolute; top:10mm; right:10mm; font-size:10px;">
+    ${dataHora}
 </div>
 
-<table>
-<tr>
-<td><b>Nº OS Container:</b></td>
-<td><b>Data/Hora:</b> ${dataHora}</td>
-<td><b>Versão:</b> V01FO02042026</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td><b>REGIÃO:</b> ${pallet.regiao || ''}</td>
-<td><b>SUB:</b> ${pallet.subregiao || ''}</td>
-<td><b>CIDADE:</b> ${pallet.cidade || ''}</td>
-<td><b>UF:</b> ${pallet.estado || ''}</td>
-</tr>
-</table>
-
-<div><b>Embarcador:</b> <span class="line"></span></div>
-
-<div style="display:flex; justify-content:space-between; align-items:center;">
-<div><b>Recebedor:</b> ${pallet.recebedor || ''}</div>
-${qrCodeUrl ? `<img src="${qrCodeUrl}" width="55" class="qr"/>` : ''}
+<!-- REGIAO -->
+<div style="position:absolute; top:25mm; left:10mm; font-size:8px;">REGIÃO</div>
+<div style="position:absolute; top:30mm; left:10mm; font-size:20px; font-weight:bold;">
+    ${pallet.regiao || ''}
 </div>
 
-<table>
-<tr>
-<td><b>Volumes:</b> ${volumesDisplay}</td>
-<td><b>Pallets:</b> ${palletsDisplay}</td>
-</tr>
-<tr>
-<td><b>CONFERÊNCIA:</b> ☐ Completo ☐ Parcial</td>
-<td><b>Perecíveis:</b> ☐ SIM ☐ NÃO</td>
-</tr>
-<tr>
-<td><b>Único Destinatário:</b> ☐ SIM ☐ NÃO</td>
-<td><b>Nº NF:</b> ${pallet.notaFiscal || ''}</td>
-</tr>
-</table>
+<!-- SUB -->
+<div style="position:absolute; top:25mm; left:80mm; font-size:8px;">SUB</div>
+<div style="position:absolute; top:30mm; left:80mm; font-size:20px; font-weight:bold;">
+    ${pallet.subregiao || ''}
+</div>
 
-<div><b>Responsável Separação:</b> <span class="line"></span></div>
+<!-- CIDADE -->
+<div style="position:absolute; top:25mm; left:130mm; font-size:8px;">CIDADE</div>
+<div style="position:absolute; top:30mm; left:130mm; font-size:14px;">
+    ${pallet.cidade || ''}
+</div>
 
-<table>
-<tr class="section"><td colspan="2">SERVIÇO</td></tr>
-<tr>
-<td>☐ Alta volumetria (+30)</td>
-<td>☐ Crossdocking</td>
-</tr>
-<tr>
-<td>☐ Fracionado (-30)</td>
-<td>☐ Ponto de encontro</td>
-</tr>
-<tr>
-<td colspan="2">☐ Exclusivo (EPI)</td>
-</tr>
-</table>
+<!-- UF -->
+<div style="position:absolute; top:25mm; right:10mm; font-size:8px;">UF</div>
+<div style="position:absolute; top:30mm; right:10mm; font-size:20px; font-weight:bold;">
+    ${pallet.estado || ''}
+</div>
 
-${[1, 2, 3, 4].map(i => `
-<table>
-<tr class="section"><td colspan="3">Trecho 0${i}</td></tr>
-<tr>
-<td>Data/Hora:</td>
-<td>Viagem:</td>
-<td>Doca:</td>
-</tr>
-<tr>
-<td>Origem:</td>
-<td>Destino:</td>
-<td>Linha:</td>
-</tr>
-<tr>
-<td colspan="3">Atividade:</td>
-</tr>
-<tr>
-<td>Hora Chegada:</td>
-<td>Hora Partida:</td>
-<td></td>
-</tr>
-<tr>
-<td>Motorista:</td>
-<td>Placa:</td>
-<td>Veículo:</td>
-</tr>
-</table>
+<!-- EMBARCADOR -->
+<div style="position:absolute; top:50mm; left:10mm;">Embarcador:</div>
+<div style="position:absolute; top:55mm; left:10mm; width:120mm;" class="line"></div>
+
+<!-- RECEBEDOR -->
+<div style="position:absolute; top:65mm; left:10mm;">
+    Recebedor: ${pallet.recebedor || ''}
+</div>
+
+<!-- QR -->
+${qrCodeUrl ? `
+<img src="${qrCodeUrl}"
+style="position:absolute; top:55mm; right:10mm; width:35mm; height:35mm;" />
+` : ''}
+
+<!-- VOLUMES -->
+<div style="position:absolute; top:80mm; left:10mm;">
+    Volumes: ${volumesDisplay}
+</div>
+
+<!-- PALLETS -->
+<div style="position:absolute; top:80mm; left:80mm;">
+    Pallets: ${palletsDisplay}
+</div>
+
+<!-- CONFERENCIA -->
+<div style="position:absolute; top:90mm; left:10mm;">
+    CONFERÊNCIA:
+    <span class="checkbox"></span> Completo
+    <span class="checkbox"></span> Parcial
+</div>
+
+<!-- PERECIVEIS -->
+<div style="position:absolute; top:90mm; left:100mm;">
+    Perecíveis:
+    <span class="checkbox"></span> Sim
+    <span class="checkbox"></span> Não
+</div>
+
+<!-- DESTINATARIO -->
+<div style="position:absolute; top:100mm; left:10mm;">
+    Único Destinatário:
+    <span class="checkbox"></span> Sim
+    <span class="checkbox"></span> Não
+</div>
+
+<!-- NF -->
+<div style="position:absolute; top:100mm; left:120mm;">
+    Nº NF: ${pallet.notaFiscal || ''}
+</div>
+
+<!-- RESPONSAVEL -->
+<div style="position:absolute; top:115mm; left:10mm;">
+    Responsável Separação:
+</div>
+<div style="position:absolute; top:120mm; left:10mm; width:120mm;" class="line"></div>
+
+<!-- SERVIÇO -->
+<div style="position:absolute; top:130mm; left:10mm;">
+    <span class="checkbox"></span> Alta volumetria (+30)
+</div>
+
+<div style="position:absolute; top:130mm; left:100mm;">
+    Data/Hora:
+</div>
+
+<div style="position:absolute; top:140mm; left:10mm;">
+    <span class="checkbox"></span> Fracionado (-30)
+</div>
+
+<div style="position:absolute; top:150mm; left:10mm;">
+    <span class="checkbox"></span> Exclusivo (EPI)
+</div>
+
+<div style="position:absolute; top:160mm; left:10mm;">
+    <span class="checkbox"></span> Crossdocking
+</div>
+
+<div style="position:absolute; top:170mm; left:10mm;">
+    <span class="checkbox"></span> Ponto de encontro
+</div>
+
+<!-- TRANSFERENCIA / LAST MILE SIMPLIFICADO -->
+${[1, 2, 3, 4].map((i, idx) => `
+<div style="position:absolute; top:${180 + (idx * 25)}mm; left:10mm; font-weight:bold;">
+    Trecho 0${i}
+</div>
+
+<div style="position:absolute; top:${185 + (idx * 25)}mm; left:10mm;">
+    Data/Hora:
+</div>
+
+<div style="position:absolute; top:${185 + (idx * 25)}mm; left:70mm;">
+    Viagem:
+</div>
+
+<div style="position:absolute; top:${185 + (idx * 25)}mm; left:120mm;">
+    Doca:
+</div>
 `).join('')}
 
-<div><b>Responsável Planejamento:</b> <span class="line"></span></div>
-
+<!-- RESPONSAVEL FINAL -->
+<div style="position:absolute; bottom:15mm; left:10mm;">
+    Responsável Planejamento:
 </div>
+<div style="position:absolute; bottom:10mm; left:10mm; width:150mm;" class="line"></div>
+
 </div>
 
 <button onclick="window.print()" class="no-print">IMPRIMIR</button>
@@ -542,6 +556,7 @@ ${[1, 2, 3, 4].map(i => `
 </html>
 `;
     }
+
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarEtiquetaHTML(pallet, codigoLista);
 
