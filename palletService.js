@@ -318,177 +318,128 @@ class PalletService {
 
     gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
-        const dataSeparacao = dataAtual.toLocaleDateString('pt-BR');
-        const horaAtual = dataAtual.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-        const volumesCompletos = (pallet.volumesAtuais === pallet.maxVolumes && pallet.maxVolumes > 0);
-        const statusVolumes = volumesCompletos ? 'COMPLETOS' : 'PARCIAL';
-
-        let volumesDisplay = '';
-        let palletsDisplay = '';
-
-        if (pallet.tipo === 'DIVERSOS') {
-            volumesDisplay = 'DIVERSOS';
-        } else if (pallet.volumesDiversos) {
-            volumesDisplay = pallet.volumesTexto || 'DIVERSOS';
-        } else {
-            volumesDisplay = `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || '?'}`;
-        }
-
-        const totalPallets = this.obterTotalPalletsGrupo(pallet);
-        const indiceAtual = this.obterIndiceNoGrupo(pallet);
-
-        if (pallet.tipo === 'VOLUMETRIA_ALTA') {
-            palletsDisplay = `${indiceAtual} / ${totalPallets}`;
-        }
+        const dataHora = dataAtual.toLocaleString('pt-BR');
 
         const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
 
+        const volumesDisplay = pallet.volumesDiversos
+            ? (pallet.volumesTexto || 'DIVERSOS')
+            : `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || ''}`;
+
+        const totalPallets = this.obterTotalPalletsGrupo(pallet);
+        const indiceAtual = this.obterIndiceNoGrupo(pallet);
+        const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
+            ? `${indiceAtual} / ${totalPallets}`
+            : '';
+
         return `
-            <div class="etiqueta-a4" style="
-                font-family: Arial, sans-serif;
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0;
-                padding: 15mm;
-                background: white;
-                box-sizing: border-box;
-                font-size: 12px;
-                position: relative;
-            ">
-                <div style="margin-bottom: 8mm;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 5mm; margin-bottom: 8mm;">
-                        <div style="font-size: 24px; font-weight: bold;">NOTA INFORMATIVA</div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 11px; color: #666;">Data/Hora: ${dataSeparacao} ${horaAtual}</div>
-                        </div>
-                    </div>
+    <div style="
+        width: 210mm;
+        min-height: 297mm;
+        padding: 10mm;
+        font-family: Arial;
+        font-size: 11px;
+        box-sizing: border-box;
+    ">
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">NÚMERO OS CONTAINER</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">DATA/HORA</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">REGIÃO</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.regiao || ''}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">SUB-REGIÃO</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.subregiao || ''}</strong></div>
-                        </div>
-                    </div>
+        <h2 style="text-align:center; margin-bottom:10px;">
+            FORMULÁRIO DE CONTROLE E PLANEJAMENTO OPERACIONAL
+        </h2>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">CIDADE</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.cidade || ''}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">UF</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.estado || ''}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">EMBARCADOR</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                    </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr;">
+            <div><strong>Nº OS Container:</strong></div>
+            <div><strong>Data/Hora:</strong> ${dataHora}</div>
+            <div><strong>Versão:</strong> V01FO02042026</div>
+        </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">RECEBEDOR</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.recebedor || ''}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">NÚMERO NF</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${pallet.notaFiscal || ''}</strong></div>
-                        </div>
-                    </div>
+        <hr/>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">VOLUMES</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${volumesDisplay}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">PALLETS</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${palletsDisplay}</strong></div>
-                        </div>
-                    </div>
+        <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:5px;">
+            <div><strong>REGIÃO:</strong> ${pallet.regiao || ''}</div>
+            <div><strong>SUB:</strong> ${pallet.subregiao || ''}</div>
+            <div><strong>CIDADE:</strong> ${pallet.cidade || ''}</div>
+            <div><strong>UF:</strong> ${pallet.estado || ''}</div>
+        </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">CONFERÊNCIA VOLUMES</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"><strong>${statusVolumes}</strong></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">CONTÉM PERECÍVEIS</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                    </div>
+        <div style="margin-top:5px;">
+            <strong>Embarcador:</strong> __________________________
+        </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-bottom: 8mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">RESPONSÁVEL SEPARAÇÃO</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">QR CODE LISTA CONTAINER</div>
-                            <div style="text-align: center;">
-                                ${qrCodeUrl ? `<img src="${qrCodeUrl}" style="width: 60px; height: 60px; margin-top: 5px;" />` : '<div style="border-bottom: 1px solid #000; height: 20px;"></div>'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 8mm;">
-                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">SERVIÇO</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4mm;">
-                        <div><input type="checkbox" style="margin-right: 5px;"> Entrega direta para o recebedor</div>
-                        <div><input type="checkbox" style="margin-right: 5px;"> Interhub / Entrega para o recebedor</div>
-                        <div><input type="checkbox" style="margin-right: 5px;"> Envio para unidade ou ponto de encontro</div>
-                        <div><input type="checkbox" style="margin-right: 5px;"> Agendamento</div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 8mm;">
-                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">TRECHOS</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6mm;">
-                        <div>
-                            <div style="font-size: 9px; color: #999;">TRECHO 1</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">TRECHO 2</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">TRECHO 3</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">TRECHO 4</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                        <div>
-                            <div style="font-size: 9px; color: #999;">+1</div>
-                            <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div style="background: #f0f0f0; padding: 3mm; font-weight: bold; margin-bottom: 5mm;">RESPONSÁVEL PLANEJAMENTO</div>
-                    <div style="border-bottom: 1px solid #000; height: 20px;"></div>
-                </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong>Recebedor:</strong> ${pallet.recebedor || ''}
             </div>
-        `;
-    }
+            <div>
+                ${qrCodeUrl ? `<img src="${qrCodeUrl}" width="80"/>` : ''}
+            </div>
+        </div>
 
+        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+            <div><strong>Volumes:</strong> ${volumesDisplay}</div>
+            <div><strong>Pallets:</strong> ${palletsDisplay}</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+            <div><strong>CONFERÊNCIA:</strong> ☐ Completo ☐ Parcial</div>
+            <div><strong>Perecíveis:</strong> ☐ SIM ☐ NÃO</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr;">
+            <div><strong>Único Destinatário:</strong> ☐ SIM ☐ NÃO</div>
+            <div><strong>Nº NF:</strong> ${pallet.notaFiscal || ''}</div>
+        </div>
+
+        <div>
+            <strong>Responsável Separação:</strong> __________________________
+        </div>
+
+        <hr/>
+
+        <h3>SERVIÇO</h3>
+
+        <div>
+            ☐ Entrega direta não exclusivo - alta volumetria (+30)
+        </div>
+        <div>
+            ☐ Entrega direta não exclusivo - fracionado (-30)
+        </div>
+        <div>
+            ☐ Entrega direta exclusivo (EPI)
+        </div>
+        <div>
+            ☐ Crossdocking
+        </div>
+        <div>
+            ☐ Ponto de encontro
+        </div>
+
+        <hr/>
+
+        ${[1, 2, 3, 4].map(i => `
+        <div style="margin-top:10px;">
+            <h3>Trecho ${i}</h3>
+
+            <div><strong>Data/Hora:</strong> ________ <strong>Viagem:</strong> ________ <strong>Doca:</strong> ________</div>
+
+            <div><strong>Origem:</strong> ________ <strong>Destino:</strong> ________ <strong>Linha:</strong> ________</div>
+
+            <div><strong>Atividade:</strong> ________</div>
+
+            <div><strong>Hora Chegada:</strong> ________ <strong>Hora Partida:</strong> ________</div>
+
+            <div><strong>Motorista:</strong> ________ <strong>Placa:</strong> ________ <strong>Veículo:</strong> ________</div>
+        </div>
+        `).join('')}
+
+        <hr/>
+
+        <div>
+            <strong>Responsável Planejamento:</strong> __________________________
+        </div>
+
+    </div>
+    `;
+    }
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarEtiquetaHTML(pallet, codigoLista);
 
