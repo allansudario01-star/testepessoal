@@ -27,8 +27,7 @@ class PalletService {
             try {
                 const lista = JSON.parse(saved);
                 lista.forEach(p => this.pallets.set(p.id, p));
-            } catch (e) {
-            }
+            } catch (e) { }
         }
 
         const finalizados = localStorage.getItem('palletsFinalizados');
@@ -36,8 +35,7 @@ class PalletService {
             try {
                 const lista = JSON.parse(finalizados);
                 lista.forEach(p => this.finalizados.set(p.id, p));
-            } catch (e) {
-            }
+            } catch (e) { }
         }
     }
 
@@ -81,7 +79,6 @@ class PalletService {
                 volumesDiversos: false
             };
         } else {
-            // DIVERSOS
             novo = {
                 ...basePallet,
                 notaFiscal: 'DIVERSOS',
@@ -93,7 +90,8 @@ class PalletService {
                 subregiao: data.subregiao ? data.subregiao.toString().trim() : '',
                 maxVolumes: null,
                 volumesAtuais: null,
-                volumesDiversos: true
+                volumesDiversos: true,
+                volumesTexto: ''
             };
         }
 
@@ -102,9 +100,7 @@ class PalletService {
 
         try {
             await window.db.collection('pallets').doc(id).set(novo);
-        } catch (e) {
-            console.warn('Erro ao salvar no Firebase:', e);
-        }
+        } catch (e) { }
 
         return novo;
     }
@@ -142,9 +138,7 @@ class PalletService {
             await window.db.collection('pallets').doc(idPalletPrincipal).update({
                 palletsVinculados: palletPrincipal.palletsVinculados
             });
-        } catch (e) {
-            console.warn('Erro ao salvar anexo no Firebase:', e);
-        }
+        } catch (e) { }
 
         return palletAnexado;
     }
@@ -166,9 +160,7 @@ class PalletService {
                 volumesAtuais: pallet.volumesAtuais,
                 ultimaAtualizacao: pallet.ultimaAtualizacao
             });
-        } catch (e) {
-            console.warn('Erro ao atualizar volumes:', e);
-        }
+        } catch (e) { }
     }
 
     async finalizar(id, bipado = false) {
@@ -211,9 +203,7 @@ class PalletService {
         try {
             await window.db.collection('pallets').doc(id).delete();
             await window.db.collection('palletsFinalizados').doc(id).set(pallet);
-        } catch (e) {
-            console.warn('Erro ao finalizar no Firebase:', e);
-        }
+        } catch (e) { }
     }
 
     async excluir(id) {
@@ -234,9 +224,7 @@ class PalletService {
 
         try {
             await window.db.collection('pallets').doc(id).delete();
-        } catch (e) {
-            console.warn('Erro ao excluir do Firebase:', e);
-        }
+        } catch (e) { }
     }
 
     listar(buscaNF = '') {
@@ -273,25 +261,21 @@ class PalletService {
     }
 
     obterTotalPalletsGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
-
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return null;
         if (pallet.palletPrincipalId) {
             const principal = this.pallets.get(pallet.palletPrincipalId);
             if (principal) {
                 return 1 + (principal.palletsVinculados?.length || 0);
             }
         }
-
         return 1 + (pallet.palletsVinculados?.length || 0);
     }
 
     obterIndiceNoGrupo(pallet) {
-        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return 1;
-
+        if (pallet.tipo !== 'VOLUMETRIA_ALTA') return null;
         if (!pallet.palletPrincipalId) {
             return 1;
         }
-
         const principal = this.pallets.get(pallet.palletPrincipalId);
         if (principal && principal.palletsVinculados) {
             const index = principal.palletsVinculados.indexOf(pallet.id);
@@ -299,7 +283,6 @@ class PalletService {
                 return index + 2;
             }
         }
-
         return 1;
     }
 
@@ -309,7 +292,6 @@ class PalletService {
     }
 
     getSubrotaDisplay(pallet) {
-        // Retorna região + subregião concatenados
         if (pallet.subregiao && pallet.regiao) {
             return `${pallet.regiao}${pallet.subregiao}`;
         }
@@ -323,16 +305,25 @@ class PalletService {
         const dataAtual = new Date();
         const dataHora = dataAtual.toLocaleString('pt-BR');
         const qrCodeUrl = codigoLista ? this.gerarQRCode(codigoLista) : null;
+        const isDiversos = pallet.tipo === 'DIVERSOS';
 
-        const volumesDisplay = pallet.volumesDiversos
-            ? (pallet.volumesTexto || 'DIVERSOS')
-            : `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || ''}`;
+        let volumesDisplay = '';
+        if (isDiversos) {
+            volumesDisplay = '______________';
+        } else if (pallet.volumesDiversos) {
+            volumesDisplay = pallet.volumesTexto || '______________';
+        } else {
+            volumesDisplay = `${pallet.volumesAtuais || 0} / ${pallet.maxVolumes || ''}`;
+        }
 
-        const totalPallets = this.obterTotalPalletsGrupo(pallet);
-        const indiceAtual = this.obterIndiceNoGrupo(pallet);
-        const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
-            ? `${indiceAtual} / ${totalPallets}`
-            : '';
+        let palletsDisplay = '';
+        if (!isDiversos && pallet.tipo === 'VOLUMETRIA_ALTA') {
+            const totalPallets = this.obterTotalPalletsGrupo(pallet);
+            const indiceAtual = this.obterIndiceNoGrupo(pallet);
+            if (totalPallets !== null && indiceAtual !== null) {
+                palletsDisplay = `${indiceAtual} / ${totalPallets}`;
+            }
+        }
 
         const subrotaDisplay = this.getSubrotaDisplay(pallet);
 
@@ -360,7 +351,6 @@ class PalletService {
     .page {
         width: 100%;
     }
-
     .section-title {
         background: #e0e0e0;
         padding: 1.5mm 4mm;
@@ -374,7 +364,6 @@ class PalletService {
         border-top: none;
         padding: 3mm 4mm;
     }
-
     .header-row {
         display: flex;
         justify-content: space-between;
@@ -390,7 +379,6 @@ class PalletService {
         display: inline-block;
         margin-left: 3px;
     }
-
     .info-row {
         display: flex;
         gap: 5mm;
@@ -413,7 +401,6 @@ class PalletService {
     .cidade-value {
         font-size: 13px;
     }
-
     .two-columns {
         display: flex;
         gap: 5mm;
@@ -442,7 +429,6 @@ class PalletService {
         height: 100%;
         object-fit: contain;
     }
-
     .embarcador-item {
         display: flex;
         align-items: baseline;
@@ -464,7 +450,6 @@ class PalletService {
         font-weight: bold;
         margin-left: 3mm;
     }
-
     .volumes-row {
         display: flex;
         gap: 10mm;
@@ -486,7 +471,6 @@ class PalletService {
         font-size: 18px;
         font-weight: bold;
     }
-
     .checkbox-row {
         display: flex;
         justify-content: space-between;
@@ -513,7 +497,6 @@ class PalletService {
         font-weight: bold;
         font-size: 9px;
     }
-
     .full-width {
         width: 100%;
     }
@@ -539,7 +522,6 @@ class PalletService {
         align-items: baseline;
         margin-top: 3mm;
     }
-
     .servico-item {
         display: flex;
         justify-content: space-between;
@@ -564,7 +546,6 @@ class PalletService {
         width: 30mm;
         height: 4mm;
     }
-
     .trechos-table {
         width: 100%;
         border-collapse: collapse;
@@ -592,7 +573,6 @@ class PalletService {
         font-size: 9px;
         font-weight: normal;
     }
-
     .no-print {
         position: fixed;
         bottom: 15px;
@@ -646,10 +626,10 @@ class PalletService {
                         <div class="volume-label">VOLUMES</div>
                         <div class="volume-number">${volumesDisplay}</div>
                     </div>
-                    <div class="pallet-card">
+                    ${palletsDisplay ? `<div class="pallet-card">
                         <div class="pallet-label">PALLETS</div>
                         <div class="pallet-number">${palletsDisplay}</div>
-                    </div>
+                    </div>` : ''}
                 </div>
             </div>
             <div class="right-col">
@@ -770,7 +750,6 @@ class PalletService {
 
     imprimirEtiqueta(pallet, codigoLista = null) {
         const html = this.gerarEtiquetaHTML(pallet, codigoLista);
-
         const janela = window.open('', '_blank');
         janela.document.write(`
             <html>

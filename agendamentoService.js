@@ -169,7 +169,6 @@ class AgendamentoService {
   }
 
   async limparTodos() {
-
     if (!window.db) return;
 
     try {
@@ -252,7 +251,6 @@ class AgendamentoService {
   }
 
   async resetTotal() {
-
     localStorage.clear();
     this.agendamentos.clear();
 

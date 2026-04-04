@@ -13,9 +13,7 @@ class OCRService {
       }
       this.worker = await Tesseract.createWorker('por');
       this.initialized = true;
-      console.log('✅ OCR inicializado');
     } catch (error) {
-      console.error('Erro ao inicializar OCR:', error);
     }
   }
 
@@ -40,8 +38,6 @@ class OCRService {
     try {
       const { data: { text } } = await this.worker.recognize(imageDataUrl);
 
-      console.log('📝 Texto OCR:', text);
-
       const hubInfo = this.extrairHubInfo(text);
 
       const dados = {
@@ -54,12 +50,9 @@ class OCRService {
         cidade: this.extrairCidade(text)
       };
 
-      console.log('📊 Dados extraídos:', dados);
-
       return dados;
 
     } catch (error) {
-      console.error('Erro no OCR:', error);
       return null;
     }
   }
@@ -82,29 +75,20 @@ class OCRService {
     });
   }
 
-  // ================================
-  // 🔧 NORMALIZAÇÃO (ESSENCIAL)
-  // ================================
   normalizarTexto(texto) {
     return texto
       .toUpperCase()
-      .replace(/O/g, '0')   // O → 0
-      .replace(/I/g, '1')   // I → 1
+      .replace(/O/g, '0')
+      .replace(/I/g, '1')
       .replace(/[^A-Z0-9\s]/g, ' ')
       .replace(/\s+/g, ' ');
   }
 
-  // ================================
-  // 🧾 NOTA FISCAL
-  // ================================
   extrairNotaFiscal(texto) {
     const match = texto.match(/\b0*(\d{5,})\b/);
     return match ? match[1] : '';
   }
 
-  // ================================
-  // 👤 RECEBEDOR (RESISTENTE A ERRO)
-  // ================================
   extrairRecebedor(texto) {
     const linhas = texto.split('\n');
 
@@ -114,7 +98,7 @@ class OCRService {
       if (
         normalizada.includes('RECEBED') ||
         normalizada.includes('RECEB') ||
-        normalizada.includes('MOSP') ||  // HOSP bugado
+        normalizada.includes('MOSP') ||
         normalizada.includes('HOSP')
       ) {
         return linha.trim();
@@ -124,9 +108,6 @@ class OCRService {
     return '';
   }
 
-  // ================================
-  // 📦 HUB + SUBREGIÃO
-  // ================================
   extrairHubInfo(texto) {
     const normalizado = this.normalizarTexto(texto);
 
@@ -142,9 +123,6 @@ class OCRService {
     return { hub: '', subRegiao: '' };
   }
 
-  // ================================
-  // 📊 VOLUME TOTAL
-  // ================================
   extrairVolumeTotal(texto) {
     const numeros = texto.match(/\b\d{2,4}\b/g);
 
@@ -161,17 +139,11 @@ class OCRService {
     return maior;
   }
 
-  // ================================
-  // 🌎 ESTADO
-  // ================================
   extrairEstado(texto) {
     const match = texto.match(/\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/);
     return match ? match[1] : '';
   }
 
-  // ================================
-  // 🏙️ CIDADE
-  // ================================
   extrairCidade(texto) {
     const match = texto.match(/\bRJ\s+([A-Z\s]+)/i);
 

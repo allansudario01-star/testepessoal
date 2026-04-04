@@ -105,7 +105,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('diversos-subregiao').value = '';
     document.getElementById('diversos-estado').value = '';
 
-    // Reset tipo para volumetria alta
     document.getElementById('pallet-tipo').value = 'VOLUMETRIA_ALTA';
     toggleCamposPorTipo();
   }
@@ -118,11 +117,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (tipo === 'VOLUMETRIA_ALTA') {
       volumetriaCampos.style.display = 'block';
       diversosCampos.style.display = 'none';
-      // Remover required dos campos diversos
       document.getElementById('diversos-regiao').removeAttribute('required');
       document.getElementById('diversos-subregiao').removeAttribute('required');
       document.getElementById('diversos-estado').removeAttribute('required');
-      // Adicionar required nos campos volumetria
       document.getElementById('nf').setAttribute('required', 'required');
       document.getElementById('recebedor').setAttribute('required', 'required');
       document.getElementById('estado').setAttribute('required', 'required');
@@ -133,7 +130,6 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
       volumetriaCampos.style.display = 'none';
       diversosCampos.style.display = 'block';
-      // Remover required dos campos volumetria
       document.getElementById('nf').removeAttribute('required');
       document.getElementById('recebedor').removeAttribute('required');
       document.getElementById('estado').removeAttribute('required');
@@ -141,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('regiao').removeAttribute('required');
       document.getElementById('subregiao').removeAttribute('required');
       document.getElementById('maxVolumes').removeAttribute('required');
-      // Adicionar required nos campos diversos
       document.getElementById('diversos-regiao').setAttribute('required', 'required');
       document.getElementById('diversos-subregiao').setAttribute('required', 'required');
       document.getElementById('diversos-estado').setAttribute('required', 'required');
@@ -149,22 +144,18 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function configurarBotoes() {
-    // Botão NOVO PALLET - abre modal direto
     document.getElementById('create-pallet-btn').addEventListener('click', () => {
       resetFormularioPallet();
       document.getElementById('pallet-modal').classList.remove('hidden');
     });
 
-    // Alternar campos conforme tipo selecionado
     document.getElementById('pallet-tipo').addEventListener('change', toggleCamposPorTipo);
 
-    // Botão escanear selo
     document.getElementById('scan-btn-modal').addEventListener('click', () => {
       window.currentFormType = 'pallet';
       abrirCamera();
     });
 
-    // Botão importar foto
     document.getElementById('import-img-btn').addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -172,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
       input.onchange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-          const dados = await window.OCRService.importarImagem(file);
+          const dados = await window.OCRService.extrairDadosSelo(await lerArquivoComoDataURL(file));
           if (dados) {
             preencherDadosOCR(dados);
             alert('✅ Dados do selo carregados com sucesso!');
@@ -205,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
           maxVolumes: document.getElementById('maxVolumes').value
         };
       } else {
-        // DIVERSOS
         dados = {
           regiao: document.getElementById('diversos-regiao').value,
           subregiao: document.getElementById('diversos-subregiao').value,
@@ -302,6 +292,15 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  function lerArquivoComoDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function preencherDadosOCR(dados) {
     const tipo = document.getElementById('pallet-tipo').value;
 
@@ -323,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function () {
       video.srcObject = stream;
       document.getElementById('camera-modal').classList.remove('hidden');
     } catch (error) {
-      // Fallback para câmera padrão
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         const video = document.getElementById('camera-video');
@@ -398,9 +396,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let volumesDisplay = '';
     if (p.tipo === 'DIVERSOS') {
-      volumesDisplay = 'DIVERSOS';
+      volumesDisplay = '______________';
     } else if (p.volumesDiversos) {
-      volumesDisplay = p.volumesTexto || 'DIVERSOS';
+      volumesDisplay = p.volumesTexto || '______________';
     } else {
       volumesDisplay = `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
     }
@@ -419,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
     `;
 
-    if (!p.volumesDiversos && p.tipo !== 'DIVERSOS') {
+    if (p.tipo === 'VOLUMETRIA_ALTA' && !p.volumesDiversos) {
       volumeControls.innerHTML = `
         <button class="btn-volume" data-value="-10">-10</button>
         <button class="btn-volume" data-value="-5">-5</button>
@@ -439,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       });
     } else {
-      volumeControls.innerHTML = `<div style="text-align: center; color: var(--text-secondary);">${p.volumesDiversos ? '📦 Volumetria Diversa - sem controle de volumes' : 'DIVERSOS'}</div>`;
+      volumeControls.innerHTML = `<div style="text-align: center; color: var(--text-secondary);">📦 Volumetria Diversa - sem controle de volumes</div>`;
       saveButton.style.display = 'none';
     }
 
@@ -503,13 +501,12 @@ document.addEventListener('DOMContentLoaded', function () {
     for (const p of palletsPrincipais) {
       const anexos = pallets.filter(a => a.palletPrincipalId === p.id);
       const isDiversos = p.tipo === 'DIVERSOS';
-      const isAgendamento = p.tipo === 'AGENDAMENTO';
 
       let volumesDisplay = '';
       if (isDiversos) {
-        volumesDisplay = 'DIVERSOS';
-      } else if (isAgendamento && p.volumesDiversos) {
-        volumesDisplay = p.volumesTexto || 'DIVERSOS';
+        volumesDisplay = '______________';
+      } else if (p.volumesDiversos) {
+        volumesDisplay = p.volumesTexto || '______________';
       } else {
         volumesDisplay = `${p.volumesAtuais || 0} / ${p.maxVolumes || '?'}`;
       }
@@ -519,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function () {
       html += `
         <div class="pallet-card" style="margin-bottom: 20px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span class="nf-tag">${isDiversos ? 'DIVERSOS' : (isAgendamento ? '📅 ' + p.notaFiscal : `NF ${p.notaFiscal}`)}</span>
+            <span class="nf-tag">${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
           </div>
 
           <div class="info-grid">
@@ -536,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <div class="card-actions">
             <button onclick="abrirModalAjustar('${p.id}')">Ajustar</button>
             <button onclick="finalizarPallet('${p.id}')">Finalizar</button>
-            ${!isDiversos && !isAgendamento ? `<button onclick="anexarPallet('${p.id}')">Anexar Pallet</button>` : ''}
+            ${!isDiversos ? `<button onclick="anexarPallet('${p.id}')">Anexar Pallet</button>` : ''}
             <button onclick="imprimirPallet('${p.id}')">Imprimir</button>
             <button onclick="excluirPallet('${p.id}')">Excluir</button>
           </div>
@@ -620,13 +617,12 @@ document.addEventListener('DOMContentLoaded', function () {
     finalizados.forEach(p => {
       const dataFinalizacao = new Date(p.finalizadoEm).toLocaleDateString('pt-BR');
       const isDiversos = p.tipo === 'DIVERSOS';
-      const isAgendamento = p.tipo === 'AGENDAMENTO';
       let volumesDisplay = '';
 
       if (isDiversos) {
-        volumesDisplay = 'DIVERSOS';
-      } else if (isAgendamento && p.volumesDiversos) {
-        volumesDisplay = p.volumesTexto || 'DIVERSOS';
+        volumesDisplay = '______________';
+      } else if (p.volumesDiversos) {
+        volumesDisplay = p.volumesTexto || '______________';
       } else {
         volumesDisplay = `${p.volumesAtuais}/${p.maxVolumes}`;
       }
@@ -636,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
       html += `
         <div class="finalizado-card">
           <div class="finalizado-header">
-            <span>${isAgendamento ? '📅 ' : ''}${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
+            <span>${isDiversos ? 'DIVERSOS' : `NF ${p.notaFiscal}`}</span>
             <span class="finalizado-badge ${p.bipado ? 'bipado' : 'nao-bipado'}">
               ${p.bipado ? '✅ BIPADO' : '⚠️ NÃO BIPADO'}
             </span>
