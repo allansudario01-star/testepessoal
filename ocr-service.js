@@ -33,7 +33,7 @@ class OCRService {
     await this.init();
 
     if (!this.worker) {
-      alert('❌ OCR não inicializado. Tente novamente.');
+      alert('❌ OCR não inicializado.');
       return null;
     }
 
@@ -59,7 +59,7 @@ class OCRService {
       return dados;
 
     } catch (error) {
-      console.error('Erro ao processar imagem:', error);
+      console.error('Erro no OCR:', error);
       return null;
     }
   }
@@ -83,52 +83,102 @@ class OCRService {
   }
 
   // ================================
-  // EXTRAÇÕES CORRETAS
+  // 🔧 NORMALIZAÇÃO (ESSENCIAL)
   // ================================
+  normalizarTexto(texto) {
+    return texto
+      .toUpperCase()
+      .replace(/O/g, '0')   // O → 0
+      .replace(/I/g, '1')   // I → 1
+      .replace(/[^A-Z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ');
+  }
 
+  // ================================
+  // 🧾 NOTA FISCAL
+  // ================================
   extrairNotaFiscal(texto) {
     const match = texto.match(/\b0*(\d{5,})\b/);
     return match ? match[1] : '';
   }
 
+  // ================================
+  // 👤 RECEBEDOR (RESISTENTE A ERRO)
+  // ================================
   extrairRecebedor(texto) {
-    const match = texto.match(/RECEBEDOR[:\s]*([A-Z\s\u00C0-\u00FF]+)/i);
-    return match ? match[1].trim().substring(0, 50) : '';
+    const linhas = texto.split('\n');
+
+    for (let linha of linhas) {
+      const normalizada = this.normalizarTexto(linha);
+
+      if (
+        normalizada.includes('RECEBED') ||
+        normalizada.includes('RECEB') ||
+        normalizada.includes('MOSP') ||  // HOSP bugado
+        normalizada.includes('HOSP')
+      ) {
+        return linha.trim();
+      }
+    }
+
+    return '';
   }
 
+  // ================================
+  // 📦 HUB + SUBREGIÃO
+  // ================================
   extrairHubInfo(texto) {
-    const match = texto.match(/\b0([A-Z]{3})(\d{3})\b/);
+    const normalizado = this.normalizarTexto(texto);
+
+    const match = normalizado.match(/\b0([A-Z]{3})(\d{3})\b/);
 
     if (match) {
       return {
-        hub: match[1],        // RJS
-        subRegiao: match[2]   // 000
+        hub: match[1],
+        subRegiao: match[2]
       };
     }
 
     return { hub: '', subRegiao: '' };
   }
 
+  // ================================
+  // 📊 VOLUME TOTAL
+  // ================================
   extrairVolumeTotal(texto) {
-    const matches = texto.match(/\b\d{4}\b/g);
+    const numeros = texto.match(/\b\d{2,4}\b/g);
 
-    if (matches && matches.length >= 2) {
-      return matches[matches.length - 1]; // pega o último (total)
+    if (!numeros) return '';
+
+    let maior = numeros[0];
+
+    for (let n of numeros) {
+      if (parseInt(n) > parseInt(maior)) {
+        maior = n;
+      }
     }
 
-    return '';
+    return maior;
   }
 
+  // ================================
+  // 🌎 ESTADO
+  // ================================
   extrairEstado(texto) {
     const match = texto.match(/\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/);
     return match ? match[1] : '';
   }
 
+  // ================================
+  // 🏙️ CIDADE
+  // ================================
   extrairCidade(texto) {
-    const match = texto.match(/\b(?:AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\s+([A-Z\s\u00C0-\u00FF]+)/i);
+    const match = texto.match(/\bRJ\s+([A-Z\s]+)/i);
 
-    if (match && match[1]) {
-      return match[1].replace(/[0-9]/g, '').trim();
+    if (match) {
+      return match[1]
+        .replace(/[^A-Z\s]/g, '')
+        .trim();
     }
 
     return '';
