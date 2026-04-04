@@ -527,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="info-item"><small>UF</small><strong>${p.estado || ''}</strong></div>
             <div class="info-item"><small>Cidade</small><strong>${p.cidade || 'N/A'}</strong></div>
             <div class="info-item"><small>Região</small><strong>${p.regiao || 'N/A'}</strong></div>
-            <div class="info-item"><small>Sub-região</small><strong>${subrotaDisplay}</strong></div>
+            <div class="info-item"><small>Sub-região</small><strong>${subrotaDisplay || 'N/A'}</strong></div>
             <div class="info-item"><small>Volumes</small><strong>${volumesDisplay}</strong></div>
           </div>
 
