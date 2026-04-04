@@ -354,28 +354,20 @@ class PalletService {
     }
     .page {
         width: 100%;
-        min-height: 277mm;
-        position: relative;
     }
 
-    /* ========== BORDAS DAS SEÇÕES ========== */
-    .section {
-        border: 1px solid #000;
-        margin-bottom: 6mm;
-        position: relative;
-    }
-    .section-title-left {
-        position: absolute;
-        left: -8mm;
-        top: 10mm;
-        writing-mode: vertical-rl;
-        transform: rotate(180deg);
+    /* Títulos de seção com fundo cinza */
+    .section-title {
+        background: #e0e0e0;
+        padding: 2mm 4mm;
         font-weight: bold;
         font-size: 11px;
-        text-align: center;
-        letter-spacing: 1px;
+        border: 1px solid #aaa;
+        margin-top: 4mm;
     }
     .section-content {
+        border: 1px solid #aaa;
+        border-top: none;
         padding: 4mm 5mm;
     }
 
@@ -383,9 +375,7 @@ class PalletService {
     .header-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 6mm;
-        padding-bottom: 2mm;
-        border-bottom: 1px solid #ccc;
+        margin-bottom: 5mm;
     }
     .campo-container {
         font-size: 10px;
@@ -393,16 +383,16 @@ class PalletService {
     }
     .campo-linha {
         border-bottom: 1px solid #000;
-        min-width: 60mm;
+        min-width: 55mm;
         display: inline-block;
         margin-left: 3px;
     }
 
-    /* Info linha (Região, Sub, Cidade, UF) - sem linhas */
+    /* Info linha (Região, Sub, Cidade, UF) */
     .info-row {
         display: flex;
-        gap: 6mm;
-        margin-bottom: 6mm;
+        gap: 5mm;
+        margin-bottom: 5mm;
         justify-content: space-between;
     }
     .info-block {
@@ -422,11 +412,11 @@ class PalletService {
         font-size: 13px;
     }
 
-    /* Grid de duas colunas (esquerda + QR Code) */
+    /* Grid de duas colunas para a parte superior */
     .two-columns {
         display: flex;
-        gap: 6mm;
-        margin-bottom: 4mm;
+        gap: 5mm;
+        margin-bottom: 3mm;
     }
     .left-col {
         flex: 2;
@@ -438,9 +428,9 @@ class PalletService {
         align-items: flex-start;
     }
     .qrcode-box {
-        width: 40mm;
-        height: 40mm;
-        border: 1px solid #ccc;
+        width: 38mm;
+        height: 38mm;
+        border: 1px solid #aaa;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -456,7 +446,7 @@ class PalletService {
     .embarcador-item {
         display: flex;
         align-items: baseline;
-        margin-bottom: 4mm;
+        margin-bottom: 3mm;
     }
     .embarcador-label {
         font-size: 10px;
@@ -478,41 +468,42 @@ class PalletService {
     /* Volumes e Pallets com bordas arredondadas */
     .volumes-row {
         display: flex;
-        gap: 12mm;
-        margin-bottom: 5mm;
+        gap: 10mm;
+        margin-bottom: 4mm;
     }
     .volume-card, .pallet-card {
         flex: 1;
         border: 1.5px solid #000;
-        border-radius: 6px;
-        padding: 3mm 4mm;
+        border-radius: 5px;
+        padding: 2mm 3mm;
         text-align: center;
     }
     .volume-label, .pallet-label {
-        font-size: 9px;
+        font-size: 8px;
         font-weight: bold;
-        margin-bottom: 2mm;
+        margin-bottom: 1mm;
     }
     .volume-number, .pallet-number {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
     }
 
-    /* Checkboxes */
-    .check-row {
+    /* Checkboxes menores */
+    .checkbox-row {
         display: flex;
-        gap: 8mm;
-        margin-bottom: 5mm;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 4mm;
         flex-wrap: wrap;
     }
-    .check-group {
-        display: flex;
-        gap: 2mm;
+    .checkbox-group {
+        display: inline-flex;
         align-items: center;
+        gap: 2mm;
     }
     .checkbox {
-        width: 4.5mm;
-        height: 4.5mm;
+        width: 3.5mm;
+        height: 3.5mm;
         border: 1px solid #000;
         display: inline-block;
         background: white;
@@ -522,45 +513,37 @@ class PalletService {
     }
     .section-label {
         font-weight: bold;
-        margin-right: 3mm;
         font-size: 9px;
     }
 
-    /* Destinatário e NF */
+    /* Linha completa (sem QR Code) */
+    .full-width {
+        width: 100%;
+    }
+    .resp-linha, .planejamento-linha {
+        border-bottom: 1px solid #000;
+        width: 100%;
+        height: 6mm;
+        margin-top: 2mm;
+    }
     .destinatario-row {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-bottom: 5mm;
+        margin-bottom: 4mm;
         flex-wrap: wrap;
-    }
-    .destinatario-group {
-        display: flex;
-        gap: 2mm;
-        align-items: center;
     }
     .nf-text {
         font-size: 11px;
         font-weight: bold;
     }
 
-    /* Responsável separar */
-    .resp-separar {
-        margin-bottom: 2mm;
-    }
-    .resp-linha {
-        border-bottom: 1px solid #000;
-        width: 100%;
-        height: 7mm;
-        margin-top: 2mm;
-    }
-
-    /* Seção Serviço */
+    /* Serviço */
     .servico-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 4mm;
+        margin-bottom: 3mm;
         flex-wrap: wrap;
     }
     .servico-check-group {
@@ -577,7 +560,7 @@ class PalletService {
     }
     .servico-linha {
         border-bottom: 1px solid #000;
-        width: 35mm;
+        width: 30mm;
         height: 5mm;
     }
 
@@ -587,34 +570,22 @@ class PalletService {
         border-collapse: collapse;
     }
     .trechos-table td {
-        padding: 1.5mm 2mm;
+        padding: 1mm 2mm;
         vertical-align: top;
-        border: 0.5px solid #ddd;
     }
     .trecho-titulo {
         font-weight: bold;
-        background: #f5f5f5;
         width: 12%;
+        font-size: 9px;
     }
     .campo-trecho {
         border-bottom: 1px solid #000;
-        min-width: 25mm;
+        min-width: 22mm;
         height: 5mm;
         display: inline-block;
     }
     .campo-trecho-peq {
-        min-width: 15mm;
-    }
-
-    /* Responsável planejamento */
-    .resp-planejamento {
-        margin-top: 4mm;
-    }
-    .planejamento-linha {
-        border-bottom: 1px solid #000;
-        width: 100%;
-        height: 7mm;
-        margin-top: 2mm;
+        min-width: 14mm;
     }
 
     /* Botão de impressão */
@@ -636,158 +607,122 @@ class PalletService {
         .no-print {
             display: none;
         }
-        .section {
-            break-inside: avoid;
-        }
     }
 </style>
 </head>
 <body>
 <div class="page">
-    <!-- CABEÇALHO -->
-    <div class="header-row">
-        <div class="campo-container">Nº OS do Container: <span class="campo-linha"></span></div>
-        <div class="campo-container">Data/Hora: ${dataHora}</div>
-    </div>
-
-    <!-- INFORMAÇÕES PRINCIPAIS (sem linhas) -->
-    <div class="info-row">
-        <div class="info-block"><div class="info-label">REGIÃO</div><div class="info-value">${pallet.regiao || ''}</div></div>
-        <div class="info-block"><div class="info-label">SUB-REGIÃO</div><div class="info-value" style="font-size:16px;">${pallet.subregiao || ''}</div></div>
-        <div class="info-block"><div class="info-label">CIDADE</div><div class="info-value cidade-value">${pallet.cidade || ''}</div></div>
-        <div class="info-block"><div class="info-label">UF</div><div class="info-value">${pallet.estado || ''}</div></div>
-    </div>
 
     <!-- SEÇÃO SEPARAÇÃO -->
-    <div class="section" style="margin-top: 2mm;">
-        <div class="section-title-left">SEPARAÇÃO</div>
-        <div class="section-content">
-            <div class="two-columns">
-                <div class="left-col">
-                    <!-- Embarcador / Recebedor -->
-                    <div class="embarcador-item">
-                        <div class="embarcador-label">Embarcador:</div>
-                        <div class="embarcador-linha"></div>
-                    </div>
-                    <div class="embarcador-item">
-                        <div class="embarcador-label">Recebedor:</div>
-                        <div class="recebedor-text">${pallet.recebedor || ''}</div>
-                    </div>
+    <div class="section-title">SEPARAÇÃO</div>
+    <div class="section-content">
+        <!-- Cabeçalho -->
+        <div class="header-row">
+            <div class="campo-container">Nº OS do Container: <span class="campo-linha"></span></div>
+            <div class="campo-container">Data/Hora: ${dataHora}</div>
+        </div>
 
-                    <!-- Volumes e Pallets com bordas arredondadas -->
-                    <div class="volumes-row">
-                        <div class="volume-card">
-                            <div class="volume-label">VOLUMES</div>
-                            <div class="volume-number">${volumesDisplay}</div>
-                        </div>
-                        <div class="pallet-card">
-                            <div class="pallet-label">PALLETS</div>
-                            <div class="pallet-number">${palletsDisplay}</div>
-                        </div>
-                    </div>
+        <!-- Região, Sub, Cidade, UF -->
+        <div class="info-row">
+            <div class="info-block"><div class="info-label">REGIÃO</div><div class="info-value">${pallet.regiao || ''}</div></div>
+            <div class="info-block"><div class="info-label">SUB-REGIÃO</div><div class="info-value" style="font-size:16px;">${pallet.subregiao || ''}</div></div>
+            <div class="info-block"><div class="info-label">CIDADE</div><div class="info-value cidade-value">${pallet.cidade || ''}</div></div>
+            <div class="info-block"><div class="info-label">UF</div><div class="info-value">${pallet.estado || ''}</div></div>
+        </div>
 
-                    <!-- Conferência e Perecíveis -->
-                    <div class="check-row">
-                        <span class="section-label">CONFERÊNCIA:</span>
-                        <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Completo</span></div>
-                        <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Parcial</span></div>
-                        <span class="section-label" style="margin-left: 5mm;">CONTÉM PERECÍVEIS:</span>
-                        <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Sim</span></div>
-                        <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Não</span></div>
-                    </div>
-
-                    <!-- Único destinatário e NF -->
-                    <div class="destinatario-row">
-                        <div style="display: flex; gap: 5mm;">
-                            <span class="section-label">ÚNICO DESTINATÁRIO:</span>
-                            <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Sim</span></div>
-                            <div class="check-group"><span class="checkbox"></span><span class="checkbox-label">Não</span></div>
-                        </div>
-                        <div class="nf-text">Nº da NF: ${pallet.notaFiscal || ''}</div>
-                    </div>
-
-                    <!-- Responsável por separar -->
-                    <div class="resp-separar">
-                        <div class="embarcador-label">Responsável por separar:</div>
-                        <div class="resp-linha"></div>
-                    </div>
+        <!-- Área com QR Code (Embarcador, Recebedor, Volumes, Pallets) -->
+        <div class="two-columns">
+            <div class="left-col">
+                <div class="embarcador-item">
+                    <div class="embarcador-label">Embarcador:</div>
+                    <div class="embarcador-linha"></div>
                 </div>
-
-                <!-- QR CODE LADO DIREITO (condicional) -->
-                <div class="right-col">
-                    ${qrCodeUrl ? `<div class="qrcode-box"><img src="${qrCodeUrl}" /></div>` : '<div style="width:40mm;"></div>'}
+                <div class="embarcador-item">
+                    <div class="embarcador-label">Recebedor:</div>
+                    <div class="recebedor-text">${pallet.recebedor || ''}</div>
+                </div>
+                <div class="volumes-row">
+                    <div class="volume-card">
+                        <div class="volume-label">VOLUMES</div>
+                        <div class="volume-number">${volumesDisplay}</div>
+                    </div>
+                    <div class="pallet-card">
+                        <div class="pallet-label">PALLETS</div>
+                        <div class="pallet-number">${palletsDisplay}</div>
+                    </div>
                 </div>
             </div>
+            <div class="right-col">
+                ${qrCodeUrl ? `<div class="qrcode-box"><img src="${qrCodeUrl}" /></div>` : '<div style="width:38mm;"></div>'}
+            </div>
+        </div>
+
+        <!-- Conferência e Perecíveis (Abaixo do QR Code, linha inteira) -->
+        <div class="checkbox-row">
+            <div style="display: flex; gap: 8mm; align-items: center;">
+                <span class="section-label">CONFERÊNCIA:</span>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Completo</span></div>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Parcial</span></div>
+            </div>
+            <div style="display: flex; gap: 8mm; align-items: center;">
+                <span class="section-label">CONTÉM PERECÍVEIS:</span>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Sim</span></div>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Não</span></div>
+            </div>
+        </div>
+
+        <!-- Único destinatário e NF -->
+        <div class="destinatario-row">
+            <div style="display: flex; gap: 5mm; align-items: center;">
+                <span class="section-label">ÚNICO DESTINATÁRIO:</span>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Sim</span></div>
+                <div class="checkbox-group"><span class="checkbox"></span><span class="checkbox-label">Não</span></div>
+            </div>
+            <div class="nf-text">Nº da NF: ${pallet.notaFiscal || ''}</div>
+        </div>
+
+        <!-- Responsável por separar -->
+        <div>
+            <div class="embarcador-label">Responsável por separar:</div>
+            <div class="resp-linha"></div>
         </div>
     </div>
 
     <!-- SEÇÃO SERVIÇO -->
-    <div class="section">
-        <div class="section-title-left">SERVIÇO</div>
-        <div class="section-content">
-            <div class="servico-item">
-                <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor não exclusivo - alta volumetria (+30)</span></div>
-            </div>
-            <div class="servico-item">
-                <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor não exclusivo - fracionado (-30)</span></div>
-            </div>
-            <div class="servico-item">
-                <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor exclusivo (EPI)</span></div>
-                <div class="servico-data"><span>Data/Hora:</span><div class="servico-linha"></div></div>
-            </div>
-            <div class="servico-item">
-                <div class="servico-check-group"><span class="checkbox"></span><span>Crossdocking (quando há necessidade de seguir mais trechos na viagem)</span></div>
-            </div>
-            <div class="servico-item">
-                <div class="servico-check-group"><span class="checkbox"></span><span>Ponto de Encontro (quando não há necessidade de seguir outros trechos)</span></div>
-            </div>
+    <div class="section-title">SERVIÇO</div>
+    <div class="section-content">
+        <div class="servico-item">
+            <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor não exclusivo - alta volumetria (+30)</span></div>
+        </div>
+        <div class="servico-item">
+            <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor não exclusivo - fracionado (-30)</span></div>
+        </div>
+        <div class="servico-item">
+            <div class="servico-check-group"><span class="checkbox"></span><span>Entrega direta ao recebedor exclusivo (EPI)</span></div>
+            <div class="servico-data"><span>Data/Hora:</span><div class="servico-linha"></div></div>
+        </div>
+        <div class="servico-item">
+            <div class="servico-check-group"><span class="checkbox"></span><span>Crossdocking (quando há necessidade de seguir mais trechos na viagem)</span></div>
+        </div>
+        <div class="servico-item">
+            <div class="servico-check-group"><span class="checkbox"></span><span>Ponto de Encontro (quando não há necessidade de seguir outros trechos)</span></div>
         </div>
     </div>
 
     <!-- SEÇÃO TRANSFERÊNCIA (Trechos 1, 2, 3) -->
-    <div class="section">
-        <div class="section-title-left">TRANSFERÊNCIA</div>
-        <div class="section-content" style="padding: 2mm 3mm;">
-            <table class="trechos-table">
-                ${[1, 2, 3].map(i => `
-                    <tr>
-                        <td class="trecho-titulo">Trecho 0${i}</td>
-                        <td>Data/Hora: <span class="campo-trecho"></span></td>
-                        <td>Nº Viagem: <span class="campo-trecho"></span></td>
-                        <td>Doca: <span class="campo-trecho campo-trecho-peq"></span></td>
-                    </tr>
-                    <tr>
-                        <td class="trecho-titulo"></td>
-                        <td colspan="3">Origem: <span class="campo-trecho" style="min-width: 35mm;"></span> &nbsp; Destino: <span class="campo-trecho" style="min-width: 35mm;"></span> &nbsp; Linha: <span class="campo-trecho"></span></td>
-                    </tr>
-                    <tr>
-                        <td class="trecho-titulo"></td>
-                        <td colspan="3">Atividade: <span class="campo-trecho"></span> &nbsp; Hora Chegada: <span class="campo-trecho"></span> &nbsp; Hora Partida: <span class="campo-trecho"></span></td>
-                    </tr>
-                    <tr>
-                        <td class="trecho-titulo"></td>
-                        <td colspan="3">Motorista: <span class="campo-trecho"></span> &nbsp; Placa: <span class="campo-trecho"></span> &nbsp; Tipo Veículo: <span class="campo-trecho"></span></td>
-                    </tr>
-                    ${i < 3 ? '<tr><td colspan="4" style="padding: 0;"><hr style="margin: 1mm 0;" /></td></tr>' : ''}
-                `).join('')}
-            </table>
-        </div>
-    </div>
-
-    <!-- SEÇÃO LAST MILE (Trecho 4) -->
-    <div class="section">
-        <div class="section-title-left">LAST MILE</div>
-        <div class="section-content" style="padding: 2mm 3mm;">
-            <table class="trechos-table">
+    <div class="section-title">TRANSFERÊNCIA</div>
+    <div class="section-content" style="padding: 2mm 3mm;">
+        <table class="trechos-table">
+            ${[1, 2, 3].map(i => `
                 <tr>
-                    <td class="trecho-titulo">Trecho 04</td>
+                    <td class="trecho-titulo">Trecho 0${i}</td>
                     <td>Data/Hora: <span class="campo-trecho"></span></td>
                     <td>Nº Viagem: <span class="campo-trecho"></span></td>
                     <td>Doca: <span class="campo-trecho campo-trecho-peq"></span></td>
                 </tr>
                 <tr>
                     <td class="trecho-titulo"></td>
-                    <td colspan="3">Origem: <span class="campo-trecho" style="min-width: 35mm;"></span> &nbsp; Destino: <span class="campo-trecho" style="min-width: 35mm;"></span> &nbsp; Linha: <span class="campo-trecho"></span></td>
+                    <td colspan="3">Origem: <span class="campo-trecho" style="min-width: 30mm;"></span> &nbsp; Destino: <span class="campo-trecho" style="min-width: 30mm;"></span> &nbsp; Linha: <span class="campo-trecho"></span></td>
                 </tr>
                 <tr>
                     <td class="trecho-titulo"></td>
@@ -797,12 +732,38 @@ class PalletService {
                     <td class="trecho-titulo"></td>
                     <td colspan="3">Motorista: <span class="campo-trecho"></span> &nbsp; Placa: <span class="campo-trecho"></span> &nbsp; Tipo Veículo: <span class="campo-trecho"></span></td>
                 </tr>
-            </table>
-        </div>
+                ${i < 3 ? '<tr><td colspan="4" style="padding: 0;"><hr style="margin: 1mm 0;" /></td></tr>' : ''}
+            `).join('')}
+        </table>
     </div>
 
-    <!-- RESPONSÁVEL PLANEJAMENTO -->
-    <div class="resp-planejamento">
+    <!-- SEÇÃO LAST MILE (Trecho 4) -->
+    <div class="section-title">LAST MILE</div>
+    <div class="section-content" style="padding: 2mm 3mm;">
+        <table class="trechos-table">
+            <tr>
+                <td class="trecho-titulo">Trecho 04</td>
+                <td>Data/Hora: <span class="campo-trecho"></span></td>
+                <td>Nº Viagem: <span class="campo-trecho"></span></td>
+                <td>Doca: <span class="campo-trecho campo-trecho-peq"></span></td>
+            </tr>
+            <tr>
+                <td class="trecho-titulo"></td>
+                <td colspan="3">Origem: <span class="campo-trecho" style="min-width: 30mm;"></span> &nbsp; Destino: <span class="campo-trecho" style="min-width: 30mm;"></span> &nbsp; Linha: <span class="campo-trecho"></span></td>
+            </tr>
+            <tr>
+                <td class="trecho-titulo"></td>
+                <td colspan="3">Atividade: <span class="campo-trecho"></span> &nbsp; Hora Chegada: <span class="campo-trecho"></span> &nbsp; Hora Partida: <span class="campo-trecho"></span></td>
+            </tr>
+            <tr>
+                <td class="trecho-titulo"></td>
+                <td colspan="3">Motorista: <span class="campo-trecho"></span> &nbsp; Placa: <span class="campo-trecho"></span> &nbsp; Tipo Veículo: <span class="campo-trecho"></span></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- RESPONSÁVEL PLANEJAMENTO (fora das seções) -->
+    <div style="margin-top: 5mm;">
         <div class="embarcador-label">Responsável Planejamento:</div>
         <div class="planejamento-linha"></div>
     </div>
