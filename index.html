@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -16,7 +16,10 @@
     <div id="offline-banner" class="offline hidden">⚠️ Modo offline</div>
 
     <header>
-        <h1>📦 Pallet System</h1>
+        <div class="header-top">
+            <h1>📦 Pallet System</h1>
+            <button class="theme-toggle" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+        </div>
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="pallets">PALLETS</button>
             <button class="tab-btn" data-tab="agendamentos">AGENDAMENTOS</button>
@@ -53,101 +56,46 @@
         </section>
     </main>
 
-    <div id="tipo-pallet-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Selecione o Tipo de Pallet</h3>
-            <div class="tipo-options">
-                <button id="tipo-volumetria-alta" class="btn-primary" style="margin-bottom: 15px;">📦 +20
-                    VOLUMES</button>
-                <button id="tipo-agendamento" class="btn-warning" style="margin-bottom: 15px;">📅 Agendamento</button>
-                <button id="tipo-diversos" class="btn-secondary">📦 Diversos</button>
-            </div>
-            <button id="cancel-tipo-modal" class="btn-secondary" style="margin-top: 20px;">Cancelar</button>
-        </div>
-    </div>
-
     <div id="pallet-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Novo Pallet - +20 Volumes</h3>
+            <h3>Novo Pallet</h3>
             <form id="pallet-form">
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <button type="button" id="scan-btn-modal" class="btn-secondary" style="flex: 1; margin: 0;">📷
-                        ESCANEAR SELO</button>
+                <div class="tipo-selector">
+                    <label>Tipo de Pallet</label>
+                    <select id="pallet-tipo" required>
+                        <option value="VOLUMETRIA_ALTA">📦 Volumetria Alta (+20 volumes)</option>
+                        <option value="DIVERSOS">📦 Diversos</option>
+                    </select>
                 </div>
-                <input type="text" id="nf" placeholder="Número Fiscal" required>
-                <input type="text" id="recebedor" placeholder="Recebedor" required>
-                <input type="text" id="hub" placeholder="Unidade" required>
-                <input type="text" id="estado" placeholder="UF" maxlength="2" required>
-                <input type="text" id="cidade" placeholder="Cidade" required>
-                <input type="text" id="regiao" placeholder="Região" required>
-                <input type="text" id="subregiao" placeholder="Sub-região" required>
-                <input type="number" id="maxVolumes" placeholder="Volumes Totais" min="1" required>
+
+                <div class="scan-options">
+                    <button type="button" id="scan-btn-modal" class="btn-secondary" style="margin: 0;">📷 ESCANEAR
+                        SELO</button>
+                    <button type="button" id="import-img-btn" class="btn-secondary" style="margin: 0;">📁 IMPORTAR
+                        FOTO</button>
+                </div>
+
+                <div id="volumetria-campos">
+                    <input type="text" id="nf" placeholder="Número Fiscal" autocomplete="off">
+                    <input type="text" id="recebedor" placeholder="Recebedor" autocomplete="off">
+                    <input type="text" id="estado" placeholder="UF" maxlength="2" autocomplete="off">
+                    <input type="text" id="cidade" placeholder="Cidade" autocomplete="off">
+                    <input type="text" id="regiao" placeholder="Região / Unidade" autocomplete="off">
+                    <input type="text" id="subregiao" placeholder="Sub-região (número)" autocomplete="off">
+                    <input type="number" id="maxVolumes" placeholder="Volumes Totais" min="1" autocomplete="off">
+                </div>
+
+                <!-- Campos Diversos -->
+                <div id="diversos-campos" style="display: none;">
+                    <input type="text" id="diversos-regiao" placeholder="Região / Unidade" autocomplete="off">
+                    <input type="text" id="diversos-subregiao" placeholder="Sub-região (número ou texto)"
+                        autocomplete="off">
+                    <input type="text" id="diversos-estado" placeholder="UF" maxlength="2" autocomplete="off">
+                </div>
+
                 <div class="form-actions">
                     <button type="submit">Criar Pallet</button>
                     <button type="button" id="close-modal">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="pallet-agendamento-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Novo Pallet - Agendamento</h3>
-            <form id="pallet-agendamento-form">
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <button type="button" id="scan-btn-agendamento" class="btn-secondary" style="flex: 1; margin: 0;">📷
-                        ESCANEAR SELO</button>
-                </div>
-                <input type="text" id="agendamento-nf" placeholder="Número Fiscal" required>
-                <input type="text" id="agendamento-recebedor" placeholder="Recebedor" required>
-                <input type="text" id="agendamento-hub" placeholder="Unidade" required>
-                <input type="text" id="agendamento-estado" placeholder="UF" maxlength="2" required>
-                <input type="text" id="agendamento-cidade" placeholder="Cidade" required>
-                <input type="text" id="agendamento-regiao" placeholder="Região" required>
-                <input type="text" id="agendamento-subregiao" placeholder="Sub-região" required>
-
-                <div style="margin: 15px 0;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">📦 Tipo de Volume</label>
-                    <div style="display: flex; gap: 15px;">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="radio" name="agendamento-volume-tipo" value="fixo" checked>
-                            <span>Volume Fixo</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="radio" name="agendamento-volume-tipo" value="diversos">
-                            <span>Diversos (sem número fixo)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div id="agendamento-volumes-fixo">
-                    <input type="number" id="agendamento-maxVolumes" placeholder="Volumes Totais" min="1">
-                </div>
-
-                <div id="agendamento-volumes-diversos" style="display: none;">
-                    <input type="text" id="agendamento-volumes-texto" placeholder="Ex: DIVERSOS, 10/10, etc"
-                        value="DIVERSOS">
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit">Criar Pallet</button>
-                    <button type="button" id="close-agendamento-modal">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="pallet-diversos-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Novo Pallet - Diversos</h3>
-            <form id="pallet-diversos-form">
-                <input type="text" id="hub-diversos" placeholder="Unidade" required>
-                <input type="text" id="estado-diversos" placeholder="UF" maxlength="2" required>
-                <input type="text" id="regiao-diversos" placeholder="Região" required>
-                <input type="text" id="subregiao-diversos" placeholder="Sub-região" required>
-                <div class="form-actions">
-                    <button type="submit">Criar Pallet</button>
-                    <button type="button" id="close-diversos-modal">Cancelar</button>
                 </div>
             </form>
         </div>
