@@ -61,52 +61,39 @@ class PalletService {
             status: 'ativo',
             bipado: false,
             palletsVinculados: [],
-            palletPrincipalId: null,
-            observacao: ''
+            palletPrincipalId: null
         };
 
         let novo;
+
         if (tipo === 'VOLUMETRIA_ALTA') {
             novo = {
                 ...basePallet,
                 notaFiscal: data.notaFiscal.toUpperCase().trim(),
                 recebedor: data.recebedor.toUpperCase().trim(),
-                hub: data.hub.toUpperCase().trim(),
+                hub: data.regiao ? data.regiao.toUpperCase().trim() : '',
                 estado: data.estado.toUpperCase().trim(),
                 cidade: data.cidade.toUpperCase().trim(),
-                regiao: data.regiao.toUpperCase().trim(),
-                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
+                regiao: data.regiao ? data.regiao.toUpperCase().trim() : '',
+                subregiao: data.subregiao ? data.subregiao.toString().trim() : '',
                 maxVolumes: parseInt(data.maxVolumes),
                 volumesAtuais: 0,
                 volumesDiversos: false
             };
-        } else if (tipo === 'AGENDAMENTO') {
-            novo = {
-                ...basePallet,
-                notaFiscal: data.notaFiscal.toUpperCase().trim(),
-                recebedor: data.recebedor.toUpperCase().trim(),
-                hub: data.hub.toUpperCase().trim(),
-                estado: data.estado.toUpperCase().trim(),
-                cidade: data.cidade.toUpperCase().trim(),
-                regiao: data.regiao.toUpperCase().trim(),
-                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
-                maxVolumes: data.maxVolumes,
-                volumesAtuais: 0,
-                volumesDiversos: data.volumesDiversos || false,
-                volumesTexto: data.volumesTexto || 'DIVERSOS'
-            };
         } else {
+            // DIVERSOS
             novo = {
                 ...basePallet,
                 notaFiscal: 'DIVERSOS',
                 recebedor: 'DIVERSOS',
-                hub: data.hub.toUpperCase().trim(),
+                hub: data.regiao ? data.regiao.toUpperCase().trim() : '',
                 estado: data.estado.toUpperCase().trim(),
                 cidade: 'DIVERSOS',
-                regiao: data.regiao.toUpperCase().trim(),
-                subregiao: data.subregiao ? data.subregiao.toString().replace(/\D/g, '') : '',
+                regiao: data.regiao ? data.regiao.toUpperCase().trim() : '',
+                subregiao: data.subregiao ? data.subregiao.toString().trim() : '',
                 maxVolumes: null,
-                volumesAtuais: null
+                volumesAtuais: null,
+                volumesDiversos: true
             };
         }
 
@@ -116,6 +103,7 @@ class PalletService {
         try {
             await window.db.collection('pallets').doc(id).set(novo);
         } catch (e) {
+            console.warn('Erro ao salvar no Firebase:', e);
         }
 
         return novo;
@@ -155,6 +143,7 @@ class PalletService {
                 palletsVinculados: palletPrincipal.palletsVinculados
             });
         } catch (e) {
+            console.warn('Erro ao salvar anexo no Firebase:', e);
         }
 
         return palletAnexado;
@@ -178,6 +167,7 @@ class PalletService {
                 ultimaAtualizacao: pallet.ultimaAtualizacao
             });
         } catch (e) {
+            console.warn('Erro ao atualizar volumes:', e);
         }
     }
 
@@ -222,6 +212,7 @@ class PalletService {
             await window.db.collection('pallets').doc(id).delete();
             await window.db.collection('palletsFinalizados').doc(id).set(pallet);
         } catch (e) {
+            console.warn('Erro ao finalizar no Firebase:', e);
         }
     }
 
@@ -244,6 +235,7 @@ class PalletService {
         try {
             await window.db.collection('pallets').doc(id).delete();
         } catch (e) {
+            console.warn('Erro ao excluir do Firebase:', e);
         }
     }
 
@@ -316,6 +308,17 @@ class PalletService {
         return `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(codigo)}`;
     }
 
+    getSubrotaDisplay(pallet) {
+        // Retorna região + subregião concatenados
+        if (pallet.subregiao && pallet.regiao) {
+            return `${pallet.regiao}${pallet.subregiao}`;
+        }
+        if (pallet.regiao) {
+            return pallet.regiao;
+        }
+        return pallet.subregiao || '';
+    }
+
     gerarEtiquetaHTML(pallet, codigoLista = null) {
         const dataAtual = new Date();
         const dataHora = dataAtual.toLocaleString('pt-BR');
@@ -330,6 +333,8 @@ class PalletService {
         const palletsDisplay = pallet.tipo === 'VOLUMETRIA_ALTA'
             ? `${indiceAtual} / ${totalPallets}`
             : '';
+
+        const subrotaDisplay = this.getSubrotaDisplay(pallet);
 
         return `
 <!DOCTYPE html>
@@ -356,7 +361,6 @@ class PalletService {
         width: 100%;
     }
 
-    /* Títulos de seção com fundo cinza */
     .section-title {
         background: #e0e0e0;
         padding: 1.5mm 4mm;
@@ -371,7 +375,6 @@ class PalletService {
         padding: 3mm 4mm;
     }
 
-    /* Cabeçalho */
     .header-row {
         display: flex;
         justify-content: space-between;
@@ -388,7 +391,6 @@ class PalletService {
         margin-left: 3px;
     }
 
-    /* Info linha */
     .info-row {
         display: flex;
         gap: 5mm;
@@ -412,7 +414,6 @@ class PalletService {
         font-size: 13px;
     }
 
-    /* Grid duas colunas */
     .two-columns {
         display: flex;
         gap: 5mm;
@@ -442,7 +443,6 @@ class PalletService {
         object-fit: contain;
     }
 
-    /* Embarcador / Recebedor */
     .embarcador-item {
         display: flex;
         align-items: baseline;
@@ -465,7 +465,6 @@ class PalletService {
         margin-left: 3mm;
     }
 
-    /* Volumes e Pallets */
     .volumes-row {
         display: flex;
         gap: 10mm;
@@ -488,7 +487,6 @@ class PalletService {
         font-weight: bold;
     }
 
-    /* Checkboxes */
     .checkbox-row {
         display: flex;
         justify-content: space-between;
@@ -516,7 +514,6 @@ class PalletService {
         font-size: 9px;
     }
 
-    /* Linha completa */
     .full-width {
         width: 100%;
     }
@@ -543,7 +540,6 @@ class PalletService {
         margin-top: 3mm;
     }
 
-    /* Serviço */
     .servico-item {
         display: flex;
         justify-content: space-between;
@@ -569,7 +565,6 @@ class PalletService {
         height: 4mm;
     }
 
-    /* Tabela de Trechos (compacta, fonte pequena) */
     .trechos-table {
         width: 100%;
         border-collapse: collapse;
@@ -598,7 +593,6 @@ class PalletService {
         font-weight: normal;
     }
 
-    /* Botão de impressão */
     .no-print {
         position: fixed;
         bottom: 15px;
@@ -623,7 +617,6 @@ class PalletService {
 <body>
 <div class="page">
 
-    <!-- SEÇÃO SEPARAÇÃO -->
     <div class="section-title">SEPARAÇÃO</div>
     <div class="section-content">
         <div class="header-row">
@@ -633,7 +626,7 @@ class PalletService {
 
         <div class="info-row">
             <div class="info-block"><div class="info-label">REGIÃO</div><div class="info-value">${pallet.regiao || ''}</div></div>
-            <div class="info-block"><div class="info-label">SUB-REGIÃO</div><div class="info-value" style="font-size:16px;">${pallet.subregiao || ''}</div></div>
+            <div class="info-block"><div class="info-label">SUB-REGIÃO</div><div class="info-value" style="font-size:16px;">${subrotaDisplay}</div></div>
             <div class="info-block"><div class="info-label">CIDADE</div><div class="info-value cidade-value">${pallet.cidade || ''}</div></div>
             <div class="info-block"><div class="info-label">UF</div><div class="info-value">${pallet.estado || ''}</div></div>
         </div>
@@ -692,7 +685,6 @@ class PalletService {
         </div>
     </div>
 
-    <!-- SEÇÃO SERVIÇO -->
     <div class="section-title">SERVIÇO</div>
     <div class="section-content">
         <div class="servico-item">
@@ -713,7 +705,6 @@ class PalletService {
         </div>
     </div>
 
-    <!-- SEÇÃO TRANSFERÊNCIA (Trechos 1, 2, 3) -->
     <div class="section-title">TRANSFERÊNCIA</div>
     <div class="section-content" style="padding: 1.5mm 2mm;">
         <table class="trechos-table">
@@ -736,12 +727,11 @@ class PalletService {
                     <td class="trecho-titulo"></td>
                     <td colspan="3"><span class="trecho-label">Motorista:</span> <span class="campo-trecho"></span> &nbsp; <span class="trecho-label">Placa:</span> <span class="campo-trecho"></span> &nbsp; <span class="trecho-label">Tipo Veículo:</span> <span class="campo-trecho"></span></td>
                 </tr>
-                ${i < 3 ? '<tr><td colspan="4" style="padding: 0;"><hr style="margin: 0.5mm 0;" /></td>' : ''}
+                ${i < 3 ? '<tr><td colspan="4" style="padding: 0;"><hr style="margin: 0.5mm 0;" /></td></tr>' : ''}
             `).join('')}
         </table>
     </div>
 
-    <!-- SEÇÃO LAST MILE (Trecho 4) -->
     <div class="section-title">LAST MILE</div>
     <div class="section-content" style="padding: 1.5mm 2mm;">
         <table class="trechos-table">
@@ -766,7 +756,6 @@ class PalletService {
         </table>
     </div>
 
-    <!-- RESPONSÁVEL PLANEJAMENTO (mesma linha) -->
     <div class="linha-com-label" style="margin-top: 4mm;">
         <div class="embarcador-label">Responsável Planejamento:</div>
         <div class="planejamento-linha"></div>
@@ -776,7 +765,7 @@ class PalletService {
 <button class="no-print" onclick="window.print()">🖨️ IMPRIMIR</button>
 </body>
 </html>
-    `;
+        `;
     }
 
     imprimirEtiqueta(pallet, codigoLista = null) {
