@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function resetFormularioPallet() {
     document.getElementById('nf').value = '';
     document.getElementById('recebedor').value = '';
+    document.getElementById('embarcador').value = '';
     document.getElementById('estado').value = '';
     document.getElementById('cidade').value = '';
     document.getElementById('regiao').value = '';
@@ -104,6 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('diversos-regiao').value = '';
     document.getElementById('diversos-subregiao').value = '';
     document.getElementById('diversos-estado').value = '';
+    document.getElementById('diversos-embarcador').value = 'DIVERSOS';
 
     document.getElementById('pallet-tipo').value = 'VOLUMETRIA_ALTA';
     toggleCamposPorTipo();
@@ -120,8 +122,10 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('diversos-regiao').removeAttribute('required');
       document.getElementById('diversos-subregiao').removeAttribute('required');
       document.getElementById('diversos-estado').removeAttribute('required');
+      document.getElementById('diversos-embarcador').removeAttribute('required');
       document.getElementById('nf').setAttribute('required', 'required');
       document.getElementById('recebedor').setAttribute('required', 'required');
+      document.getElementById('embarcador').setAttribute('required', 'required');
       document.getElementById('estado').setAttribute('required', 'required');
       document.getElementById('cidade').setAttribute('required', 'required');
       document.getElementById('regiao').setAttribute('required', 'required');
@@ -132,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
       diversosCampos.style.display = 'block';
       document.getElementById('nf').removeAttribute('required');
       document.getElementById('recebedor').removeAttribute('required');
+      document.getElementById('embarcador').removeAttribute('required');
       document.getElementById('estado').removeAttribute('required');
       document.getElementById('cidade').removeAttribute('required');
       document.getElementById('regiao').removeAttribute('required');
@@ -140,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('diversos-regiao').setAttribute('required', 'required');
       document.getElementById('diversos-subregiao').setAttribute('required', 'required');
       document.getElementById('diversos-estado').setAttribute('required', 'required');
+      document.getElementById('diversos-embarcador').setAttribute('required', 'required');
     }
   }
 
@@ -189,6 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dados = {
           notaFiscal: document.getElementById('nf').value,
           recebedor: document.getElementById('recebedor').value,
+          embarcador: document.getElementById('embarcador').value,
           regiao: document.getElementById('regiao').value,
           subregiao: document.getElementById('subregiao').value,
           estado: document.getElementById('estado').value,
@@ -200,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
           regiao: document.getElementById('diversos-regiao').value,
           subregiao: document.getElementById('diversos-subregiao').value,
           estado: document.getElementById('diversos-estado').value,
+          embarcador: 'DIVERSOS',
           notaFiscal: 'DIVERSOS',
           recebedor: 'DIVERSOS',
           cidade: 'DIVERSOS',
@@ -409,6 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
       <div>
         <strong>Número Fiscal:</strong> ${p.notaFiscal || 'DIVERSOS'}<br>
         <strong>Recebedor:</strong> ${p.recebedor || 'DIVERSOS'}<br>
+        <strong>Embarcador:</strong> ${p.embarcador || 'DIVERSOS'}<br>
         <strong>UF:</strong> ${p.estado}<br>
         <strong>Cidade:</strong> ${p.cidade || 'DIVERSOS'}<br>
         <strong>Região:</strong> ${p.regiao || 'N/A'}<br>
@@ -521,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
           <div class="info-grid">
             <div class="info-item"><small>Recebedor</small><strong>${p.recebedor || 'DIVERSOS'}</strong></div>
+            <div class="info-item"><small>Embarcador</small><strong>${p.embarcador || 'DIVERSOS'}</strong></div>
             <div class="info-item"><small>UF</small><strong>${p.estado || ''}</strong></div>
             <div class="info-item"><small>Cidade</small><strong>${p.cidade || 'N/A'}</strong></div>
             <div class="info-item"><small>Região</small><strong>${p.regiao || 'N/A'}</strong></div>
@@ -554,6 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>
               <div class="info-grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="info-item"><small>Recebedor</small><strong>${anexo.recebedor}</strong></div>
+                <div class="info-item"><small>Embarcador</small><strong>${anexo.embarcador || 'DIVERSOS'}</strong></div>
                 <div class="info-item"><small>Sub-região</small><strong>${subrotaAnexo}</strong></div>
                 <div class="info-item"><small>Volumes</small><strong>${volumesAnexo}</strong></div>
               </div>
@@ -640,6 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
           <div class="finalizado-info">
             <div><small>Recebedor</small><br>${p.recebedor || 'DIVERSOS'}</div>
+            <div><small>Embarcador</small><br>${p.embarcador || 'DIVERSOS'}</div>
             <div><small>UF</small><br>${p.estado}</div>
             <div><small>Cidade</small><br>${p.cidade || 'N/A'}</div>
             <div><small>Região</small><br>${p.regiao || 'N/A'}</div>

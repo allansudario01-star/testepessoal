@@ -69,6 +69,7 @@ class PalletService {
                 ...basePallet,
                 notaFiscal: data.notaFiscal.toUpperCase().trim(),
                 recebedor: data.recebedor.toUpperCase().trim(),
+                embarcador: data.embarcador ? data.embarcador.toUpperCase().trim() : '',
                 hub: data.regiao ? data.regiao.toUpperCase().trim() : '',
                 estado: data.estado.toUpperCase().trim(),
                 cidade: data.cidade.toUpperCase().trim(),
@@ -83,6 +84,7 @@ class PalletService {
                 ...basePallet,
                 notaFiscal: 'DIVERSOS',
                 recebedor: 'DIVERSOS',
+                embarcador: 'DIVERSOS',
                 hub: data.regiao ? data.regiao.toUpperCase().trim() : '',
                 estado: data.estado.toUpperCase().trim(),
                 cidade: 'DIVERSOS',
@@ -245,6 +247,7 @@ class PalletService {
             lista = lista.filter(p =>
                 p.notaFiscal?.toUpperCase().includes(buscaUpper) ||
                 p.recebedor?.toUpperCase().includes(buscaUpper) ||
+                p.embarcador?.toUpperCase().includes(buscaUpper) ||
                 p.hub?.toUpperCase().includes(buscaUpper) ||
                 p.estado?.toUpperCase().includes(buscaUpper)
             );
@@ -439,12 +442,6 @@ class PalletService {
         font-weight: bold;
         width: 22mm;
     }
-    .embarcador-linha {
-        border-bottom: 1px solid #000;
-        flex: 1;
-        margin-left: 3mm;
-        height: 5mm;
-    }
     .recebedor-text {
         font-size: 11px;
         font-weight: bold;
@@ -615,7 +612,7 @@ class PalletService {
             <div class="left-col">
                 <div class="embarcador-item">
                     <div class="embarcador-label">Embarcador:</div>
-                    <div class="embarcador-linha"></div>
+                    <div class="recebedor-text">${pallet.embarcador || ''}</div>
                 </div>
                 <div class="embarcador-item">
                     <div class="embarcador-label">Recebedor:</div>
