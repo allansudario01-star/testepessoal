@@ -31,7 +31,6 @@
                 <div class="tab" data-tab="historico">HISTÓRICO</div>
             </div>
 
-            <!-- Aba Viagens -->
             <div class="tab-content active" id="tab-viagens">
                 <div id="viagemForm">
                     <div class="form-group">
@@ -149,7 +148,6 @@
                 </div>
             </div>
 
-            <!-- Aba Gestão -->
             <div class="tab-content" id="tab-gestao">
                 <h3 style="margin-bottom:20px;">Gastos do Guincho</h3>
                 <div class="form-group">
@@ -210,7 +208,6 @@
                 </div>
             </div>
 
-            <!-- Aba Motoristas -->
             <div class="tab-content" id="tab-motoristas">
                 <h3 style="margin-bottom:20px;">Cadastro de Motoristas</h3>
                 <div class="form-group"><label>Nome</label><input type="text" id="motoristaNome"
@@ -243,7 +240,6 @@
                 </div>
             </div>
 
-            <!-- Aba Histórico -->
             <div class="tab-content" id="tab-historico">
                 <div class="export-bar">
                     <button class="btn btn-secondary btn-sm" id="btnExportarMes">Exportar Mês</button>
@@ -281,7 +277,6 @@
         </div>
     </div>
 
-    <!-- Modal de Visualização de Foto -->
     <div id="fotoModal" class="modal">
         <div class="modal-content">
             <h3>📸 COMPROVANTE DA VIAGEM</h3>
@@ -292,7 +287,6 @@
     </div>
 
     <script>
-        // ==================== VARIAVEIS GLOBAIS ====================
         let viagens = [];
         let gastos = [];
         let motoristas = [];
@@ -302,19 +296,16 @@
         let contadorHex = 0;
         let currentQRCode = null;
 
-        // ==================== FUNCOES DO MAPA ====================
         function initMap() {
             map = L.map('map').setView([-14.2350, -51.9253], 4);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+                attribution: '&copy; OpenStreetMap',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
         }
 
-        // Adicionar marcadores no mapa
         function adicionarMarcadores(waypoints) {
-            // Remove marcadores antigos se existirem
             if (window.markers) {
                 window.markers.forEach(m => map.removeLayer(m));
             }
@@ -335,7 +326,6 @@
             });
         }
 
-        // ==================== FUNCOES DE GEOLOCALIZACAO ====================
         async function geocodificar(endereco) {
             if (!endereco || endereco.trim() === '') {
                 throw new Error('Endereço vazio');
@@ -358,7 +348,6 @@
             return data.routes[0];
         }
 
-        // Gerar QR Code
         function gerarQRCode(texto) {
             const container = document.getElementById('qrcode');
             container.innerHTML = '';
@@ -375,7 +364,6 @@
             });
         }
 
-        // Enviar WhatsApp
         function enviarWhatsApp(telefone, codigo) {
             let numero = telefone.replace(/\D/g, '');
             if (numero.length === 10) {
@@ -388,26 +376,34 @@
             window.open(url, '_blank');
         }
 
-        // ==================== FUNCOES DO FIREBASE ====================
         async function carregarDadosFirestore() {
             try {
                 const anoAtual = new Date().getFullYear();
 
-                const viagensSnapshot = await db.collection('viagens').orderBy('dataCriacao', 'desc').get();
+                const viagensSnapshot = await db.collection('viagens').get();
                 viagens = [];
                 viagensSnapshot.forEach(doc => {
                     viagens.push({ id: doc.id, ...doc.data() });
                 });
+                viagens.sort((a, b) => {
+                    const dateA = a.dataCriacao ? new Date(a.dataCriacao) : new Date(0);
+                    const dateB = b.dataCriacao ? new Date(b.dataCriacao) : new Date(0);
+                    return dateB - dateA;
+                });
                 atualizarHistorico();
 
-                // Carregar gastos do ano atual
-                const gastosSnapshot = await db.collection('gastos')
-                    .where('ano', '==', anoAtual)
-                    .orderBy('data', 'desc')
-                    .get();
+                const gastosSnapshot = await db.collection('gastos').get();
                 gastos = [];
                 gastosSnapshot.forEach(doc => {
-                    gastos.push({ id: doc.id, ...doc.data() });
+                    const gasto = { id: doc.id, ...doc.data() };
+                    if (gasto.ano === anoAtual) {
+                        gastos.push(gasto);
+                    }
+                });
+                gastos.sort((a, b) => {
+                    const dateA = new Date(a.data);
+                    const dateB = new Date(b.data);
+                    return dateB - dateA;
                 });
                 atualizarGastos();
 
@@ -426,7 +422,7 @@
                     await db.collection('config').doc('contador').set({ valor: 0 });
                 }
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados do Firebase. Verifique as regras do Firestore.');
             }
         }
 
@@ -437,7 +433,6 @@
             return hex;
         }
 
-        // ==================== CALCULO DE ROTA ====================
         window.calcularRota = async function () {
             const tipo = document.getElementById('tipoServico').value;
             if (!tipo) { alert('Selecione o tipo de serviço!'); return; }
@@ -493,10 +488,8 @@
                 document.getElementById('valorTotal').textContent = `R$ ${valorTotal.toFixed(2)}`;
                 document.getElementById('qrCodeHex').textContent = codigoHex;
 
-                // Gerar QR Code
                 gerarQRCode(codigoHex);
 
-                // Mostrar botão WhatsApp se tiver telefone
                 const telefone = document.getElementById('clienteTelefone').value;
                 const btnWhatsApp = document.getElementById('btnEnviarWhatsApp');
                 if (telefone) {
@@ -534,7 +527,6 @@
             }
         };
 
-        // ==================== CRIAR VIAGEM ====================
         document.getElementById('btnCriarViagem').addEventListener('click', async () => {
             if (!ultimoCalculo) { alert('Calcule a rota primeiro!'); return; }
 
@@ -576,7 +568,6 @@
 
             await db.collection('viagens').add(viagem);
 
-            // Limpar formulário
             document.getElementById('clienteNome').value = '';
             document.getElementById('clienteTelefone').value = '';
             document.getElementById('veiculoModelo').value = '';
@@ -590,13 +581,10 @@
             ultimoCalculo = null;
 
             await carregarDadosFirestore();
-
-            // Enviar WhatsApp para o cliente
             enviarWhatsApp(clienteTelefone, viagem.codigoValidacao);
             alert(`Viagem criada! Código enviado para o WhatsApp do cliente.`);
         });
 
-        // ==================== ATUALIZAR TABELAS ====================
         function atualizarHistorico() {
             const tbody = document.getElementById('historicoList');
             if (viagens.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma viagem</td></tr>'; return; }
@@ -635,7 +623,6 @@
                 return;
             }
 
-            // Contar viagens por motorista
             const viagensPorMotorista = {};
             viagens.forEach(v => {
                 if (v.motoristaId) {
@@ -723,7 +710,6 @@
             }
         };
 
-        // ==================== EXPORTACOES ====================
         function exportarParaExcel(dados, nomeArquivo) {
             const planilha = dados.map(v => ({
                 'ID': v.id,
@@ -764,7 +750,6 @@
             exportarParaExcel(viagens, 'viagens_completo');
         });
 
-        // ==================== EVENTOS DE UI ====================
         document.getElementById('btnCalcular').addEventListener('click', () => window.calcularRota());
 
         document.getElementById('btnCadastrarMotorista').addEventListener('click', async () => {
@@ -840,18 +825,15 @@
             });
         });
 
-        // Fechar modal de foto
         document.getElementById('fotoModal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('fotoModal')) {
                 document.getElementById('fotoModal').style.display = 'none';
             }
         });
 
-        // ==================== INICIALIZACAO ====================
         initMap();
         carregarDadosFirestore();
     </script>
-
 </body>
 
 </html>

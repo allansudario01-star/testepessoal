@@ -104,11 +104,7 @@
             <h3>✅ FINALIZAR VIAGEM</h3>
             <p>Escaneie o QR Code do cliente</p>
 
-            <div id="qr-reader" style="width:100%; margin:15px 0;"></div>
-
-            <div class="qr-scanner-area" id="simulateScannerBtn">
-                📷 SIMULAR LEITURA (TESTE)
-            </div>
+            <div id="qr-reader" style="width:100%; margin:0 auto 15px;"></div>
 
             <div style="margin:15px 0; text-align:center; color:#666; font-size:12px;">
                 — ou digite o código manualmente —
@@ -116,19 +112,20 @@
 
             <input type="text" id="codigoInput" placeholder="Código de 9 dígitos" maxlength="9">
 
-            <div style="margin:15px 0;">
-                <label style="display:block; margin-bottom:8px; color:#aaa; font-size:12px;">📸 COMPROVANTE DO
-                    SERVIÇO</label>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="foto-area">
+                <label>📸 COMPROVANTE DO SERVIÇO</label>
+                <div class="foto-buttons">
                     <button class="btn-secondary" id="btnAbrirCamera" style="flex:1;">📷 TIRAR FOTO</button>
                     <button class="btn-secondary" id="btnSelecionarFoto" style="flex:1;">🖼️ GALERIA</button>
                 </div>
                 <input type="file" id="fotoInput" accept="image/*" style="display:none;">
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
-                <img id="fotoPreview" class="foto-preview">
+                <div class="foto-preview-container">
+                    <img id="fotoPreview" class="foto-preview">
+                </div>
             </div>
 
-            <div class="btn-group">
+            <div class="modal-buttons">
                 <button class="btn-secondary" id="btnCancelarModal">CANCELAR</button>
                 <button class="btn-success" id="btnConfirmarFinalizar">FINALIZAR</button>
             </div>
@@ -145,7 +142,6 @@
         let fotoBase64 = null;
         let html5QrCode = null;
 
-        // Aguardar Firebase carregar
         function esperarFirebase() {
             return new Promise((resolve) => {
                 if (typeof db !== 'undefined' && db) {
@@ -160,8 +156,6 @@
                 }
             });
         }
-
-        // ==================== PERSISTÊNCIA DE LOGIN ====================
 
         function salvarSessao(motorista) {
             const sessao = {
@@ -195,7 +189,6 @@
             if (!sessao) return false;
 
             try {
-                // Tentar encontrar o motorista pelo CPF e senha salvos
                 const snapshot = await db.collection('motoristas')
                     .where('cpf', '==', sessao.cpf)
                     .where('senha', '==', sessao.senha)
@@ -208,7 +201,7 @@
                     return true;
                 }
             } catch (error) {
-                console.error('Erro no login automático:', error);
+                return false;
             }
             return false;
         }
@@ -258,7 +251,6 @@
                             limparSessao();
                         }
                     } catch (error) {
-                        console.error('Erro no login rápido:', error);
                         document.getElementById('loginError').textContent = 'Erro ao fazer login. Tente novamente.';
                     }
 
@@ -267,8 +259,6 @@
                 });
             }
         }
-
-        // ==================== FUNÇÕES DO MAPA ====================
 
         function initMap() {
             map = L.map('map').setView([-14.2350, -51.9253], 4);
@@ -307,7 +297,7 @@
             if (data && data.length > 0) {
                 return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display_name: data[0].display_name };
             }
-            throw new Error('Endereço não encontrado: ' + endereco);
+            throw new Error('Endereço não encontrado');
         }
 
         async function carregarViagens() {
@@ -319,7 +309,6 @@
                 snapshot.forEach(doc => {
                     viagensAtribuidas.push({ id: doc.id, ...doc.data() });
                 });
-                // Ordenar no cliente
                 viagensAtribuidas.sort((a, b) => {
                     const dateA = a.dataCriacao ? new Date(a.dataCriacao) : new Date(0);
                     const dateB = b.dataCriacao ? new Date(b.dataCriacao) : new Date(0);
@@ -328,7 +317,7 @@
                 viagemAtiva = viagensAtribuidas.find(v => v.status === 'em_andamento');
                 atualizarInterface();
             } catch (error) {
-                console.error('Erro ao carregar viagens:', error);
+                // erro silencioso
             }
         }
 
@@ -372,7 +361,6 @@
                     document.getElementById('mapInfo').innerHTML = `📏 ${(data.routes[0].distance / 1000).toFixed(1)} km | ⏱️ ${Math.round(data.routes[0].duration / 60)} min`;
                 }
             } catch (error) {
-                console.error('Erro ao carregar rota:', error);
                 document.getElementById('mapInfo').innerHTML = '❌ Erro ao carregar rota';
             }
         }
@@ -450,7 +438,6 @@
                 await carregarViagens();
                 alert(`✅ Viagem iniciada! Tempo previsto: ${viagemAtiva?.tempoPrevisto || 0} minutos`);
             } catch (error) {
-                console.error('Erro ao iniciar viagem:', error);
                 alert('Erro ao iniciar viagem. Tente novamente.');
             }
         }
@@ -474,8 +461,8 @@
                     document.getElementById('codigoInput').value = decodedText;
                     html5QrCode.stop();
                 },
-                (error) => { console.log("QR scan error:", error); }
-            ).catch(err => console.log("Erro ao iniciar câmera:", err));
+                (error) => { }
+            ).catch(err => { });
         }
 
         function fecharModal() {
@@ -512,7 +499,6 @@
                 await carregarViagens();
                 alert('✅ Viagem finalizada com sucesso!');
             } catch (error) {
-                console.error('Erro ao finalizar viagem:', error);
                 alert('Erro ao finalizar viagem. Tente novamente.');
             }
         }
@@ -524,8 +510,6 @@
             initMap();
             carregarViagens();
         }
-
-        // ==================== LOGIN ====================
 
         document.getElementById('btnLogin').addEventListener('click', async () => {
             const cpf = document.getElementById('loginCpf').value.trim();
@@ -542,20 +526,14 @@
             document.getElementById('btnLogin').textContent = 'ENTRANDO...';
 
             try {
-                console.log('Buscando motorista com CPF:', cpf);
-
                 const snapshot = await db.collection('motoristas')
                     .where('cpf', '==', cpf)
                     .where('senha', '==', senha)
                     .where('status', '==', 'ativo')
                     .get();
 
-                console.log('Resultado da busca:', snapshot.empty ? 'Nenhum motorista encontrado' : 'Motorista encontrado');
-
                 if (!snapshot.empty) {
                     motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                    console.log('Motorista logado:', motoristaLogado.nome);
-
                     if (lembrar) {
                         salvarSessao(motoristaLogado);
                     }
@@ -564,8 +542,7 @@
                     document.getElementById('loginError').textContent = 'CPF ou senha inválidos! Verifique se o motorista está cadastrado e ativo.';
                 }
             } catch (error) {
-                console.error('Erro no login:', error);
-                document.getElementById('loginError').textContent = 'Erro ao conectar com o banco de dados: ' + error.message;
+                document.getElementById('loginError').textContent = 'Erro ao conectar com o banco de dados.';
             }
 
             document.getElementById('btnLogin').disabled = false;
@@ -581,15 +558,6 @@
             document.getElementById('loginSenha').value = '';
             document.getElementById('rememberCheckbox').checked = false;
             document.getElementById('loginError').textContent = '';
-        });
-
-        document.getElementById('simulateScannerBtn').addEventListener('click', () => {
-            if (viagemAtiva) {
-                document.getElementById('codigoInput').value = viagemAtiva.codigoValidacao;
-                alert(`🔢 Código preenchido: ${viagemAtiva.codigoValidacao}`);
-            } else {
-                alert('Nenhuma viagem ativa para testar');
-            }
         });
 
         document.getElementById('btnAbrirCamera').addEventListener('click', () => {
@@ -623,8 +591,6 @@
 
         document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
         document.getElementById('btnConfirmarFinalizar').addEventListener('click', confirmarFinalizacao);
-
-        // ==================== INICIALIZAÇÃO ====================
 
         async function init() {
             await esperarFirebase();
