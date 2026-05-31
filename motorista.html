@@ -18,28 +18,46 @@
 <body>
     <div id="loginContainer" class="login-container">
         <div class="login-card">
-            <h1>BLACK TOW</h1>
-            <div class="login-subtitle">Painel do Motorista</div>
+            <div class="login-logo">
+                <div class="logo-icon">🚛</div>
+                <h1>BLACK TOW</h1>
+                <div class="tagline">Motorista Profissional</div>
+            </div>
 
             <div id="savedUserContainer" style="display:none;"></div>
 
             <div class="input-group">
-                <label>📄 CPF</label>
-                <input type="text" id="loginCpf" placeholder="000.000.000-00" autocomplete="username">
+                <label>CPF</label>
+                <div class="input-icon">
+                    <span>📄</span>
+                    <input type="text" id="loginCpf" placeholder="000.000.000-00" autocomplete="username">
+                </div>
             </div>
 
             <div class="input-group">
-                <label>🔒 SENHA</label>
-                <input type="password" id="loginSenha" placeholder="••••••" autocomplete="current-password">
+                <label>SENHA</label>
+                <div class="input-icon">
+                    <span>🔒</span>
+                    <input type="password" id="loginSenha" placeholder="••••••" autocomplete="current-password">
+                </div>
             </div>
 
-            <div class="remember-me" id="rememberMeBtn">
-                <input type="checkbox" id="rememberCheckbox">
-                <label>Lembrar de mim</label>
+            <div class="remember-container">
+                <label class="remember-checkbox">
+                    <input type="checkbox" id="rememberCheckbox">
+                    <span>Lembrar de mim</span>
+                </label>
             </div>
 
-            <button id="btnLogin">ENTRAR</button>
+            <button class="btn-login-premium" id="btnLogin">
+                ENTRAR NO SISTEMA →
+            </button>
+
             <div id="loginError" class="error"></div>
+
+            <div class="login-footer">
+                BLACK TOW - Sistema de Guincho 24h
+            </div>
         </div>
     </div>
 
@@ -48,13 +66,13 @@
             <div class="motorista-header">
                 <div class="logo">BLACK TOW</div>
                 <div class="motorista-info-card" id="motoristaInfo">
-                    <div class="motorista-avatar">👤</div>
+                    <div class="motorista-avatar">🚛</div>
                     <div class="motorista-details">
                         <span class="motorista-name" id="motoristaNome">Carregando...</span>
                         <span class="motorista-status">● Online</span>
                     </div>
                 </div>
-                <button class="btn-logout" id="btnLogout">SAIR</button>
+                <button class="btn-logout" id="btnLogout">Sair</button>
             </div>
 
             <div class="motorista-grid">
@@ -159,7 +177,6 @@
             const sessao = carregarSessao();
             if (!sessao) return false;
 
-            // Tentar encontrar o motorista pelo ID
             const doc = await db.collection('motoristas').doc(sessao.id).get();
             if (doc.exists && doc.data().status === 'ativo') {
                 motoristaLogado = { id: doc.id, ...doc.data() };
@@ -175,12 +192,19 @@
                 const sessao = JSON.parse(saved);
                 const container = document.getElementById('savedUserContainer');
                 container.innerHTML = `
-                    <div class="saved-user" id="quickLoginBtn">
-                        <div class="saved-user-name">👤 ${sessao.nome}</div>
-                        <div class="saved-user-cpf">${sessao.cpf}</div>
-                        <div style="font-size:11px; color:#4caf50; margin-top:5px;">● Clique para entrar rapidamente</div>
+                    <div class="saved-user-card" id="quickLoginBtn">
+                        <div class="saved-user-avatar">🚛</div>
+                        <div class="saved-user-info">
+                            <div class="saved-user-name">${sessao.nome}</div>
+                            <div class="saved-user-cpf">${sessao.cpf}</div>
+                        </div>
+                        <div class="saved-user-badge">
+                            ⚡ Clique para entrar
+                        </div>
                     </div>
-                    <div style="text-align:center; margin:15px 0; color:#333;">— ou faça login com outro usuário —</div>
+                    <div class="divider">
+                        <span>ou faça login com outro usuário</span>
+                    </div>
                 `;
                 container.style.display = 'block';
 
@@ -203,7 +227,7 @@
                     }
 
                     document.getElementById('btnLogin').disabled = false;
-                    document.getElementById('btnLogin').textContent = 'ENTRAR';
+                    document.getElementById('btnLogin').textContent = 'ENTRAR NO SISTEMA →';
                 });
             }
         }
@@ -296,7 +320,7 @@
                 if (data.routes && data.routes.length > 0) {
                     if (currentRoute) map.removeLayer(currentRoute);
                     currentRoute = L.geoJSON(data.routes[0].geometry, {
-                        style: { color: '#4caf50', weight: 4, opacity: 0.8 }
+                        style: { color: '#FF4500', weight: 4, opacity: 0.8 }
                     }).addTo(map);
                     map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
                     adicionarMarcadores(waypointsInfo);
@@ -324,7 +348,7 @@
                         <div style="font-size:13px;">🚗 ${v.veiculo || '-'}</div>
                         <div style="font-size:12px; color:#888;">🔧 ${v.tipo || '-'}${v.subtipo ? ` (${v.subtipo})` : ''}</div>
                         <div style="font-size:12px; color:#888;">📍 ${v.clienteLocal ? v.clienteLocal.substring(0, 35) : '-'}</div>
-                        <div style="font-size:12px; color:#4caf50;">⏱️ Previsto: ${v.tempoPrevisto || 0} min</div>
+                        <div style="font-size:12px; color:#FF8C00;">⏱️ Previsto: ${v.tempoPrevisto || 0} min</div>
                     </div>
                 `).join('');
 
@@ -479,7 +503,7 @@
             }
 
             document.getElementById('btnLogin').disabled = false;
-            document.getElementById('btnLogin').textContent = 'ENTRAR';
+            document.getElementById('btnLogin').textContent = 'ENTRAR NO SISTEMA →';
         });
 
         document.getElementById('btnLogout').addEventListener('click', () => {
@@ -494,56 +518,5 @@
             location.reload();
         });
 
-        document.getElementById('simulateScannerBtn').addEventListener('click', () => {
-            if (viagemAtiva) {
-                document.getElementById('codigoInput').value = viagemAtiva.codigoValidacao;
-                alert(`🔢 Código preenchido: ${viagemAtiva.codigoValidacao}`);
-            } else {
-                alert('Nenhuma viagem ativa para testar');
-            }
-        });
-
-        document.getElementById('btnAbrirCamera').addEventListener('click', () => {
-            document.getElementById('cameraInput').click();
-        });
-
-        document.getElementById('btnSelecionarFoto').addEventListener('click', () => {
-            document.getElementById('fotoInput').click();
-        });
-
-        function processarFoto(file) {
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    fotoBase64 = ev.target.result;
-                    const preview = document.getElementById('fotoPreview');
-                    preview.src = fotoBase64;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        document.getElementById('cameraInput').addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
-        });
-
-        document.getElementById('fotoInput').addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
-        });
-
-        document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
-        document.getElementById('btnConfirmarFinalizar').addEventListener('click', confirmarFinalizacao);
-
-        // ==================== INICIALIZAÇÃO ====================
-
-        mostrarUsuariosSalvos();
-        tentarLoginAutomatico().then(success => {
-            if (!success) {
-                document.getElementById('loginContainer').style.display = 'flex';
-            }
-        });
-    </script>
-</body>
-
-</html>
+        document.getElementById
+    

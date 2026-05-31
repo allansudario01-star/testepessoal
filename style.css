@@ -1,4 +1,4 @@
-/* style.css - Black Tow Admin & Motorista */
+/* style.css - Black Tow Admin & Motorista - Versão Premium */
 * {
     margin: 0;
     padding: 0;
@@ -11,7 +11,7 @@ body {
     color: #ffffff;
 }
 
-/* Scrollbar personalizada */
+/* ==================== SCROLLBAR PERSONALIZADA ==================== */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -27,10 +27,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555555;
+    background: #FF4500;
 }
 
-/* Botões e elementos globais */
+/* ==================== BOTÕES GLOBAIS ==================== */
 .btn {
     padding: 12px 20px;
     border: none;
@@ -91,7 +91,7 @@ body {
     font-size: 12px;
 }
 
-/* Cards e containers */
+/* ==================== CARDS E CONTAINERS ==================== */
 .card {
     background: #000000;
     border: 1px solid #222222;
@@ -118,7 +118,7 @@ body {
     border: 1px solid #222222;
 }
 
-/* Formulários */
+/* ==================== FORMULÁRIOS ==================== */
 .form-group {
     margin-bottom: 20px;
 }
@@ -149,11 +149,12 @@ body {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #ffffff;
+    border-color: #FF4500;
     background: #1a1a1a;
+    box-shadow: 0 0 0 3px rgba(255, 68, 0, 0.2);
 }
 
-/* Tabelas */
+/* ==================== TABELAS ==================== */
 .table-container {
     overflow-x: auto;
     border-radius: 12px;
@@ -182,7 +183,7 @@ tr:hover td {
     background: #0d0d0d;
 }
 
-/* Badges de status */
+/* ==================== BADGES DE STATUS ==================== */
 .status-badge {
     padding: 4px 10px;
     border-radius: 20px;
@@ -217,7 +218,7 @@ tr:hover td {
     color: #ffffff;
 }
 
-/* Result rows */
+/* ==================== RESULT ROWS ==================== */
 .result-row {
     display: flex;
     justify-content: space-between;
@@ -244,7 +245,7 @@ tr:hover td {
     color: #ffffff;
 }
 
-/* QR Code */
+/* ==================== QR CODE ==================== */
 .qr-code-container {
     background: #111111;
     padding: 16px;
@@ -294,7 +295,7 @@ tr:hover td {
     transform: translateY(-1px);
 }
 
-/* Loading */
+/* ==================== LOADING ==================== */
 .loading {
     text-align: center;
     padding: 20px;
@@ -309,7 +310,7 @@ tr:hover td {
     width: 40px;
     height: 40px;
     border: 3px solid #222;
-    border-top-color: #fff;
+    border-top-color: #FF4500;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto 10px;
@@ -321,7 +322,7 @@ tr:hover td {
     }
 }
 
-/* Export bar */
+/* ==================== EXPORT BAR ==================== */
 .export-bar {
     display: flex;
     gap: 10px;
@@ -329,7 +330,7 @@ tr:hover td {
     flex-wrap: wrap;
 }
 
-/* Modal */
+/* ==================== MODAL ==================== */
 .modal {
     display: none;
     position: fixed;
@@ -384,7 +385,7 @@ tr:hover td {
 }
 
 .qr-scanner-area:hover {
-    border-color: #fff;
+    border-color: #FF4500;
     background: #1a1a1a;
 }
 
@@ -405,7 +406,7 @@ tr:hover td {
     flex: 1;
 }
 
-/* Tabs */
+/* ==================== TABS ==================== */
 .tabs {
     display: flex;
     border-bottom: 1px solid #222222;
@@ -429,8 +430,8 @@ tr:hover td {
 }
 
 .tab.active {
-    color: #ffffff;
-    border-bottom-color: #ffffff;
+    color: #FF4500;
+    border-bottom-color: #FF4500;
     background: #0a0a0a;
 }
 
@@ -445,7 +446,7 @@ tr:hover td {
     display: block;
 }
 
-/* Waypoint list */
+/* ==================== WAYPOINT LIST ==================== */
 .waypoint-list {
     margin-top: 10px;
     max-height: 150px;
@@ -477,7 +478,7 @@ tr:hover td {
     border-left-color: #888888;
 }
 
-/* Layout Admin */
+/* ==================== LAYOUT ADMIN ==================== */
 .app-container {
     display: flex;
     height: 100vh;
@@ -501,12 +502,10 @@ tr:hover td {
 .logo {
     font-size: 28px;
     font-weight: 800;
-    background: linear-gradient(135deg, #ffffff, #888888);
-
-    background-clip: text;
+    background: linear-gradient(135deg, #ffffff, #FF4500);
     -webkit-background-clip: text;
-
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .subtitle {
@@ -539,7 +538,327 @@ tr:hover td {
     font-size: 12px;
 }
 
-/* Motorista Layout */
+/* ==================== LOGIN PREMIUM ==================== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #000000;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efeito de fundo com gradientes */
+.login-container::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(255, 68, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 68, 0, 0.1) 0%, transparent 50%),
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 2px, transparent 2px, transparent 8px);
+}
+
+/* Grade tecnológica */
+.login-container::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+}
+
+.login-card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 440px;
+    margin: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 48px;
+    padding: 48px 32px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Logo área */
+.login-logo {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.login-logo .logo-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    display: inline-block;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        filter: drop-shadow(0 0 0px rgba(255, 68, 0, 0));
+        transform: scale(1);
+    }
+
+    50% {
+        filter: drop-shadow(0 0 20px rgba(255, 68, 0, 0.5));
+        transform: scale(1.05);
+    }
+}
+
+.login-logo h1 {
+    font-size: 48px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FF8C00 50%, #FF4500 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+}
+
+.login-logo .tagline {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* Input groups */
+.input-group {
+    margin-bottom: 24px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 8px;
+}
+
+.input-group .input-icon {
+    position: relative;
+}
+
+.input-group .input-icon span {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.6;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 16px 16px 16px 48px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #FF4500;
+    background: rgba(255, 68, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 68, 0, 0.2);
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Remember me */
+.remember-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 24px 0 32px;
+}
+
+.remember-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.remember-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #FF4500;
+}
+
+.remember-checkbox span {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Botão login premium */
+.btn-login-premium {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #FF4500, #FF8C00);
+    border: none;
+    border-radius: 32px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: 24px;
+}
+
+.btn-login-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-login-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 68, 0, 0.3);
+}
+
+.btn-login-premium:hover::before {
+    left: 100%;
+}
+
+.btn-login-premium:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Usuário salvo */
+.saved-user-card {
+    background: rgba(255, 68, 0, 0.1);
+    border: 1px solid rgba(255, 68, 0, 0.3);
+    border-radius: 32px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.saved-user-card:hover {
+    background: rgba(255, 68, 0, 0.15);
+    border-color: rgba(255, 68, 0, 0.5);
+    transform: translateX(5px);
+}
+
+.saved-user-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #FF4500, #FF8C00);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.saved-user-info {
+    flex: 1;
+}
+
+.saved-user-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.saved-user-cpf {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.saved-user-badge {
+    font-size: 11px;
+    color: #FF8C00;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Divisor */
+.divider {
+    text-align: center;
+    margin: 24px 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.divider span {
+    position: relative;
+    background: #000;
+    padding: 0 16px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+}
+
+/* Error message */
+.error {
+    color: #f44336;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    padding: 10px;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 10px;
+}
+
+/* Footer do login */
+.login-footer {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* ==================== LAYOUT MOTORISTA ==================== */
 .motorista-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -549,23 +868,70 @@ tr:hover td {
 .motorista-header {
     background: #000000;
     border: 1px solid #222222;
-    border-radius: 20px;
-    padding: 20px;
-    margin-bottom: 20px;
+    border-radius: 24px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
+    backdrop-filter: blur(10px);
 }
 
-.motorista-info {
-    background: #111111;
+.motorista-info-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #111;
     padding: 8px 20px;
-    border-radius: 40px;
-    font-size: 14px;
+    border-radius: 60px;
+    border: 1px solid #222;
 }
 
+.motorista-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FF4500, #FF8C00);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.motorista-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.motorista-name {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.motorista-status {
+    font-size: 11px;
+    color: #4caf50;
+}
+
+.btn-logout {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    padding: 10px 20px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.btn-logout:hover {
+    background: rgba(244, 67, 54, 0.25);
+    border-color: #f44336;
+}
+
+/* Grid do motorista */
 .motorista-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -578,6 +944,7 @@ tr:hover td {
     background: linear-gradient(135deg, #0a1a0a, #000000);
 }
 
+/* Info rows */
 .info-row {
     display: flex;
     justify-content: space-between;
@@ -596,6 +963,7 @@ tr:hover td {
     text-align: right;
 }
 
+/* Viagem item */
 .viagem-item {
     background: #111111;
     border-radius: 12px;
@@ -612,7 +980,7 @@ tr:hover td {
 }
 
 .viagem-item.selected {
-    border-color: #ffffff;
+    border-color: #FF4500;
     background: #1a1a1a;
 }
 
@@ -634,8 +1002,18 @@ tr:hover td {
     font-weight: 600;
 }
 
-/* Responsivo para celular */
+/* ==================== MARCADORES DO MAPA ==================== */
+.marker-icon {
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== RESPONSIVIDADE ==================== */
 @media (max-width: 768px) {
+
+    /* Admin responsivo */
     .sidebar {
         width: 100%;
         height: 50%;
@@ -650,10 +1028,12 @@ tr:hover td {
         height: 50%;
     }
 
+    /* Motorista responsivo */
     .motorista-grid {
         grid-template-columns: 1fr;
     }
 
+    /* Modal responsivo */
     .modal-content {
         padding: 20px;
         width: 95%;
@@ -668,6 +1048,7 @@ tr:hover td {
         flex-direction: column;
     }
 
+    /* Tabs responsivo */
     .tab {
         padding: 12px;
         font-size: 12px;
@@ -681,247 +1062,61 @@ tr:hover td {
         padding: 15px;
     }
 
+    /* Resultados responsivos */
     .result-value.highlight {
         font-size: 22px;
     }
 
-    /* Login Container melhorado */
-    .login-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #000000, #1a1a1a);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .login-container::before {
-        content: '';
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-        animation: moveGrid 20s linear infinite;
-    }
-
-    @keyframes moveGrid {
-        0% {
-            transform: translate(0, 0);
-        }
-
-        100% {
-            transform: translate(40px, 40px);
-        }
-    }
-
+    /* Login responsivo */
     .login-card {
-        background: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 32px 24px;
+        margin: 16px;
         border-radius: 32px;
-        padding: 48px 40px;
-        width: 100%;
-        max-width: 420px;
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
-    .login-card h1 {
-        font-size: 42px;
-        font-weight: 800;
-
-        background: linear-gradient(135deg, #ffffff, #888888);
-
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-
-        text-align: center;
-        margin-bottom: 8px;
+    .login-logo h1 {
+        font-size: 36px;
     }
 
-    .login-card .login-subtitle {
-        text-align: center;
-        color: #666;
-        font-size: 14px;
-        margin-bottom: 32px;
+    .login-logo .logo-icon {
+        font-size: 48px;
     }
 
-    .login-card .input-group {
-        margin-bottom: 20px;
-    }
-
-    .login-card .input-group label {
-        display: block;
-        font-size: 12px;
-        color: #aaa;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .login-card input {
-        width: 100%;
-        padding: 14px 16px;
-        background: #111;
-        border: 1px solid #222;
-        border-radius: 14px;
-        color: #fff;
-        font-size: 16px;
-        transition: all 0.3s;
-    }
-
-    .login-card input:focus {
-        outline: none;
-        border-color: #fff;
-        background: #1a1a1a;
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-    }
-
-    .login-card button {
-        width: 100%;
-        padding: 14px;
-        background: linear-gradient(135deg, #ffffff, #e0e0e0);
-        color: #000;
-        border: none;
-        border-radius: 14px;
-        font-weight: bold;
-        font-size: 16px;
-        cursor: pointer;
-        transition: all 0.3s;
-        margin-top: 10px;
-    }
-
-    .login-card button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
-    }
-
-    .login-card .error {
-        color: #f44336;
-        text-align: center;
-        margin-top: 16px;
-        font-size: 13px;
-        padding: 10px;
-        background: rgba(244, 67, 54, 0.1);
-        border-radius: 10px;
-    }
-
-    .login-card .remember-me {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin: 20px 0;
-        cursor: pointer;
-    }
-
-    .login-card .remember-me input {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: #fff;
-    }
-
-    .login-card .remember-me label {
-        margin: 0;
-        cursor: pointer;
-        font-size: 13px;
-        color: #888;
-    }
-
-    .login-card .saved-user {
-        background: #0a0a0a;
-        border: 1px solid #222;
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 20px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .login-card .saved-user:hover {
-        background: #111;
-        border-color: #444;
-    }
-
-    .login-card .saved-user-name {
-        font-weight: bold;
-        color: #fff;
-    }
-
-    .login-card .saved-user-cpf {
-        font-size: 12px;
-        color: #666;
-        margin-top: 4px;
-    }
-
-    /* Header do motorista melhorado */
+    /* Header motorista responsivo */
     .motorista-header {
-        background: #000000;
-        border: 1px solid #222222;
-        border-radius: 24px;
-        padding: 20px 24px;
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-        backdrop-filter: blur(10px);
+        flex-direction: column;
+        text-align: center;
     }
 
     .motorista-info-card {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        background: #111;
-        padding: 8px 20px;
-        border-radius: 60px;
-        border: 1px solid #222;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Ajustes extras para telas muito pequenas */
+    .card {
+        padding: 15px;
     }
 
-    .motorista-avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #ffffff, #888888);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .result-value.highlight {
         font-size: 20px;
     }
 
-    .motorista-details {
-        display: flex;
-        flex-direction: column;
+    .qr-code-hex {
+        font-size: 16px;
+        letter-spacing: 2px;
     }
 
-    .motorista-name {
-        font-weight: bold;
-        font-size: 15px;
+    .saved-user-card {
+        padding: 12px 16px;
     }
 
-    .motorista-status {
-        font-size: 11px;
-        color: #4caf50;
-    }
-
-    .btn-logout {
-        background: rgba(244, 67, 54, 0.15);
-        color: #f44336;
-        border: 1px solid rgba(244, 67, 54, 0.3);
-        padding: 10px 20px;
-        border-radius: 40px;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 600;
-    }
-
-    .btn-logout:hover {
-        background: rgba(244, 67, 54, 0.25);
-        border-color: #f44336;
+    .saved-user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
     }
 }
