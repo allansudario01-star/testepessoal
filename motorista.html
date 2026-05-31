@@ -1,66 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
     <title>Black Tow - Motorista</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="./firebase-config.js"></script>
-
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #ffffff; min-height: 100vh; }
-
-        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #000000, #1a1a1a); }
-        .login-card { background: #000000; border: 1px solid #222222; border-radius: 16px; padding: 40px; width: 100%; max-width: 400px; }
-        .login-card h1 { font-size: 32px; margin-bottom: 30px; text-align: center; }
-        .login-card input { width: 100%; padding: 14px; background: #111111; border: 1px solid #222222; border-radius: 8px; color: #ffffff; margin-bottom: 20px; font-size: 16px; }
-        .login-card button { width: 100%; padding: 14px; background: #ffffff; color: #000000; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .error { color: #f44336; text-align: center; margin-top: 15px; font-size: 14px; }
-
-        .app-container { display: none; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: #000000; border: 1px solid #222222; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo { font-size: 24px; font-weight: 800; }
-        .motorista-info { background: #111111; padding: 10px 20px; border-radius: 8px; }
-        .btn-logout { background: #f44336; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .card { background: #000000; border: 1px solid #222222; border-radius: 12px; padding: 20px; }
-        .card h3 { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222222; }
-
-        .viagem-ativa { background: linear-gradient(135deg, #1a1a1a, #000000); border: 2px solid #4caf50; }
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222222; }
-        .info-label { color: #888888; }
-        .info-value { font-weight: 600; }
-        .codigo { font-family: monospace; font-size: 20px; letter-spacing: 3px; background: #111111; padding: 10px; border-radius: 8px; text-align: center; margin: 15px 0; }
-
-        .viagem-item { background: #111111; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; border: 1px solid #222222; }
-        .viagem-item:hover { background: #1a1a1a; transform: translateX(5px); }
-        .viagem-item.selected { border-color: #ffffff; background: #1a1a1a; }
-        .viagem-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .viagem-cliente { font-weight: bold; }
-        .viagem-status { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
-        .status-pendente { background: #ff9800; color: #000000; }
-        .status-andamento { background: #2196f3; color: #ffffff; }
-
-        #map { height: 300px; border-radius: 12px; margin-top: 15px; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .modal-content { background: #000000; border: 1px solid #222222; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; text-align: center; }
-        .modal-content input { width: 100%; padding: 15px; font-size: 24px; text-align: center; font-family: monospace; letter-spacing: 3px; background: #111111; border: 1px solid #222222; color: #ffffff; border-radius: 8px; margin: 20px 0; }
-        .qr-scanner { background: #111111; padding: 20px; border-radius: 8px; margin: 20px 0; cursor: pointer; border: 1px dashed #666666; }
-        .foto-preview { max-width: 100%; margin-top: 15px; border-radius: 8px; display: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1; }
-        .btn-primary { background: #ffffff; color: #000000; }
-        .btn-secondary { background: #222222; color: #ffffff; border: 1px solid #333333; }
-        .btn-success { background: #4caf50; color: #ffffff; }
-    </style>
 </head>
+
 <body>
     <div id="loginContainer" class="login-container">
         <div class="login-card">
@@ -68,52 +22,72 @@
             <h3 style="text-align:center; margin-bottom:20px;">Painel do Motorista</h3>
             <input type="text" id="loginCpf" placeholder="CPF">
             <input type="password" id="loginSenha" placeholder="Senha">
-            <button id="btnLogin">ENTRAR</button>
+            <button class="btn btn-primary" id="btnLogin" style="width:100%">ENTRAR</button>
             <div id="loginError" class="error"></div>
         </div>
     </div>
 
-    <div id="appContainer" class="app-container">
-        <div class="header">
-            <div class="logo">BLACK TOW</div>
-            <div class="motorista-info" id="motoristaInfo">Carregando...</div>
-            <button class="btn-logout" id="btnLogout">SAIR</button>
-        </div>
+    <div id="appContainer" style="display:none;">
+        <div class="motorista-container">
+            <div class="motorista-header">
+                <div class="logo">BLACK TOW</div>
+                <div class="motorista-info" id="motoristaInfo">Carregando...</div>
+                <button class="btn-danger btn-sm" id="btnLogout">SAIR</button>
+            </div>
 
-        <div class="grid">
-            <div class="card viagem-ativa" id="viagemAtivaCard">
-                <h3>VIAGEM ATIVA</h3>
-                <div id="viagemAtivaContent">
-                    <p style="color:#666;">Nenhuma viagem em andamento</p>
+            <div class="motorista-grid">
+                <div class="card viagem-ativa" id="viagemAtivaCard">
+                    <div class="card-header">🚛 VIAGEM ATIVA</div>
+                    <div id="viagemAtivaContent">
+                        <p style="color:#666;">Nenhuma viagem em andamento</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">📋 PRÓXIMAS VIAGENS</div>
+                    <div id="proximasViagens" style="max-height: 400px; overflow-y: auto;">
+                        <p style="color:#666;">Carregando...</p>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
-                <h3>PROXIMAS VIAGENS</h3>
-                <div id="proximasViagens" style="max-height: 400px; overflow-y: auto;">
-                    <p style="color:#666;">Carregando...</p>
-                </div>
+                <div class="card-header">🗺️ ROTA</div>
+                <div id="map" style="height: 300px; border-radius: 12px;"></div>
+                <div id="mapInfo" style="margin-top: 10px; font-size: 12px; color:#888;"></div>
             </div>
-        </div>
-
-        <div class="card">
-            <h3>ROTA</h3>
-            <div id="map"></div>
-            <div id="mapInfo" style="margin-top: 10px; font-size: 12px; color:#888;"></div>
         </div>
     </div>
 
     <div id="qrModal" class="modal">
         <div class="modal-content">
-            <h3>FINALIZAR VIAGEM</h3>
-            <p>Digite o codigo informado pelo cliente</p>
-            <input type="text" id="codigoInput" placeholder="Codigo de 9 digitos" maxlength="9">
-            <div class="qr-scanner" id="simulateScanner">
-                SIMULAR LEITURA QR CODE
+            <h3>✅ FINALIZAR VIAGEM</h3>
+            <p>Escaneie o QR Code do cliente</p>
+
+            <div id="qr-reader" style="width:100%; margin:15px 0;"></div>
+
+            <div class="qr-scanner-area" id="simulateScannerBtn">
+                📷 SIMULAR LEITURA (TESTE)
             </div>
-            <input type="file" id="fotoInput" accept="image/*" style="display:none;">
-            <button class="btn-secondary" style="width:100%; margin-top:10px;" id="btnTirarFoto">TIRAR FOTO DO VEICULO</button>
-            <img id="fotoPreview" class="foto-preview">
+
+            <div style="margin:15px 0; text-align:center; color:#666; font-size:12px;">
+                — ou digite o código manualmente —
+            </div>
+
+            <input type="text" id="codigoInput" placeholder="Código de 9 dígitos" maxlength="9">
+
+            <div style="margin:15px 0;">
+                <label style="display:block; margin-bottom:8px; color:#aaa; font-size:12px;">📸 COMPROVANTE DO
+                    SERVIÇO</label>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn-secondary" id="btnAbrirCamera" style="flex:1;">📷 TIRAR FOTO</button>
+                    <button class="btn-secondary" id="btnSelecionarFoto" style="flex:1;">🖼️ GALERIA</button>
+                </div>
+                <input type="file" id="fotoInput" accept="image/*" style="display:none;">
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+                <img id="fotoPreview" class="foto-preview">
+            </div>
+
             <div class="btn-group">
                 <button class="btn-secondary" id="btnCancelarModal">CANCELAR</button>
                 <button class="btn-success" id="btnConfirmarFinalizar">FINALIZAR</button>
@@ -129,18 +103,53 @@
         let map;
         let currentRoute = null;
         let fotoBase64 = null;
+        let html5QrCode = null;
 
         function initMap() {
             map = L.map('map').setView([-14.2350, -51.9253], 4);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: 'OpenStreetMap',
+                attribution: '&copy; OpenStreetMap',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
         }
 
+        function adicionarMarcadores(waypoints) {
+            if (window.markers) {
+                window.markers.forEach(m => map.removeLayer(m));
+            }
+            window.markers = [];
+
+            const icones = {
+                origem: L.divIcon({ html: '🚛', className: 'marker-icon', iconSize: [30, 30] }),
+                cliente: L.divIcon({ html: '📍', className: 'marker-icon', iconSize: [30, 30] }),
+                destino: L.divIcon({ html: '🏁', className: 'marker-icon', iconSize: [30, 30] })
+            };
+
+            waypoints.forEach((p, i) => {
+                const marker = L.marker([p.lat, p.lon], { icon: icones[p.tipo] || icones.origem })
+                    .bindPopup(`<strong>${p.label}</strong><br>${p.endereco?.substring(0, 60) || ''}`)
+                    .addTo(map);
+                window.markers.push(marker);
+            });
+        }
+
+        async function geocodificar(endereco) {
+            if (!endereco) throw new Error('Endereço vazio');
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco + ', Brasil')}&limit=1`;
+            const response = await fetch(url, { headers: { 'User-Agent': 'BlackTow/1.0' } });
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display_name: data[0].display_name };
+            }
+            throw new Error('Endereço não encontrado');
+        }
+
         async function carregarViagens() {
-            const snapshot = await db.collection('viagens').where('motoristaId', '==', motoristaLogado.id).get();
+            const snapshot = await db.collection('viagens')
+                .where('motoristaId', '==', motoristaLogado.id)
+                .orderBy('dataCriacao', 'desc')
+                .get();
             viagensAtribuidas = [];
             snapshot.forEach(doc => {
                 viagensAtribuidas.push({ id: doc.id, ...doc.data() });
@@ -149,12 +158,57 @@
             atualizarInterface();
         }
 
+        async function desenharRotaViagem(viagem) {
+            if (!map) return;
+            try {
+                const coordOrigem = await geocodificar(viagem.origem);
+                const coordCliente = await geocodificar(viagem.clienteLocal);
+
+                let waypointsCoords, waypointsInfo;
+                if (viagem.tipo === 'reboque') {
+                    const coordDestino = await geocodificar(viagem.destino);
+                    waypointsCoords = [coordOrigem, coordCliente, coordDestino, coordOrigem];
+                    waypointsInfo = [
+                        { ...coordOrigem, tipo: 'origem', label: '🚛 GUINCHO', endereco: viagem.origem },
+                        { ...coordCliente, tipo: 'cliente', label: '📍 CLIENTE', endereco: viagem.clienteLocal },
+                        { ...coordDestino, tipo: 'destino', label: '🏁 DESTINO', endereco: viagem.destino },
+                        { ...coordOrigem, tipo: 'volta', label: '🏠 RETORNO', endereco: viagem.origem }
+                    ];
+                } else {
+                    waypointsCoords = [coordOrigem, coordCliente, coordOrigem];
+                    waypointsInfo = [
+                        { ...coordOrigem, tipo: 'origem', label: '🚛 GUINCHO', endereco: viagem.origem },
+                        { ...coordCliente, tipo: 'cliente', label: '📍 CLIENTE', endereco: viagem.clienteLocal },
+                        { ...coordOrigem, tipo: 'volta', label: '🏠 RETORNO', endereco: viagem.origem }
+                    ];
+                }
+
+                const coords = waypointsCoords.map(w => `${w.lon},${w.lat}`).join(';');
+                const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.routes && data.routes.length > 0) {
+                    if (currentRoute) map.removeLayer(currentRoute);
+                    currentRoute = L.geoJSON(data.routes[0].geometry, {
+                        style: { color: '#4caf50', weight: 4, opacity: 0.8 }
+                    }).addTo(map);
+                    map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
+                    adicionarMarcadores(waypointsInfo);
+                    document.getElementById('mapInfo').innerHTML = `📏 ${(data.routes[0].distance / 1000).toFixed(1)} km | ⏱️ ${Math.round(data.routes[0].duration / 60)} min`;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar rota:', error);
+                document.getElementById('mapInfo').innerHTML = '❌ Erro ao carregar rota';
+            }
+        }
+
         function atualizarInterface() {
             const proximas = viagensAtribuidas.filter(v => v.status === 'pendente');
             const container = document.getElementById('proximasViagens');
 
             if (proximas.length === 0) {
-                container.innerHTML = '<p style="color:#666;">Nenhuma viagem pendente</p>';
+                container.innerHTML = '<p style="color:#666;">✅ Nenhuma viagem pendente</p>';
             } else {
                 container.innerHTML = proximas.map(v => `
                     <div class="viagem-item ${viagemSelecionada?.id === v.id ? 'selected' : ''}" data-id="${v.id}">
@@ -162,10 +216,10 @@
                             <span class="viagem-cliente">${v.cliente || '-'}</span>
                             <span class="viagem-status status-pendente">Pendente</span>
                         </div>
-                        <div>Veiculo: ${v.veiculo || '-'}</div>
-                        <div>Servico: ${v.tipo || '-'} ${v.subtipo ? `(${v.subtipo})` : ''}</div>
-                        <div>Local: ${v.clienteLocal ? v.clienteLocal.substring(0, 40) : '-'}</div>
-                        <div>Previa: ${v.tempoPrevisto || 0} min</div>
+                        <div style="font-size:13px;">🚗 ${v.veiculo || '-'}</div>
+                        <div style="font-size:12px; color:#888;">🔧 ${v.tipo || '-'}${v.subtipo ? ` (${v.subtipo})` : ''}</div>
+                        <div style="font-size:12px; color:#888;">📍 ${v.clienteLocal ? v.clienteLocal.substring(0, 35) : '-'}</div>
+                        <div style="font-size:12px; color:#4caf50;">⏱️ Previsto: ${v.tempoPrevisto || 0} min</div>
                     </div>
                 `).join('');
 
@@ -181,14 +235,13 @@
             const ativaContent = document.getElementById('viagemAtivaContent');
             if (viagemAtiva) {
                 ativaContent.innerHTML = `
-                    <div class="info-row"><span class="info-label">Cliente:</span><span class="info-value">${viagemAtiva.cliente || '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Telefone:</span><span class="info-value">${viagemAtiva.telefone || '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Veiculo:</span><span class="info-value">${viagemAtiva.veiculo || '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Local:</span><span class="info-value">${viagemAtiva.clienteLocal || '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Destino:</span><span class="info-value">${viagemAtiva.destino || '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Status:</span><span class="info-value">Em andamento</span></div>
-                    <div class="codigo">Codigo: ${viagemAtiva.codigoValidacao || '-'}</div>
-                    <button class="btn-primary" style="width:100%; margin-top:10px;" id="btnFinalizarViagem">FINALIZAR VIAGEM</button>
+                    <div class="info-row"><span class="info-label">👤 Cliente:</span><span class="info-value">${viagemAtiva.cliente || '-'}</span></div>
+                    <div class="info-row"><span class="info-label">📞 Telefone:</span><span class="info-value">${viagemAtiva.telefone || '-'}</span></div>
+                    <div class="info-row"><span class="info-label">🚗 Veículo:</span><span class="info-value">${viagemAtiva.veiculo || '-'}</span></div>
+                    <div class="info-row"><span class="info-label">📍 Local:</span><span class="info-value" style="font-size:12px;">${viagemAtiva.clienteLocal || '-'}</span></div>
+                    <div class="info-row"><span class="info-label">🏁 Destino:</span><span class="info-value" style="font-size:12px;">${viagemAtiva.destino || '-'}</span></div>
+                    <div class="info-row"><span class="info-label">⏱️ Tempo previsto:</span><span class="info-value">${viagemAtiva.tempoPrevisto || 0} minutos</span></div>
+                    <button class="btn-success" style="width:100%; margin-top:15px;" id="btnFinalizarViagem">✅ FINALIZAR VIAGEM</button>
                 `;
                 document.getElementById('btnFinalizarViagem')?.addEventListener('click', abrirModalFinalizar);
                 desenharRotaViagem(viagemAtiva);
@@ -197,28 +250,31 @@
                 if (map && currentRoute) map.removeLayer(currentRoute);
             }
 
-            if (viagemSelecionada && !document.getElementById('btnIniciarInjected')) {
-                const btn = document.createElement('button');
-                btn.id = 'btnIniciarInjected';
-                btn.className = 'btn-primary';
-                btn.style.width = '100%';
-                btn.style.marginTop = '15px';
-                btn.innerHTML = 'INICIAR VIAGEM SELECIONADA';
-                btn.onclick = iniciarViagem;
-                document.getElementById('proximasViagens').parentElement.appendChild(btn);
-            } else if (!viagemSelecionada) {
-                const btn = document.getElementById('btnIniciarInjected');
-                if (btn) btn.remove();
+            // Botão de iniciar viagem
+            const existingBtn = document.getElementById('btnIniciarInjected');
+            if (viagemSelecionada && viagemSelecionada.status === 'pendente') {
+                if (!existingBtn) {
+                    const btn = document.createElement('button');
+                    btn.id = 'btnIniciarInjected';
+                    btn.className = 'btn-primary';
+                    btn.style.width = '100%';
+                    btn.style.marginTop = '15px';
+                    btn.innerHTML = '🚀 INICIAR VIAGEM SELECIONADA';
+                    btn.onclick = iniciarViagem;
+                    document.getElementById('proximasViagens').parentElement.appendChild(btn);
+                }
+            } else if (existingBtn) {
+                existingBtn.remove();
             }
         }
 
         async function iniciarViagem() {
             if (!viagemSelecionada) { alert('Selecione uma viagem!'); return; }
-            if (viagemSelecionada.status !== 'pendente') { alert('Esta viagem nao pode ser iniciada!'); return; }
+            if (viagemSelecionada.status !== 'pendente') { alert('Esta viagem não pode ser iniciada!'); return; }
 
             await db.collection('viagens').doc(viagemSelecionada.id).update({ status: 'em_andamento' });
             await carregarViagens();
-            alert(`Viagem iniciada! Tempo previsto: ${viagemAtiva?.tempoPrevisto || 0} minutos`);
+            alert(`✅ Viagem iniciada! Tempo previsto: ${viagemAtiva?.tempoPrevisto || 0} minutos`);
         }
 
         function abrirModalFinalizar() {
@@ -226,20 +282,39 @@
             fotoBase64 = null;
             document.getElementById('codigoInput').value = '';
             document.getElementById('fotoPreview').style.display = 'none';
+            document.getElementById('fotoPreview').src = '';
             document.getElementById('qrModal').style.display = 'flex';
+
+            // Iniciar leitor QR Code
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => { });
+            }
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (decodedText) => {
+                    document.getElementById('codigoInput').value = decodedText;
+                    html5QrCode.stop();
+                },
+                (error) => { console.log("QR scan error:", error); }
+            ).catch(err => console.log("Erro ao iniciar câmera:", err));
         }
 
         function fecharModal() {
+            if (html5QrCode) {
+                html5QrCode.stop().catch(() => { });
+            }
             document.getElementById('qrModal').style.display = 'none';
         }
 
         async function confirmarFinalizacao() {
             const codigo = document.getElementById('codigoInput').value;
-            if (!codigo) { alert('Digite o codigo de finalizacao!'); return; }
-            if (!fotoBase64) { alert('Tire uma foto do veiculo!'); return; }
+            if (!codigo) { alert('Digite ou escaneie o código de finalização!'); return; }
+            if (!fotoBase64) { alert('Tire uma foto do veículo como comprovante!'); return; }
 
             if (codigo !== viagemAtiva.codigoValidacao) {
-                alert('Codigo invalido! Verifique com o cliente.');
+                alert('❌ Código inválido! Verifique com o cliente.');
                 return;
             }
 
@@ -257,51 +332,7 @@
 
             fecharModal();
             await carregarViagens();
-            alert('Viagem finalizada com sucesso!');
-        }
-
-        async function desenharRotaViagem(viagem) {
-            if (!map) return;
-
-            try {
-                const geocodificar = async (endereco) => {
-                    if (!endereco) throw new Error('Endereco vazio');
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco + ', Brasil')}&limit=1`;
-                    const response = await fetch(url, { headers: { 'User-Agent': 'BlackTow/1.0' } });
-                    const data = await response.json();
-                    if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-                    throw new Error('Endereco nao encontrado');
-                };
-
-                const coordOrigem = await geocodificar(viagem.origem);
-                const coordCliente = await geocodificar(viagem.clienteLocal);
-
-                let waypoints;
-                if (viagem.tipo === 'reboque') {
-                    const coordDestino = await geocodificar(viagem.destino);
-                    waypoints = [coordOrigem, coordCliente, coordDestino, coordOrigem];
-                } else {
-                    waypoints = [coordOrigem, coordCliente, coordOrigem];
-                }
-
-                const coords = waypoints.map(w => `${w.lon},${w.lat}`).join(';');
-                const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.routes && data.routes.length > 0) {
-                    if (currentRoute) map.removeLayer(currentRoute);
-                    currentRoute = L.geoJSON(data.routes[0].geometry, {
-                        style: { color: '#4caf50', weight: 4, opacity: 0.8 }
-                    }).addTo(map);
-                    map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
-
-                    document.getElementById('mapInfo').innerHTML = `Rota: ${(data.routes[0].distance / 1000).toFixed(1)} km | Tempo: ${Math.round(data.routes[0].duration / 60)} min`;
-                }
-            } catch (error) {
-                console.error('Erro ao carregar rota:', error);
-                document.getElementById('mapInfo').innerHTML = 'Erro ao carregar rota';
-            }
+            alert('✅ Viagem finalizada com sucesso!');
         }
 
         // Login
@@ -309,17 +340,21 @@
             const cpf = document.getElementById('loginCpf').value;
             const senha = document.getElementById('loginSenha').value;
 
-            const snapshot = await db.collection('motoristas').where('cpf', '==', cpf).where('senha', '==', senha).where('status', '==', 'ativo').get();
+            const snapshot = await db.collection('motoristas')
+                .where('cpf', '==', cpf)
+                .where('senha', '==', senha)
+                .where('status', '==', 'ativo')
+                .get();
 
             if (!snapshot.empty) {
                 motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
-                document.getElementById('motoristaInfo').innerHTML = `Motorista: ${motoristaLogado.nome}`;
+                document.getElementById('motoristaInfo').innerHTML = `👤 ${motoristaLogado.nome}`;
                 initMap();
                 await carregarViagens();
             } else {
-                document.getElementById('loginError').textContent = 'CPF ou senha invalidos!';
+                document.getElementById('loginError').textContent = 'CPF ou senha inválidos!';
             }
         });
 
@@ -332,32 +367,48 @@
             document.getElementById('loginError').textContent = '';
         });
 
-        document.getElementById('simulateScanner').addEventListener('click', () => {
+        document.getElementById('simulateScannerBtn').addEventListener('click', () => {
             if (viagemAtiva) {
                 document.getElementById('codigoInput').value = viagemAtiva.codigoValidacao;
-                alert(`Codigo preenchido: ${viagemAtiva.codigoValidacao}`);
+                alert(`🔢 Código preenchido: ${viagemAtiva.codigoValidacao}`);
+            } else {
+                alert('Nenhuma viagem ativa para testar');
             }
         });
 
-        document.getElementById('btnTirarFoto').addEventListener('click', () => {
+        // Capturar foto
+        document.getElementById('btnAbrirCamera').addEventListener('click', () => {
+            document.getElementById('cameraInput').click();
+        });
+
+        document.getElementById('btnSelecionarFoto').addEventListener('click', () => {
             document.getElementById('fotoInput').click();
         });
 
-        document.getElementById('fotoInput').addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
+        function processarFoto(file) {
+            if (file) {
                 const reader = new FileReader();
-                reader.onload = function(ev) {
+                reader.onload = function (ev) {
                     fotoBase64 = ev.target.result;
                     const preview = document.getElementById('fotoPreview');
                     preview.src = fotoBase64;
                     preview.style.display = 'block';
                 };
-                reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
             }
+        }
+
+        document.getElementById('cameraInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
+        });
+
+        document.getElementById('fotoInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
         });
 
         document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
         document.getElementById('btnConfirmarFinalizar').addEventListener('click', confirmarFinalizacao);
     </script>
 </body>
+
 </html>

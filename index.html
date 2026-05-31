@@ -1,76 +1,21 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Black Tow Admin - Sistema de Guincho</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="./firebase-config.js"></script>
-
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #ffffff; }
-        .app-container { display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 520px; background: #000000; border-right: 1px solid #222222; display: flex; flex-direction: column; overflow-y: auto; }
-        .sidebar-header { padding: 25px; border-bottom: 1px solid #222222; }
-        .logo { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #ffffff, #888888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { font-size: 12px; color: #666666; margin-top: 5px; }
-        .tabs { display: flex; border-bottom: 1px solid #222222; background: #000000; }
-        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; color: #666666; border-bottom: 2px solid transparent; font-weight: 600; transition: all 0.3s; }
-        .tab:hover { color: #ffffff; background: #111111; }
-        .tab.active { color: #ffffff; border-bottom-color: #ffffff; background: #0a0a0a; }
-        .tab-content { display: none; padding: 25px; flex: 1; overflow-y: auto; }
-        .tab-content.active { display: block; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-size: 12px; color: #aaaaaa; text-transform: uppercase; font-weight: 600; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: #111111; border: 1px solid #222222; border-radius: 8px; color: #ffffff; font-size: 14px; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: #ffffff; background: #1a1a1a; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 14px; }
-        .btn-primary { background: #ffffff; color: #000000; }
-        .btn-primary:hover { background: #dddddd; transform: translateY(-1px); }
-        .btn-secondary { background: #222222; color: #ffffff; border: 1px solid #333333; }
-        .btn-secondary:hover { background: #333333; }
-        .btn-danger { background: #f44336; color: #ffffff; }
-        .btn-sm { padding: 6px 12px; font-size: 11px; }
-        .result-card { background: linear-gradient(135deg, #111111, #1a1a1a); border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid #222222; }
-        .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222222; }
-        .result-row:last-child { border-bottom: none; }
-        .result-label { color: #888888; font-size: 13px; }
-        .result-value { font-weight: 700; font-size: 18px; }
-        .result-value.highlight { font-size: 24px; color: #ffffff; }
-        .table-container { overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #222222; font-size: 13px; }
-        th { background: #111111; font-weight: 600; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-block; }
-        .status-pendente { background: #ff9800; color: #000000; }
-        .status-andamento { background: #2196f3; color: #ffffff; }
-        .status-concluida { background: #4caf50; color: #ffffff; }
-        .status-cancelada { background: #666666; color: #ffffff; }
-        .map-container { flex: 1; position: relative; }
-        #map { width: 100%; height: 100%; }
-        .map-info { position: absolute; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; border: 1px solid #222222; z-index: 1000; font-size: 12px; }
-        .waypoint-list { margin-top: 10px; max-height: 150px; overflow-y: auto; }
-        .waypoint-item { padding: 8px; border-left: 2px solid; margin-bottom: 5px; background: #111111; border-radius: 4px; }
-        .waypoint-origem { border-left-color: #4caf50; }
-        .waypoint-cliente { border-left-color: #ff9800; }
-        .waypoint-destino { border-left-color: #f44336; }
-        .waypoint-volta { border-left-color: #888888; }
-        .loading { text-align: center; padding: 20px; display: none; }
-        .loading.show { display: block; }
-        .export-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .qr-code { background: #111111; padding: 10px; border-radius: 8px; text-align: center; margin-top: 10px; }
-        .qr-code span { font-family: monospace; font-size: 16px; letter-spacing: 2px; background: #000000; padding: 8px; border-radius: 4px; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #0a0a0a; }
-        ::-webkit-scrollbar-thumb { background: #333333; border-radius: 4px; }
-    </style>
 </head>
+
 <body>
     <div class="app-container">
         <div class="sidebar">
@@ -81,9 +26,9 @@
 
             <div class="tabs">
                 <div class="tab active" data-tab="viagens">VIAGENS</div>
-                <div class="tab" data-tab="gestao">GESTAO</div>
+                <div class="tab" data-tab="gestao">GESTÃO</div>
                 <div class="tab" data-tab="motoristas">MOTORISTAS</div>
-                <div class="tab" data-tab="historico">HISTORICO</div>
+                <div class="tab" data-tab="historico">HISTÓRICO</div>
             </div>
 
             <!-- Aba Viagens -->
@@ -94,7 +39,7 @@
                         <input type="text" id="clienteNome" placeholder="Nome completo">
                     </div>
                     <div class="form-group">
-                        <label>Telefone</label>
+                        <label>Telefone (WhatsApp)</label>
                         <input type="tel" id="clienteTelefone" placeholder="(00) 00000-0000">
                     </div>
                     <div class="form-group">
@@ -103,34 +48,33 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Tipo de Servico</label>
+                        <label>Tipo de Serviço</label>
                         <select id="tipoServico">
                             <option value="">Selecione...</option>
                             <option value="reboque">Reboque</option>
                             <option value="bateria">Carga de Bateria</option>
                             <option value="pneu">Troca de Pneu</option>
-                            <option value="combustivel">Combustivel</option>
+                            <option value="combustivel">Combustível</option>
                         </select>
                     </div>
 
                     <div class="form-group" id="subtipoGroup" style="display:none;">
-                        <label>Situacao do Reboque</label>
+                        <label>Situação do Reboque</label>
                         <select id="subtipoReboque">
-                            <option value="colisao">Colisao</option>
+                            <option value="colisao">Colisão</option>
                             <option value="mal_funcionamento">Mal Funcionamento</option>
                             <option value="atolamento">Atolamento</option>
                         </select>
                     </div>
 
-                    <!-- Campos Reboque -->
                     <div id="reboqueFields">
                         <div class="form-group">
                             <label>Local do Guincho</label>
-                            <input type="text" id="guinchoLocal" placeholder="Onde o guincho esta">
+                            <input type="text" id="guinchoLocal" placeholder="Onde o guincho está">
                         </div>
                         <div class="form-group">
                             <label>Local do Cliente</label>
-                            <input type="text" id="clienteEndereco" placeholder="Onde o cliente esta">
+                            <input type="text" id="clienteEndereco" placeholder="Onde o cliente está">
                         </div>
                         <div class="form-group">
                             <label>Destino Final</label>
@@ -138,15 +82,14 @@
                         </div>
                     </div>
 
-                    <!-- Campos Atendimento Local -->
                     <div id="localFields" style="display:none;">
                         <div class="form-group">
                             <label>Local do Guincho</label>
-                            <input type="text" id="guinchoLocalAtendimento" placeholder="Onde o guincho esta">
+                            <input type="text" id="guinchoLocalAtendimento" placeholder="Onde o guincho está">
                         </div>
                         <div class="form-group">
                             <label>Local do Cliente</label>
-                            <input type="text" id="clienteLocalAtendimento" placeholder="Onde o cliente esta">
+                            <input type="text" id="clienteLocalAtendimento" placeholder="Onde o cliente está">
                         </div>
                     </div>
 
@@ -163,17 +106,18 @@
                     </div>
 
                     <div class="loading" id="loading">
+                        <div class="loading-spinner"></div>
                         <p>Calculando rota...</p>
                     </div>
 
                     <div class="result-card" id="resultado" style="display:none;">
                         <div class="result-row">
-                            <span class="result-label">PREVIA DE CHEGADA</span>
+                            <span class="result-label">PREVISÃO DE CHEGADA</span>
                             <span class="result-value highlight" id="tempoChegada">0</span>
                             <span class="result-label">minutos</span>
                         </div>
                         <div class="result-row">
-                            <span class="result-label">KM ate o cliente</span>
+                            <span class="result-label">KM até o cliente</span>
                             <span class="result-value" id="kmCliente">0</span>
                             <span class="result-label">km</span>
                         </div>
@@ -186,77 +130,164 @@
                             <span class="result-label">Valor total</span>
                             <span class="result-value" id="valorTotal">R$ 0</span>
                         </div>
-                        <div class="qr-code">
-                            <label>Codigo de finalizacao</label><br>
-                            <span id="qrCodeHex">-</span>
+
+                        <div class="qr-code-container">
+                            <div class="qr-code-label">CÓDIGO DE FINALIZAÇÃO</div>
+                            <div class="qr-code-hex" id="qrCodeHex">-</div>
+                            <div id="qrcode" class="qr-code-image"></div>
+                            <button class="btn btn-whatsapp" id="btnEnviarWhatsApp" style="display:none;">
+                                📱 ENVIAR PARA O CLIENTE
+                            </button>
                         </div>
                     </div>
 
                     <div style="display:flex; gap:10px; margin-top:20px;">
                         <button type="button" class="btn btn-primary" style="flex:1" id="btnCalcular">CALCULAR</button>
-                        <button type="button" class="btn btn-secondary" style="flex:1" id="btnCriarViagem">CRIAR VIAGEM</button>
+                        <button type="button" class="btn btn-secondary" style="flex:1" id="btnCriarViagem">CRIAR
+                            VIAGEM</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Aba Gestao -->
+            <!-- Aba Gestão -->
             <div class="tab-content" id="tab-gestao">
                 <h3 style="margin-bottom:20px;">Gastos do Guincho</h3>
-                <div class="form-group"><label>Data</label><input type="date" id="gastoData"></div>
-                <div class="form-group"><label>Tipo de Gasto</label>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="gastoData">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Gasto</label>
                     <select id="gastoTipo">
-                        <option value="combustivel">Combustivel</option>
-                        <option value="manutencao">Manutencao</option>
+                        <option value="combustivel">Combustível</option>
+                        <option value="manutencao">Manutenção</option>
                         <option value="pneu">Pneu</option>
                         <option value="outro">Outro</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" id="gastoValor"></div>
-                <div class="form-group"><label>Descricao</label><input type="text" id="gastoDescricao" placeholder="Ex: Troca de oleo"></div>
-                <div class="form-group"><label>KM Atual</label><input type="number" id="gastoKm" placeholder="Quilometragem"></div>
+                <div class="form-group">
+                    <label>Motorista</label>
+                    <select id="gastoMotorista">
+                        <option value="">Selecione o motorista</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" step="0.01" id="gastoValor">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="gastoDescricao" placeholder="Ex: Troca de óleo">
+                </div>
+                <div class="form-group">
+                    <label>KM Atual</label>
+                    <input type="number" id="gastoKm" placeholder="Quilometragem">
+                </div>
                 <button class="btn btn-primary" style="width:100%" id="btnRegistrarGasto">REGISTRAR GASTO</button>
 
-                <div style="margin-top:30px;"><h4>Resumo Financeiro</h4>
+                <div style="margin-top:30px;">
+                    <h4>Resumo Financeiro do Ano</h4>
                     <div class="result-card">
-                        <div class="result-row"><span>Combustivel</span><span id="totalCombustivel">R$ 0</span></div>
-                        <div class="result-row"><span>Manutencao</span><span id="totalManutencao">R$ 0</span></div>
+                        <div class="result-row"><span>Combustível</span><span id="totalCombustivel">R$ 0</span></div>
+                        <div class="result-row"><span>Manutenção</span><span id="totalManutencao">R$ 0</span></div>
                         <div class="result-row"><span>Total Geral</span><span id="totalGastos">R$ 0</span></div>
                     </div>
-                    <div class="table-container"><table><thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Descricao</th><th></th></tr></thead><tbody id="gastosList"></tbody></table></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Motorista</th>
+                                    <th>Valor</th>
+                                    <th>Descrição</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="gastosList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- Aba Motoristas -->
             <div class="tab-content" id="tab-motoristas">
                 <h3 style="margin-bottom:20px;">Cadastro de Motoristas</h3>
-                <div class="form-group"><label>Nome</label><input type="text" id="motoristaNome" placeholder="Nome completo"></div>
-                <div class="form-group"><label>CPF</label><input type="text" id="motoristaCpf" placeholder="000.000.000-00"></div>
-                <div class="form-group"><label>CNH</label><input type="text" id="motoristaCnh" placeholder="Numero da CNH"></div>
-                <div class="form-group"><label>Telefone</label><input type="text" id="motoristaTelefone" placeholder="(00) 00000-0000"></div>
-                <div class="form-group"><label>Senha</label><input type="password" id="motoristaSenha" placeholder="Senha do motorista" value="123456"></div>
-                <button class="btn btn-primary" style="width:100%" id="btnCadastrarMotorista">CADASTRAR MOTORISTA</button>
+                <div class="form-group"><label>Nome</label><input type="text" id="motoristaNome"
+                        placeholder="Nome completo"></div>
+                <div class="form-group"><label>CPF</label><input type="text" id="motoristaCpf"
+                        placeholder="000.000.000-00"></div>
+                <div class="form-group"><label>CNH</label><input type="text" id="motoristaCnh"
+                        placeholder="Número da CNH"></div>
+                <div class="form-group"><label>Telefone</label><input type="text" id="motoristaTelefone"
+                        placeholder="(00) 00000-0000"></div>
+                <div class="form-group"><label>Senha</label><input type="password" id="motoristaSenha"
+                        placeholder="Senha do motorista" value="123456"></div>
+                <button class="btn btn-primary" style="width:100%" id="btnCadastrarMotorista">CADASTRAR
+                    MOTORISTA</button>
 
                 <div class="table-container" style="margin-top:30px;">
-                    <table><thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>Status</th><th></th></tr></thead><tbody id="motoristasList"></tbody></td>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Telefone</th>
+                                <th>Status</th>
+                                <th>Viagens</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="motoristasList"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Aba Historico -->
+            <!-- Aba Histórico -->
             <div class="tab-content" id="tab-historico">
                 <div class="export-bar">
-                    <button class="btn btn-secondary btn-sm" id="btnExportarMes">Exportar Mes</button>
+                    <button class="btn btn-secondary btn-sm" id="btnExportarMes">Exportar Mês</button>
                     <button class="btn btn-secondary btn-sm" id="btnExportarTotal">Exportar Total</button>
-                    <input type="month" id="mesSelecionado" style="background:#111; border:1px solid #222; color:#fff; padding:6px; border-radius:6px;">
+                    <input type="month" id="mesSelecionado"
+                        style="background:#111; border:1px solid #222; color:#fff; padding:8px; border-radius:8px;">
                 </div>
                 <div class="table-container">
-                    <table><thead><tr><th>ID</th><th>Cliente</th><th>Motorista</th><th>Servico</th><th>Subtipo</th><th>KM</th><th>Valor</th><th>Status</th><th>Codigo</th></tr></thead><tbody id="historicoList"></tbody></table>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cliente</th>
+                                <th>Motorista</th>
+                                <th>Serviço</th>
+                                <th>KM</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Código</th>
+                                <th>Foto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historicoList"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
         <div class="map-container">
             <div id="map"></div>
-            <div class="map-info"><strong>ROTA COMPLETA</strong><div id="waypointInfo" class="waypoint-list"></div></div>
+            <div class="map-info">
+                <strong>📍 ROTA COMPLETA</strong>
+                <div id="waypointInfo" class="waypoint-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Visualização de Foto -->
+    <div id="fotoModal" class="modal">
+        <div class="modal-content">
+            <h3>📸 COMPROVANTE DA VIAGEM</h3>
+            <img id="fotoModalImg" style="max-width:100%; border-radius:12px; margin:15px 0;">
+            <button class="btn btn-secondary"
+                onclick="document.getElementById('fotoModal').style.display='none'">FECHAR</button>
         </div>
     </div>
 
@@ -269,21 +300,45 @@
         let map;
         let currentRoute = null;
         let contadorHex = 0;
+        let currentQRCode = null;
 
         // ==================== FUNCOES DO MAPA ====================
         function initMap() {
             map = L.map('map').setView([-14.2350, -51.9253], 4);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: 'OpenStreetMap',
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
                 subdomains: 'abcd',
                 maxZoom: 19
             }).addTo(map);
         }
 
+        // Adicionar marcadores no mapa
+        function adicionarMarcadores(waypoints) {
+            // Remove marcadores antigos se existirem
+            if (window.markers) {
+                window.markers.forEach(m => map.removeLayer(m));
+            }
+            window.markers = [];
+
+            const icones = {
+                origem: L.divIcon({ html: '🚛', className: 'marker-icon', iconSize: [30, 30] }),
+                cliente: L.divIcon({ html: '📍', className: 'marker-icon', iconSize: [30, 30] }),
+                destino: L.divIcon({ html: '🏁', className: 'marker-icon', iconSize: [30, 30] }),
+                volta: L.divIcon({ html: '🏠', className: 'marker-icon', iconSize: [30, 30] })
+            };
+
+            waypoints.forEach((p, i) => {
+                const marker = L.marker([p.lat, p.lon], { icon: icones[p.tipo] || icones.origem })
+                    .bindPopup(`<strong>${p.label}</strong><br>${p.display_name?.substring(0, 80) || ''}`)
+                    .addTo(map);
+                window.markers.push(marker);
+            });
+        }
+
         // ==================== FUNCOES DE GEOLOCALIZACAO ====================
         async function geocodificar(endereco) {
             if (!endereco || endereco.trim() === '') {
-                throw new Error('Endereco vazio');
+                throw new Error('Endereço vazio');
             }
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco + ', Brasil')}&limit=1`;
             const response = await fetch(url, { headers: { 'User-Agent': 'BlackTow/1.0' } });
@@ -291,7 +346,7 @@
             if (data && data.length > 0) {
                 return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display_name: data[0].display_name };
             }
-            throw new Error(`Endereco nao encontrado: ${endereco}`);
+            throw new Error(`Endereço não encontrado: ${endereco}`);
         }
 
         async function calcularRotaOSRM(waypoints) {
@@ -299,14 +354,45 @@
             const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
             const response = await fetch(url);
             const data = await response.json();
-            if (!data.routes || data.routes.length === 0) throw new Error('Rota nao encontrada');
+            if (!data.routes || data.routes.length === 0) throw new Error('Rota não encontrada');
             return data.routes[0];
+        }
+
+        // Gerar QR Code
+        function gerarQRCode(texto) {
+            const container = document.getElementById('qrcode');
+            container.innerHTML = '';
+            if (currentQRCode) {
+                currentQRCode.clear();
+            }
+            currentQRCode = new QRCode(container, {
+                text: texto,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Enviar WhatsApp
+        function enviarWhatsApp(telefone, codigo) {
+            let numero = telefone.replace(/\D/g, '');
+            if (numero.length === 10) {
+                numero = '55' + numero;
+            } else if (numero.length === 11) {
+                numero = '55' + numero;
+            }
+            const mensagem = `🔧 *BLACK TOW - GUINCHO* 🔧\n\nSeu código de finalização é: *${codigo}*\n\nMostre este código ao motorista para finalizar o serviço.\n\nObrigado por escolher a Black Tow! 🚛`;
+            const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+            window.open(url, '_blank');
         }
 
         // ==================== FUNCOES DO FIREBASE ====================
         async function carregarDadosFirestore() {
             try {
-                // Carregar viagens
+                const anoAtual = new Date().getFullYear();
+
                 const viagensSnapshot = await db.collection('viagens').orderBy('dataCriacao', 'desc').get();
                 viagens = [];
                 viagensSnapshot.forEach(doc => {
@@ -314,15 +400,17 @@
                 });
                 atualizarHistorico();
 
-                // Carregar gastos
-                const gastosSnapshot = await db.collection('gastos').orderBy('data', 'desc').get();
+                // Carregar gastos do ano atual
+                const gastosSnapshot = await db.collection('gastos')
+                    .where('ano', '==', anoAtual)
+                    .orderBy('data', 'desc')
+                    .get();
                 gastos = [];
                 gastosSnapshot.forEach(doc => {
                     gastos.push({ id: doc.id, ...doc.data() });
                 });
                 atualizarGastos();
 
-                // Carregar motoristas
                 const motoristasSnapshot = await db.collection('motoristas').get();
                 motoristas = [];
                 motoristasSnapshot.forEach(doc => {
@@ -330,7 +418,6 @@
                 });
                 atualizarMotoristas();
 
-                // Carregar contador
                 const contadorDoc = await db.collection('config').doc('contador').get();
                 if (contadorDoc.exists) {
                     contadorHex = contadorDoc.data().valor;
@@ -338,25 +425,22 @@
                     contadorHex = 0;
                     await db.collection('config').doc('contador').set({ valor: 0 });
                 }
-
-                console.log('Dados carregados com sucesso!');
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                alert('Erro ao carregar dados do Firebase. Verifique as regras do Firestore.');
             }
         }
 
         async function gerarProximoHex() {
-            const hex = contadorHex.toString(16).toUpperCase().padStart(9, '0');
+            const hex = (contadorHex + 100000000).toString(16).toUpperCase().slice(-9);
             contadorHex++;
             await db.collection('config').doc('contador').update({ valor: contadorHex });
             return hex;
         }
 
         // ==================== CALCULO DE ROTA ====================
-        window.calcularRota = async function() {
+        window.calcularRota = async function () {
             const tipo = document.getElementById('tipoServico').value;
-            if (!tipo) { alert('Selecione o tipo de servico!'); return; }
+            if (!tipo) { alert('Selecione o tipo de serviço!'); return; }
 
             let origem, clienteLocal, destino;
             if (tipo === 'reboque') {
@@ -364,7 +448,7 @@
                 clienteLocal = document.getElementById('clienteEndereco').value;
                 destino = document.getElementById('destinoFinal').value;
                 if (!origem || !clienteLocal || !destino) {
-                    alert('Preencha todos os enderecos (Guincho, Cliente e Destino)!');
+                    alert('Preencha todos os endereços!');
                     return;
                 }
             } else {
@@ -372,7 +456,7 @@
                 clienteLocal = document.getElementById('clienteLocalAtendimento').value;
                 destino = origem;
                 if (!origem || !clienteLocal) {
-                    alert('Preencha todos os enderecos!');
+                    alert('Preencha todos os endereços!');
                     return;
                 }
             }
@@ -408,20 +492,36 @@
                 document.getElementById('kmTotal').textContent = kmTotal.toFixed(1);
                 document.getElementById('valorTotal').textContent = `R$ ${valorTotal.toFixed(2)}`;
                 document.getElementById('qrCodeHex').textContent = codigoHex;
+
+                // Gerar QR Code
+                gerarQRCode(codigoHex);
+
+                // Mostrar botão WhatsApp se tiver telefone
+                const telefone = document.getElementById('clienteTelefone').value;
+                const btnWhatsApp = document.getElementById('btnEnviarWhatsApp');
+                if (telefone) {
+                    btnWhatsApp.style.display = 'flex';
+                    btnWhatsApp.onclick = () => enviarWhatsApp(telefone, codigoHex);
+                } else {
+                    btnWhatsApp.style.display = 'none';
+                }
+
                 resultado.style.display = 'block';
 
                 const todosPontos = waypointsCompletos.map((p, i) => {
                     let tipoPonto = '', label = '';
-                    if (i === 0) { tipoPonto = 'origem'; label = 'GUINCHO'; }
-                    else if (i === 1) { tipoPonto = 'cliente'; label = 'CLIENTE'; }
-                    else if (i === waypointsCompletos.length - 1) { tipoPonto = 'volta'; label = 'RETORNO'; }
-                    else { tipoPonto = 'destino'; label = 'DESTINO'; }
+                    if (i === 0) { tipoPonto = 'origem'; label = '🚛 GUINCHO'; }
+                    else if (i === 1) { tipoPonto = 'cliente'; label = '📍 CLIENTE'; }
+                    else if (i === waypointsCompletos.length - 1) { tipoPonto = 'volta'; label = '🏠 RETORNO'; }
+                    else { tipoPonto = 'destino'; label = '🏁 DESTINO'; }
                     return { ...p, tipo: tipoPonto, label };
                 });
 
                 if (currentRoute) map.removeLayer(currentRoute);
                 currentRoute = L.geoJSON(rotaTotal.geometry, { style: { color: '#ffffff', weight: 4, opacity: 0.8 } }).addTo(map);
                 map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
+
+                adicionarMarcadores(todosPontos);
 
                 const waypointHtml = todosPontos.map(p => `<div class="waypoint-item waypoint-${p.tipo}"><strong>${p.label}</strong><br><small>${p.display_name?.substring(0, 50) || ''}</small></div>`).join('');
                 document.getElementById('waypointInfo').innerHTML = waypointHtml;
@@ -445,7 +545,7 @@
 
             if (!clienteNome) { alert('Preencha o nome do cliente!'); return; }
             if (!clienteTelefone) { alert('Preencha o telefone do cliente!'); return; }
-            if (!veiculoModelo) { alert('Preencha a marca/modelo do veiculo!'); return; }
+            if (!veiculoModelo) { alert('Preencha a marca/modelo do veículo!'); return; }
             if (!motoristaId) { alert('Selecione um motorista!'); return; }
 
             const motorista = motoristas.find(m => m.id === motoristaId);
@@ -456,7 +556,7 @@
                 veiculo: veiculoModelo,
                 tipo: ultimoCalculo.tipo,
                 subtipo: ultimoCalculo.tipo === 'reboque' ? document.getElementById('subtipoReboque').value : null,
-                motorista: motorista?.nome || 'Nao atribuido',
+                motorista: motorista?.nome || 'Não atribuído',
                 motoristaId: motoristaId,
                 origem: ultimoCalculo.origem,
                 clienteLocal: ultimoCalculo.clienteLocal,
@@ -476,7 +576,7 @@
 
             await db.collection('viagens').add(viagem);
 
-            // Limpar formulario
+            // Limpar formulário
             document.getElementById('clienteNome').value = '';
             document.getElementById('clienteTelefone').value = '';
             document.getElementById('veiculoModelo').value = '';
@@ -486,10 +586,14 @@
             document.getElementById('guinchoLocalAtendimento').value = '';
             document.getElementById('clienteLocalAtendimento').value = '';
             document.getElementById('resultado').style.display = 'none';
+            document.getElementById('qrcode').innerHTML = '';
             ultimoCalculo = null;
 
             await carregarDadosFirestore();
-            alert(`Viagem criada! Codigo: ${viagem.codigoValidacao}`);
+
+            // Enviar WhatsApp para o cliente
+            enviarWhatsApp(clienteTelefone, viagem.codigoValidacao);
+            alert(`Viagem criada! Código enviado para o WhatsApp do cliente.`);
         });
 
         // ==================== ATUALIZAR TABELAS ====================
@@ -501,38 +605,83 @@
                     <td>${v.id ? v.id.substring(0, 8) : '-'}</td>
                     <td>${v.cliente || '-'}<br><small>${v.telefone || '-'}</small></td>
                     <td>${v.motorista || '-'}</td>
-                    <td>${v.tipo || '-'}</td>
-                    <td>${v.subtipo || '-'}</td>
+                    <td>${v.tipo || '-'}${v.subtipo ? ` (${v.subtipo})` : ''}</td>
                     <td>${v.kmTotal ? v.kmTotal.toFixed(1) : 0} km</td>
                     <td>R$ ${v.valor ? v.valor.toFixed(2) : 0}</td>
-                    <td><span class="status-badge status-${v.status || 'pendente'}">${v.status || 'pendente'}</span></td>
+                    <td><span class="status-badge status-${v.status === 'em_andamento' ? 'andamento' : v.status || 'pendente'}">${v.status === 'em_andamento' ? 'em andamento' : v.status || 'pendente'}</span></td>
                     <td><code>${v.codigoValidacao || '-'}</code></td>
+                    <td>${v.fotoComprovante ? `<button class="btn-secondary btn-sm" onclick="verFoto('${v.fotoComprovante}')">📸 VER</button>` : '-'}</td>
                 </tr>
             `).join('');
         }
+
+        function verFoto(fotoBase64) {
+            const modal = document.getElementById('fotoModal');
+            const img = document.getElementById('fotoModalImg');
+            img.src = fotoBase64;
+            modal.style.display = 'flex';
+        }
+        window.verFoto = verFoto;
 
         function atualizarMotoristas() {
             const tbody = document.getElementById('motoristasList');
-            const select = document.getElementById('motoristaSelecionado');
+            const selectMotorista = document.getElementById('motoristaSelecionado');
+            const selectGasto = document.getElementById('gastoMotorista');
+
             if (motoristas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum motorista</td></tr>';
-                select.innerHTML = '<option value="">Selecione um motorista</option>';
+                tbody.innerHTML = '<tr><td colspan="6">Nenhum motorista</td></tr>';
+                selectMotorista.innerHTML = '<option value="">Selecione um motorista</option>';
+                selectGasto.innerHTML = '<option value="">Selecione o motorista</option>';
                 return;
             }
+
+            // Contar viagens por motorista
+            const viagensPorMotorista = {};
+            viagens.forEach(v => {
+                if (v.motoristaId) {
+                    viagensPorMotorista[v.motoristaId] = (viagensPorMotorista[v.motoristaId] || 0) + 1;
+                }
+            });
+
             tbody.innerHTML = motoristas.map(m => `
                 <tr>
-                    <td>${m.nome || '-'}</td>
+                    <td><strong>${m.nome || '-'}</strong></td>
                     <td>${m.cpf || '-'}</td>
                     <td>${m.telefone || '-'}</td>
-                    <td><span class="status-badge status-pendente">${m.status || 'ativo'}</span></td>
-                    <td><button class="btn-danger btn-sm" onclick="removerMotorista('${m.id}')">X</button></td>
+                    <td><span class="status-badge status-ativo">Ativo</span></td>
+                    <td>
+                        <button class="btn-secondary btn-sm" onclick="verViagensMotorista('${m.id}', '${m.nome}')">
+                            🚛 ${viagensPorMotorista[m.id] || 0} viagens
+                        </button>
+                    </td>
+                    <td><button class="btn-danger btn-sm" onclick="removerMotorista('${m.id}')">🗑️</button></td>
                 </tr>
             `).join('');
-            select.innerHTML = '<option value="">Selecione um motorista</option>' + motoristas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+
+            selectMotorista.innerHTML = '<option value="">Selecione um motorista</option>' + motoristas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+            selectGasto.innerHTML = '<option value="">Selecione o motorista</option>' + motoristas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
         }
 
-        window.removerMotorista = async function(id) {
-            if (confirm('Tem certeza?')) {
+        function verViagensMotorista(motoristaId, motoristaNome) {
+            const viagensMotorista = viagens.filter(v => v.motoristaId === motoristaId);
+            if (viagensMotorista.length === 0) {
+                alert(`${motoristaNome} não possui viagens.`);
+                return;
+            }
+
+            let mensagem = `📊 VIAGENS DE ${motoristaNome}\n\n`;
+            let totalValor = 0;
+            viagensMotorista.forEach((v, i) => {
+                mensagem += `${i + 1}. ${v.cliente} - ${v.tipo}\n   KM: ${v.kmTotal?.toFixed(1) || 0}km | R$ ${v.valor?.toFixed(2) || 0}\n   Status: ${v.status}\n\n`;
+                totalValor += v.valor || 0;
+            });
+            mensagem += `💰 TOTAL FATURADO: R$ ${totalValor.toFixed(2)}`;
+            alert(mensagem);
+        }
+        window.verViagensMotorista = verViagensMotorista;
+
+        window.removerMotorista = async function (id) {
+            if (confirm('Tem certeza que deseja remover este motorista?')) {
                 await db.collection('motoristas').doc(id).delete();
                 await carregarDadosFirestore();
             }
@@ -541,29 +690,33 @@
         function atualizarGastos() {
             const tbody = document.getElementById('gastosList');
             if (gastos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">Nenhum gasto</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6">Nenhum gasto</td></tr>';
             } else {
-                tbody.innerHTML = gastos.map(g => `
-                    <tr>
-                        <td>${g.data || '-'}</td>
-                        <td>${g.tipo || '-'}</td>
-                        <td>R$ ${(g.valor || 0).toFixed(2)}</td>
-                        <td>${g.descricao || '-'}</td>
-                        <td><button class="btn-danger btn-sm" onclick="removerGasto('${g.id}')">X</button></td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = gastos.map(g => {
+                    const motorista = motoristas.find(m => m.id === g.motoristaId);
+                    return `
+                        <tr>
+                            <td>${g.data || '-'}</td>
+                            <td>${g.tipo || '-'}</td>
+                            <td>${motorista?.nome || '-'}</td>
+                            <td>R$ ${(g.valor || 0).toFixed(2)}</td>
+                            <td>${g.descricao || '-'}</td>
+                            <td><button class="btn-danger btn-sm" onclick="removerGasto('${g.id}')">🗑️</button></td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
-            const totalCombustivel = gastos.filter(g => g.tipo === 'combustivel').reduce((s,g) => s + (g.valor || 0), 0);
-            const totalManutencao = gastos.filter(g => g.tipo === 'manutencao').reduce((s,g) => s + (g.valor || 0), 0);
-            const totalGeral = gastos.reduce((s,g) => s + (g.valor || 0), 0);
+            const totalCombustivel = gastos.filter(g => g.tipo === 'combustivel').reduce((s, g) => s + (g.valor || 0), 0);
+            const totalManutencao = gastos.filter(g => g.tipo === 'manutencao').reduce((s, g) => s + (g.valor || 0), 0);
+            const totalGeral = gastos.reduce((s, g) => s + (g.valor || 0), 0);
 
             document.getElementById('totalCombustivel').textContent = `R$ ${totalCombustivel.toFixed(2)}`;
             document.getElementById('totalManutencao').textContent = `R$ ${totalManutencao.toFixed(2)}`;
             document.getElementById('totalGastos').textContent = `R$ ${totalGeral.toFixed(2)}`;
         }
 
-        window.removerGasto = async function(id) {
+        window.removerGasto = async function (id) {
             if (confirm('Tem certeza?')) {
                 await db.collection('gastos').doc(id).delete();
                 await carregarDadosFirestore();
@@ -576,8 +729,8 @@
                 'ID': v.id,
                 'Cliente': v.cliente,
                 'Telefone': v.telefone,
-                'Veiculo': v.veiculo,
-                'Servico': v.tipo,
+                'Veículo': v.veiculo,
+                'Serviço': v.tipo,
                 'Subtipo': v.subtipo || '-',
                 'Motorista': v.motorista,
                 'Origem': v.origem,
@@ -586,7 +739,7 @@
                 'KM Total': v.kmTotal,
                 'Valor (R$)': v.valor,
                 'Status': v.status,
-                'Codigo': v.codigoValidacao,
+                'Código': v.codigoValidacao,
                 'Data': v.dataCriacao ? new Date(v.dataCriacao).toLocaleString() : '-'
             }));
             const ws = XLSX.utils.json_to_sheet(planilha);
@@ -597,7 +750,7 @@
 
         document.getElementById('btnExportarMes').addEventListener('click', () => {
             const mes = document.getElementById('mesSelecionado').value;
-            if (!mes) { alert('Selecione um mes!'); return; }
+            if (!mes) { alert('Selecione um mês!'); return; }
             const [ano, mesNum] = mes.split('-');
             const filtradas = viagens.filter(v => {
                 if (!v.dataCriacao) return false;
@@ -616,7 +769,7 @@
 
         document.getElementById('btnCadastrarMotorista').addEventListener('click', async () => {
             const nome = document.getElementById('motoristaNome').value;
-            if (!nome) { alert('Nome obrigatorio!'); return; }
+            if (!nome) { alert('Nome obrigatório!'); return; }
             const motorista = {
                 nome: nome,
                 cpf: document.getElementById('motoristaCpf').value,
@@ -637,18 +790,22 @@
         });
 
         document.getElementById('btnRegistrarGasto').addEventListener('click', async () => {
+            const anoAtual = new Date().getFullYear();
             const gasto = {
                 data: document.getElementById('gastoData').value || new Date().toISOString().split('T')[0],
                 tipo: document.getElementById('gastoTipo').value,
+                motoristaId: document.getElementById('gastoMotorista').value || null,
                 valor: parseFloat(document.getElementById('gastoValor').value) || 0,
                 descricao: document.getElementById('gastoDescricao').value,
-                km: parseInt(document.getElementById('gastoKm').value) || 0
+                km: parseInt(document.getElementById('gastoKm').value) || 0,
+                ano: anoAtual
             };
             await db.collection('gastos').add(gasto);
             document.getElementById('gastoData').value = '';
             document.getElementById('gastoValor').value = '';
             document.getElementById('gastoDescricao').value = '';
             document.getElementById('gastoKm').value = '';
+            document.getElementById('gastoMotorista').value = '';
             await carregarDadosFirestore();
             alert('Gasto registrado!');
         });
@@ -683,9 +840,17 @@
             });
         });
 
+        // Fechar modal de foto
+        document.getElementById('fotoModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('fotoModal')) {
+                document.getElementById('fotoModal').style.display = 'none';
+            }
+        });
+
         // ==================== INICIALIZACAO ====================
         initMap();
         carregarDadosFirestore();
     </script>
 </body>
+
 </html>
