@@ -681,4 +681,24 @@ tr:hover td {
     .result-value.highlight {
         font-size: 22px;
     }
+
+    /* Versão do sistema - simples e discreto */
+    .version {
+        position: fixed;
+        bottom: 8px;
+        right: 8px;
+        font-size: 10px;
+        color: #333333;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: monospace;
+        z-index: 9999;
+        pointer-events: none;
+        letter-spacing: 0.5px;
+    }
+
+    .version::before {
+        content: "v";
+    }
 }
