@@ -145,6 +145,22 @@
         let fotoBase64 = null;
         let html5QrCode = null;
 
+        // Aguardar Firebase carregar
+        function esperarFirebase() {
+            return new Promise((resolve) => {
+                if (typeof db !== 'undefined' && db) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (typeof db !== 'undefined' && db) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
         // ==================== PERSISTÊNCIA DE LOGIN ====================
 
         function salvarSessao(motorista) {
@@ -152,6 +168,7 @@
                 id: motorista.id,
                 nome: motorista.nome,
                 cpf: motorista.cpf,
+                senha: motorista.senha,
                 salvoEm: new Date().toISOString()
             };
             localStorage.setItem('blacktow_motorista_sessao', JSON.stringify(sessao));
@@ -177,11 +194,21 @@
             const sessao = carregarSessao();
             if (!sessao) return false;
 
-            const doc = await db.collection('motoristas').doc(sessao.id).get();
-            if (doc.exists && doc.data().status === 'ativo') {
-                motoristaLogado = { id: doc.id, ...doc.data() };
-                mostrarApp();
-                return true;
+            try {
+                // Tentar encontrar o motorista pelo CPF e senha salvos
+                const snapshot = await db.collection('motoristas')
+                    .where('cpf', '==', sessao.cpf)
+                    .where('senha', '==', sessao.senha)
+                    .where('status', '==', 'ativo')
+                    .get();
+
+                if (!snapshot.empty) {
+                    motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    mostrarApp();
+                    return true;
+                }
+            } catch (error) {
+                console.error('Erro no login automático:', error);
             }
             return false;
         }
@@ -195,7 +222,7 @@
                     <div class="saved-user-card" id="quickLoginBtn">
                         <div class="saved-user-avatar">🚛</div>
                         <div class="saved-user-info">
-                            <div class="saved-user-name">${sessao.nome}</div>
+                            <div class="saved-user-name">${sessao.nome || 'Motorista'}</div>
                             <div class="saved-user-cpf">${sessao.cpf}</div>
                         </div>
                         <div class="saved-user-badge">
@@ -213,17 +240,26 @@
                     document.getElementById('btnLogin').disabled = true;
                     document.getElementById('btnLogin').textContent = 'ENTRANDO...';
 
-                    const doc = await db.collection('motoristas').doc(sessao.id).get();
-                    if (doc.exists && doc.data().status === 'ativo') {
-                        motoristaLogado = { id: doc.id, ...doc.data() };
-                        if (document.getElementById('rememberCheckbox').checked) {
-                            salvarSessao(motoristaLogado);
+                    try {
+                        const snapshot = await db.collection('motoristas')
+                            .where('cpf', '==', sessao.cpf)
+                            .where('senha', '==', sessao.senha)
+                            .where('status', '==', 'ativo')
+                            .get();
+
+                        if (!snapshot.empty) {
+                            motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                            if (document.getElementById('rememberCheckbox').checked) {
+                                salvarSessao(motoristaLogado);
+                            }
+                            mostrarApp();
+                        } else {
+                            document.getElementById('loginError').textContent = 'Sessão expirada. Faça login novamente.';
+                            limparSessao();
                         }
-                        mostrarApp();
-                    } else {
-                        document.getElementById('loginError').textContent = 'Sessão expirada. Faça login novamente.';
-                        limparSessao();
-                        location.reload();
+                    } catch (error) {
+                        console.error('Erro no login rápido:', error);
+                        document.getElementById('loginError').textContent = 'Erro ao fazer login. Tente novamente.';
                     }
 
                     document.getElementById('btnLogin').disabled = false;
@@ -271,20 +307,29 @@
             if (data && data.length > 0) {
                 return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display_name: data[0].display_name };
             }
-            throw new Error('Endereço não encontrado');
+            throw new Error('Endereço não encontrado: ' + endereco);
         }
 
         async function carregarViagens() {
-            const snapshot = await db.collection('viagens')
-                .where('motoristaId', '==', motoristaLogado.id)
-                .orderBy('dataCriacao', 'desc')
-                .get();
-            viagensAtribuidas = [];
-            snapshot.forEach(doc => {
-                viagensAtribuidas.push({ id: doc.id, ...doc.data() });
-            });
-            viagemAtiva = viagensAtribuidas.find(v => v.status === 'em_andamento');
-            atualizarInterface();
+            try {
+                const snapshot = await db.collection('viagens')
+                    .where('motoristaId', '==', motoristaLogado.id)
+                    .get();
+                viagensAtribuidas = [];
+                snapshot.forEach(doc => {
+                    viagensAtribuidas.push({ id: doc.id, ...doc.data() });
+                });
+                // Ordenar no cliente
+                viagensAtribuidas.sort((a, b) => {
+                    const dateA = a.dataCriacao ? new Date(a.dataCriacao) : new Date(0);
+                    const dateB = b.dataCriacao ? new Date(b.dataCriacao) : new Date(0);
+                    return dateB - dateA;
+                });
+                viagemAtiva = viagensAtribuidas.find(v => v.status === 'em_andamento');
+                atualizarInterface();
+            } catch (error) {
+                console.error('Erro ao carregar viagens:', error);
+            }
         }
 
         async function desenharRotaViagem(viagem) {
@@ -400,9 +445,14 @@
             if (!viagemSelecionada) { alert('Selecione uma viagem!'); return; }
             if (viagemSelecionada.status !== 'pendente') { alert('Esta viagem não pode ser iniciada!'); return; }
 
-            await db.collection('viagens').doc(viagemSelecionada.id).update({ status: 'em_andamento' });
-            await carregarViagens();
-            alert(`✅ Viagem iniciada! Tempo previsto: ${viagemAtiva?.tempoPrevisto || 0} minutos`);
+            try {
+                await db.collection('viagens').doc(viagemSelecionada.id).update({ status: 'em_andamento' });
+                await carregarViagens();
+                alert(`✅ Viagem iniciada! Tempo previsto: ${viagemAtiva?.tempoPrevisto || 0} minutos`);
+            } catch (error) {
+                console.error('Erro ao iniciar viagem:', error);
+                alert('Erro ao iniciar viagem. Tente novamente.');
+            }
         }
 
         function abrirModalFinalizar() {
@@ -450,16 +500,21 @@
             const minutos = Math.floor((agora - criacao) / 60000);
             const atrasado = minutos > (viagemAtiva.tempoPrevisto + 5);
 
-            await db.collection('viagens').doc(viagemAtiva.id).update({
-                status: 'concluida',
-                fotoComprovante: fotoBase64,
-                concluidoEm: agora.toISOString(),
-                atrasado: atrasado
-            });
+            try {
+                await db.collection('viagens').doc(viagemAtiva.id).update({
+                    status: 'concluida',
+                    fotoComprovante: fotoBase64,
+                    concluidoEm: agora.toISOString(),
+                    atrasado: atrasado
+                });
 
-            fecharModal();
-            await carregarViagens();
-            alert('✅ Viagem finalizada com sucesso!');
+                fecharModal();
+                await carregarViagens();
+                alert('✅ Viagem finalizada com sucesso!');
+            } catch (error) {
+                console.error('Erro ao finalizar viagem:', error);
+                alert('Erro ao finalizar viagem. Tente novamente.');
+            }
         }
 
         function mostrarApp() {
@@ -473,7 +528,7 @@
         // ==================== LOGIN ====================
 
         document.getElementById('btnLogin').addEventListener('click', async () => {
-            const cpf = document.getElementById('loginCpf').value;
+            const cpf = document.getElementById('loginCpf').value.trim();
             const senha = document.getElementById('loginSenha').value;
             const lembrar = document.getElementById('rememberCheckbox').checked;
 
@@ -486,20 +541,31 @@
             document.getElementById('btnLogin').disabled = true;
             document.getElementById('btnLogin').textContent = 'ENTRANDO...';
 
-            const snapshot = await db.collection('motoristas')
-                .where('cpf', '==', cpf)
-                .where('senha', '==', senha)
-                .where('status', '==', 'ativo')
-                .get();
+            try {
+                console.log('Buscando motorista com CPF:', cpf);
 
-            if (!snapshot.empty) {
-                motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                if (lembrar) {
-                    salvarSessao(motoristaLogado);
+                const snapshot = await db.collection('motoristas')
+                    .where('cpf', '==', cpf)
+                    .where('senha', '==', senha)
+                    .where('status', '==', 'ativo')
+                    .get();
+
+                console.log('Resultado da busca:', snapshot.empty ? 'Nenhum motorista encontrado' : 'Motorista encontrado');
+
+                if (!snapshot.empty) {
+                    motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+                    console.log('Motorista logado:', motoristaLogado.nome);
+
+                    if (lembrar) {
+                        salvarSessao(motoristaLogado);
+                    }
+                    mostrarApp();
+                } else {
+                    document.getElementById('loginError').textContent = 'CPF ou senha inválidos! Verifique se o motorista está cadastrado e ativo.';
                 }
-                mostrarApp();
-            } else {
-                document.getElementById('loginError').textContent = 'CPF ou senha inválidos!';
+            } catch (error) {
+                console.error('Erro no login:', error);
+                document.getElementById('loginError').textContent = 'Erro ao conectar com o banco de dados: ' + error.message;
             }
 
             document.getElementById('btnLogin').disabled = false;
@@ -515,8 +581,62 @@
             document.getElementById('loginSenha').value = '';
             document.getElementById('rememberCheckbox').checked = false;
             document.getElementById('loginError').textContent = '';
-            location.reload();
         });
 
-        document.getElementById
-    
+        document.getElementById('simulateScannerBtn').addEventListener('click', () => {
+            if (viagemAtiva) {
+                document.getElementById('codigoInput').value = viagemAtiva.codigoValidacao;
+                alert(`🔢 Código preenchido: ${viagemAtiva.codigoValidacao}`);
+            } else {
+                alert('Nenhuma viagem ativa para testar');
+            }
+        });
+
+        document.getElementById('btnAbrirCamera').addEventListener('click', () => {
+            document.getElementById('cameraInput').click();
+        });
+
+        document.getElementById('btnSelecionarFoto').addEventListener('click', () => {
+            document.getElementById('fotoInput').click();
+        });
+
+        function processarFoto(file) {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (ev) {
+                    fotoBase64 = ev.target.result;
+                    const preview = document.getElementById('fotoPreview');
+                    preview.src = fotoBase64;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('cameraInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
+        });
+
+        document.getElementById('fotoInput').addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) processarFoto(e.target.files[0]);
+        });
+
+        document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
+        document.getElementById('btnConfirmarFinalizar').addEventListener('click', confirmarFinalizacao);
+
+        // ==================== INICIALIZAÇÃO ====================
+
+        async function init() {
+            await esperarFirebase();
+            mostrarUsuariosSalvos();
+            const loginAutomatico = await tentarLoginAutomatico();
+            if (!loginAutomatico) {
+                document.getElementById('loginContainer').style.display = 'flex';
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
