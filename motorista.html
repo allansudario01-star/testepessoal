@@ -19,10 +19,26 @@
     <div id="loginContainer" class="login-container">
         <div class="login-card">
             <h1>BLACK TOW</h1>
-            <h3 style="text-align:center; margin-bottom:20px;">Painel do Motorista</h3>
-            <input type="text" id="loginCpf" placeholder="CPF">
-            <input type="password" id="loginSenha" placeholder="Senha">
-            <button class="btn btn-primary" id="btnLogin" style="width:100%">ENTRAR</button>
+            <div class="login-subtitle">Painel do Motorista</div>
+
+            <div id="savedUserContainer" style="display:none;"></div>
+
+            <div class="input-group">
+                <label>📄 CPF</label>
+                <input type="text" id="loginCpf" placeholder="000.000.000-00" autocomplete="username">
+            </div>
+
+            <div class="input-group">
+                <label>🔒 SENHA</label>
+                <input type="password" id="loginSenha" placeholder="••••••" autocomplete="current-password">
+            </div>
+
+            <div class="remember-me" id="rememberMeBtn">
+                <input type="checkbox" id="rememberCheckbox">
+                <label>Lembrar de mim</label>
+            </div>
+
+            <button id="btnLogin">ENTRAR</button>
             <div id="loginError" class="error"></div>
         </div>
     </div>
@@ -31,8 +47,14 @@
         <div class="motorista-container">
             <div class="motorista-header">
                 <div class="logo">BLACK TOW</div>
-                <div class="motorista-info" id="motoristaInfo">Carregando...</div>
-                <button class="btn-danger btn-sm" id="btnLogout">SAIR</button>
+                <div class="motorista-info-card" id="motoristaInfo">
+                    <div class="motorista-avatar">👤</div>
+                    <div class="motorista-details">
+                        <span class="motorista-name" id="motoristaNome">Carregando...</span>
+                        <span class="motorista-status">● Online</span>
+                    </div>
+                </div>
+                <button class="btn-logout" id="btnLogout">SAIR</button>
             </div>
 
             <div class="motorista-grid">
@@ -104,6 +126,89 @@
         let currentRoute = null;
         let fotoBase64 = null;
         let html5QrCode = null;
+
+        // ==================== PERSISTÊNCIA DE LOGIN ====================
+
+        function salvarSessao(motorista) {
+            const sessao = {
+                id: motorista.id,
+                nome: motorista.nome,
+                cpf: motorista.cpf,
+                salvoEm: new Date().toISOString()
+            };
+            localStorage.setItem('blacktow_motorista_sessao', JSON.stringify(sessao));
+        }
+
+        function carregarSessao() {
+            const saved = localStorage.getItem('blacktow_motorista_sessao');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        function limparSessao() {
+            localStorage.removeItem('blacktow_motorista_sessao');
+        }
+
+        async function tentarLoginAutomatico() {
+            const sessao = carregarSessao();
+            if (!sessao) return false;
+
+            // Tentar encontrar o motorista pelo ID
+            const doc = await db.collection('motoristas').doc(sessao.id).get();
+            if (doc.exists && doc.data().status === 'ativo') {
+                motoristaLogado = { id: doc.id, ...doc.data() };
+                mostrarApp();
+                return true;
+            }
+            return false;
+        }
+
+        function mostrarUsuariosSalvos() {
+            const saved = localStorage.getItem('blacktow_motorista_sessao');
+            if (saved) {
+                const sessao = JSON.parse(saved);
+                const container = document.getElementById('savedUserContainer');
+                container.innerHTML = `
+                    <div class="saved-user" id="quickLoginBtn">
+                        <div class="saved-user-name">👤 ${sessao.nome}</div>
+                        <div class="saved-user-cpf">${sessao.cpf}</div>
+                        <div style="font-size:11px; color:#4caf50; margin-top:5px;">● Clique para entrar rapidamente</div>
+                    </div>
+                    <div style="text-align:center; margin:15px 0; color:#333;">— ou faça login com outro usuário —</div>
+                `;
+                container.style.display = 'block';
+
+                document.getElementById('quickLoginBtn').addEventListener('click', async () => {
+                    document.getElementById('loginError').textContent = '';
+                    document.getElementById('btnLogin').disabled = true;
+                    document.getElementById('btnLogin').textContent = 'ENTRANDO...';
+
+                    const doc = await db.collection('motoristas').doc(sessao.id).get();
+                    if (doc.exists && doc.data().status === 'ativo') {
+                        motoristaLogado = { id: doc.id, ...doc.data() };
+                        if (document.getElementById('rememberCheckbox').checked) {
+                            salvarSessao(motoristaLogado);
+                        }
+                        mostrarApp();
+                    } else {
+                        document.getElementById('loginError').textContent = 'Sessão expirada. Faça login novamente.';
+                        limparSessao();
+                        location.reload();
+                    }
+
+                    document.getElementById('btnLogin').disabled = false;
+                    document.getElementById('btnLogin').textContent = 'ENTRAR';
+                });
+            }
+        }
+
+        // ==================== FUNÇÕES DO MAPA ====================
 
         function initMap() {
             map = L.map('map').setView([-14.2350, -51.9253], 4);
@@ -250,7 +355,6 @@
                 if (map && currentRoute) map.removeLayer(currentRoute);
             }
 
-            // Botão de iniciar viagem
             const existingBtn = document.getElementById('btnIniciarInjected');
             if (viagemSelecionada && viagemSelecionada.status === 'pendente') {
                 if (!existingBtn) {
@@ -285,7 +389,6 @@
             document.getElementById('fotoPreview').src = '';
             document.getElementById('qrModal').style.display = 'flex';
 
-            // Iniciar leitor QR Code
             if (html5QrCode) {
                 html5QrCode.stop().catch(() => { });
             }
@@ -335,10 +438,29 @@
             alert('✅ Viagem finalizada com sucesso!');
         }
 
-        // Login
+        function mostrarApp() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('motoristaNome').textContent = motoristaLogado.nome;
+            initMap();
+            carregarViagens();
+        }
+
+        // ==================== LOGIN ====================
+
         document.getElementById('btnLogin').addEventListener('click', async () => {
             const cpf = document.getElementById('loginCpf').value;
             const senha = document.getElementById('loginSenha').value;
+            const lembrar = document.getElementById('rememberCheckbox').checked;
+
+            if (!cpf || !senha) {
+                document.getElementById('loginError').textContent = 'Preencha CPF e senha!';
+                return;
+            }
+
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('btnLogin').disabled = true;
+            document.getElementById('btnLogin').textContent = 'ENTRANDO...';
 
             const snapshot = await db.collection('motoristas')
                 .where('cpf', '==', cpf)
@@ -348,23 +470,28 @@
 
             if (!snapshot.empty) {
                 motoristaLogado = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-                document.getElementById('loginContainer').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'block';
-                document.getElementById('motoristaInfo').innerHTML = `👤 ${motoristaLogado.nome}`;
-                initMap();
-                await carregarViagens();
+                if (lembrar) {
+                    salvarSessao(motoristaLogado);
+                }
+                mostrarApp();
             } else {
                 document.getElementById('loginError').textContent = 'CPF ou senha inválidos!';
             }
+
+            document.getElementById('btnLogin').disabled = false;
+            document.getElementById('btnLogin').textContent = 'ENTRAR';
         });
 
         document.getElementById('btnLogout').addEventListener('click', () => {
+            limparSessao();
             motoristaLogado = null;
             document.getElementById('loginContainer').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginCpf').value = '';
             document.getElementById('loginSenha').value = '';
+            document.getElementById('rememberCheckbox').checked = false;
             document.getElementById('loginError').textContent = '';
+            location.reload();
         });
 
         document.getElementById('simulateScannerBtn').addEventListener('click', () => {
@@ -376,7 +503,6 @@
             }
         });
 
-        // Capturar foto
         document.getElementById('btnAbrirCamera').addEventListener('click', () => {
             document.getElementById('cameraInput').click();
         });
@@ -408,8 +534,16 @@
 
         document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
         document.getElementById('btnConfirmarFinalizar').addEventListener('click', confirmarFinalizacao);
+
+        // ==================== INICIALIZAÇÃO ====================
+
+        mostrarUsuariosSalvos();
+        tentarLoginAutomatico().then(success => {
+            if (!success) {
+                document.getElementById('loginContainer').style.display = 'flex';
+            }
+        });
     </script>
-    <div class="version">2.0.1</div>
 </body>
 
 </html>
