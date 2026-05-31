@@ -1,25 +1,28 @@
-document.addEventListener('DOMContentLoaded', function () {
+// firebase-config.js
+const firebaseConfig = {
+    apiKey: "AIzaSyC1po4JIlse2knDtnkznBvGdUvllvEEGIE",
+    authDomain: "mazproject-4c83a.firebaseapp.com",
+    projectId: "mazproject-4c83a",
+    storageBucket: "mazproject-4c83a.firebasestorage.app",
+    messagingSenderId: "313036466415",
+    appId: "1:313036466415:web:71f7bbe1310d761585531a"
+};
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDyyEsEPJjCw3YAprH03OlWlovATy4SAFI",
-    authDomain: "palletsystem-6ff16.firebaseapp.com",
-    projectId: "palletsystem-6ff16",
-    storageBucket: "palletsystem-6ff16.firebasestorage.app",
-    messagingSenderId: "395589767694",
-    appId: "1:395589767694:web:59e6797705a3e89fdca25f"
-  };
-
-  if (!firebase.apps.length) {
+// Inicializar Firebase
+if (!firebase.apps || !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-  }
+}
 
-  window.db = firebase.firestore();
-  window.auth = firebase.auth();
+// Exportar serviços
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-  window.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => {
-    })
+// Configurar persistência
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .catch((error) => {
+        console.error("Erro na persistência:", error);
     });
 
-});
+// Disponibilizar globalmente
+window.db = db;
+window.auth = auth;
