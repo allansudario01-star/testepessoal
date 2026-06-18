@@ -1,839 +1,633 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+<!doctype html>
+<html lang=pt-BR>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Black Tow Admin - Sistema de Guincho</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="./firebase-config.js"></script>
+  <meta charset=UTF-8>
+  <meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no">
+  <title>Painel de Coletas | CPSZ</title>
+  <link rel=preconnect href=https://fonts.googleapis.com>
+  <link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap"
+    rel=stylesheet>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    :root {
+      --bg-dark: #050b12;
+      --bg-card: rgba(10, 18, 28, 0.92);
+      --border-glow: rgba(101, 231, 255, 0.2);
+      --cyan-neon: #65e7ff;
+      --cyan-glow: 0 0 12px rgba(101, 231, 255, 0.3);
+      --yellow-warning: #ffc107;
+      --red-alert: #ff5e5e;
+      --green-ok: #00e676;
+      --blue-info: #4fc3f7;
+      --text-main: #f0f6fe;
+      --text-dim: #8da0b5
+    }
+
+    body {
+      font-family: Inter, sans-serif;
+      background: radial-gradient(circle at 20% 30%, #0a1420, #03070e);
+      min-height: 100vh;
+      padding: 0;
+      margin: 0;
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh
+    }
+
+    .dashboard {
+      max-width: 100vw;
+      height: 100vh;
+      margin: 0;
+      background: rgba(3, 8, 14, .65);
+      backdrop-filter: blur(4px);
+      border: none;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: none;
+      position: relative;
+      display: flex;
+      flex-direction: column
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, rgba(0, 20, 40, .7), rgba(0, 5, 15, .9));
+      border-bottom: 1px solid var(--border-glow);
+      flex-shrink: 0
+    }
+
+    .logo-area h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff, var(--cyan-neon));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent
+    }
+
+    .logo-area p {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan-neon);
+      font-weight: 800
+    }
+
+    .badge {
+      background: rgba(101, 231, 255, .12);
+      padding: 6px 16px;
+      border-radius: 60px;
+      border: 1px solid rgba(101, 231, 255, .3);
+      text-align: center
+    }
+
+    .badge strong {
+      font-size: 24px;
+      font-family: "Space Grotesk";
+      color: var(--cyan-neon);
+      display: block;
+      line-height: 1
+    }
+
+    .clock {
+      text-align: right
+    }
+
+    .clock-time {
+      font-family: "Space Grotesk";
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 2px
+    }
+
+    .clock-date {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      padding: 10px 24px;
+      background: rgba(0, 0, 0, .2);
+      flex-shrink: 0
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, .05);
+      backdrop-filter: blur(8px);
+      position: relative;
+      overflow: hidden
+    }
+
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px
+    }
+
+    .kpi-card.coletas::after {
+      background: var(--cyan-neon)
+    }
+
+    .kpi-card.embarcadores::after {
+      background: #fff
+    }
+
+    .kpi-card.veiculos::after {
+      background: var(--blue-info)
+    }
+
+    .kpi-card.andamento::after {
+      background: var(--yellow-warning)
+    }
+
+    .kpi-card.atrasado::after {
+      background: var(--red-alert)
+    }
+
+    .kpi-card.concluido::after {
+      background: var(--green-ok)
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 6px
+    }
+
+    .kpi-value {
+      font-family: "Space Grotesk";
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .progress-wrapper {
+      padding: 8px 24px 12px 24px;
+      background: rgba(0, 0, 0, .25);
+      border-bottom: 1px solid rgba(101, 231, 255, .08);
+      flex-shrink: 0
+    }
+
+    .progress-container {
+      background: rgba(255, 255, 255, .06);
+      border-radius: 60px;
+      height: 32px;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid rgba(101, 231, 255, .15);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, .5)
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00e676, #65e7ff, #4fc3f7);
+      border-radius: 60px;
+      transition: width .8s ease;
+      box-shadow: 0 0 30px rgba(101, 231, 255, .2);
+      position: relative
+    }
+
+    .progress-percent {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: "Space Grotesk";
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(0, 0, 0, .8), 0 0 40px rgba(0, 0, 0, .5);
+      letter-spacing: 2px;
+      z-index: 2;
+      pointer-events: none
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      padding: 0 6px;
+      font-weight: 600;
+      letter-spacing: .5px
+    }
+
+    .progress-label span:last-child {
+      color: var(--cyan-neon);
+      font-size: 14px
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      padding: 0 24px;
+      border-bottom: 1px solid rgba(101, 231, 255, .1);
+      flex-shrink: 0
+    }
+
+    .tab-btn {
+      background: 0 0;
+      border: none;
+      padding: 10px 24px;
+      font-family: "Space Grotesk";
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: .2s;
+      border-radius: 40px 40px 0 0;
+      position: relative
+    }
+
+    .tab-btn.active {
+      color: var(--cyan-neon);
+      background: rgba(101, 231, 255, .08)
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--cyan-neon);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .table-wrapper {
+      padding: 10px 24px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, .3);
+      border: 1px solid rgba(255, 255, 255, .05);
+      flex: 1
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 10px;
+      background: rgba(0, 15, 25, .7);
+      color: var(--cyan-neon);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(101, 231, 255, .2);
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      vertical-align: middle;
+      font-size: 12px
+    }
+
+    tr:hover {
+      background: rgba(101, 231, 255, .05)
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 40px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    .status-icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 10px
+    }
+
+    .status-atrasado {
+      background: rgba(255, 94, 94, .15);
+      color: #faa;
+      border: 1px solid rgba(255, 94, 94, .3);
+      animation: blinkStatus 1s ease-in-out infinite
+    }
+
+    .status-atrasado .status-icon {
+      background: var(--red-alert);
+      box-shadow: 0 0 6px red
+    }
+
+    @keyframes blinkStatus {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .status-andamento {
+      background: rgba(255, 193, 7, .12);
+      color: #ffe4a3;
+      border: 1px solid rgba(255, 193, 7, .3)
+    }
+
+    .status-andamento .status-icon {
+      background: var(--yellow-warning)
+    }
+
+    .status-deslocamento {
+      background: rgba(79, 195, 247, .12);
+      color: #c2e9ff;
+      border: 1px solid rgba(79, 195, 247, .3)
+    }
+
+    .status-deslocamento .status-icon {
+      background: var(--blue-info)
+    }
+
+    .status-chegou-prazo {
+      background: rgba(0, 230, 118, .12);
+      color: #cfd;
+      border: 1px solid rgba(0, 230, 118, .3)
+    }
+
+    .status-chegou-prazo .status-icon {
+      background: var(--green-ok)
+    }
+
+    .status-chegou-atrasado {
+      background: rgba(255, 140, 0, .12);
+      color: #fd9;
+      border: 1px solid rgba(255, 140, 0, .3)
+    }
+
+    .status-chegou-atrasado .status-icon {
+      background: #ff8c00
+    }
+
+    .row-atrasado {
+      background: rgba(255, 60, 60, .08) !important;
+      border-left: 3px solid var(--red-alert)
+    }
+
+    .page-info-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 8px;
+      flex-shrink: 0
+    }
+
+    #pageInfo {
+      font-family: "Space Grotesk";
+      font-weight: 600;
+      background: rgba(0, 0, 0, .5);
+      padding: 4px 20px;
+      border-radius: 40px;
+      font-size: 13px;
+      letter-spacing: 1px
+    }
+
+    .footer-ticker {
+      background: #010a12;
+      padding: 10px 0;
+      border-top: 1px solid rgba(101, 231, 255, .2);
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+      width: 100%;
+      flex-shrink: 0
+    }
+
+    .ticker-track {
+      display: inline-block;
+      animation: scrollTicker 35s linear infinite;
+      padding-left: 100%;
+      white-space: nowrap
+    }
+
+    .ticker-content {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan-neon);
+      letter-spacing: 1px;
+      padding-right: 80px
+    }
+
+    @keyframes scrollTicker {
+      0% {
+        transform: translateX(0)
+      }
+
+      100% {
+        transform: translateX(-100%)
+      }
+    }
+
+    .footer-ticker:hover .ticker-track {
+      animation-play-state: paused
+    }
+
+    .nav-hint {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-top: 6px;
+      opacity: .4;
+      letter-spacing: .5px;
+      flex-shrink: 0
+    }
+
+    @media (max-width:1200px) {
+      .kpi-grid {
+        gap: 8px;
+        padding: 8px 16px
+      }
+
+      .kpi-value {
+        font-size: 26px
+      }
+
+      .header {
+        padding: 10px 16px
+      }
+
+      .table-wrapper {
+        padding: 8px 16px
+      }
+
+      .progress-wrapper {
+        padding: 6px 16px 10px 16px
+      }
+
+      .progress-percent {
+        font-size: 18px
+      }
+
+      .progress-container {
+        height: 28px
+      }
+
+      .clock-time {
+        font-size: 22px
+      }
+
+      .logo-area h1 {
+        font-size: 18px
+      }
+
+      td {
+        font-size: 11px;
+        padding: 6px 8px
+      }
+
+      th {
+        font-size: 9px;
+        padding: 8px 8px
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <div class="app-container">
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="logo">BLACK TOW</div>
-                <div class="subtitle">Painel Administrativo</div>
-            </div>
-
-            <div class="tabs">
-                <div class="tab active" data-tab="viagens">VIAGENS</div>
-                <div class="tab" data-tab="gestao">GESTÃO</div>
-                <div class="tab" data-tab="motoristas">MOTORISTAS</div>
-                <div class="tab" data-tab="historico">HISTÓRICO</div>
-            </div>
-
-            <div class="tab-content active" id="tab-viagens">
-                <div id="viagemForm">
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="clienteNome" placeholder="Nome completo">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone (WhatsApp)</label>
-                        <input type="tel" id="clienteTelefone" placeholder="(00) 00000-0000">
-                    </div>
-                    <div class="form-group">
-                        <label>Marca / Modelo</label>
-                        <input type="text" id="veiculoModelo" placeholder="Ex: Fiat Strada">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Tipo de Serviço</label>
-                        <select id="tipoServico">
-                            <option value="">Selecione...</option>
-                            <option value="reboque">Reboque</option>
-                            <option value="bateria">Carga de Bateria</option>
-                            <option value="pneu">Troca de Pneu</option>
-                            <option value="combustivel">Combustível</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="subtipoGroup" style="display:none;">
-                        <label>Situação do Reboque</label>
-                        <select id="subtipoReboque">
-                            <option value="colisao">Colisão</option>
-                            <option value="mal_funcionamento">Mal Funcionamento</option>
-                            <option value="atolamento">Atolamento</option>
-                        </select>
-                    </div>
-
-                    <div id="reboqueFields">
-                        <div class="form-group">
-                            <label>Local do Guincho</label>
-                            <input type="text" id="guinchoLocal" placeholder="Onde o guincho está">
-                        </div>
-                        <div class="form-group">
-                            <label>Local do Cliente</label>
-                            <input type="text" id="clienteEndereco" placeholder="Onde o cliente está">
-                        </div>
-                        <div class="form-group">
-                            <label>Destino Final</label>
-                            <input type="text" id="destinoFinal" placeholder="Para onde levar">
-                        </div>
-                    </div>
-
-                    <div id="localFields" style="display:none;">
-                        <div class="form-group">
-                            <label>Local do Guincho</label>
-                            <input type="text" id="guinchoLocalAtendimento" placeholder="Onde o guincho está">
-                        </div>
-                        <div class="form-group">
-                            <label>Local do Cliente</label>
-                            <input type="text" id="clienteLocalAtendimento" placeholder="Onde o cliente está">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Motorista</label>
-                        <select id="motoristaSelecionado">
-                            <option value="">Selecione um motorista</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Valor por KM (R$)</label>
-                        <input type="number" step="0.01" id="valorPorKm" value="5.00">
-                    </div>
-
-                    <div class="loading" id="loading">
-                        <div class="loading-spinner"></div>
-                        <p>Calculando rota...</p>
-                    </div>
-
-                    <div class="result-card" id="resultado" style="display:none;">
-                        <div class="result-row">
-                            <span class="result-label">PREVISÃO DE CHEGADA</span>
-                            <span class="result-value highlight" id="tempoChegada">0</span>
-                            <span class="result-label">minutos</span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">KM até o cliente</span>
-                            <span class="result-value" id="kmCliente">0</span>
-                            <span class="result-label">km</span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">KM total (ida + volta)</span>
-                            <span class="result-value" id="kmTotal">0</span>
-                            <span class="result-label">km</span>
-                        </div>
-                        <div class="result-row">
-                            <span class="result-label">Valor total</span>
-                            <span class="result-value" id="valorTotal">R$ 0</span>
-                        </div>
-
-                        <div class="qr-code-container">
-                            <div class="qr-code-label">CÓDIGO DE FINALIZAÇÃO</div>
-                            <div class="qr-code-hex" id="qrCodeHex">-</div>
-                            <div id="qrcode" class="qr-code-image"></div>
-                            <button class="btn btn-whatsapp" id="btnEnviarWhatsApp" style="display:none;">
-                                📱 ENVIAR PARA O CLIENTE
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="display:flex; gap:10px; margin-top:20px;">
-                        <button type="button" class="btn btn-primary" style="flex:1" id="btnCalcular">CALCULAR</button>
-                        <button type="button" class="btn btn-secondary" style="flex:1" id="btnCriarViagem">CRIAR
-                            VIAGEM</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-content" id="tab-gestao">
-                <h3 style="margin-bottom:20px;">Gastos do Guincho</h3>
-                <div class="form-group">
-                    <label>Data</label>
-                    <input type="date" id="gastoData">
-                </div>
-                <div class="form-group">
-                    <label>Tipo de Gasto</label>
-                    <select id="gastoTipo">
-                        <option value="combustivel">Combustível</option>
-                        <option value="manutencao">Manutenção</option>
-                        <option value="pneu">Pneu</option>
-                        <option value="outro">Outro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Motorista</label>
-                    <select id="gastoMotorista">
-                        <option value="">Selecione o motorista</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Valor (R$)</label>
-                    <input type="number" step="0.01" id="gastoValor">
-                </div>
-                <div class="form-group">
-                    <label>Descrição</label>
-                    <input type="text" id="gastoDescricao" placeholder="Ex: Troca de óleo">
-                </div>
-                <div class="form-group">
-                    <label>KM Atual</label>
-                    <input type="number" id="gastoKm" placeholder="Quilometragem">
-                </div>
-                <button class="btn btn-primary" style="width:100%" id="btnRegistrarGasto">REGISTRAR GASTO</button>
-
-                <div style="margin-top:30px;">
-                    <h4>Resumo Financeiro do Ano</h4>
-                    <div class="result-card">
-                        <div class="result-row"><span>Combustível</span><span id="totalCombustivel">R$ 0</span></div>
-                        <div class="result-row"><span>Manutenção</span><span id="totalManutencao">R$ 0</span></div>
-                        <div class="result-row"><span>Total Geral</span><span id="totalGastos">R$ 0</span></div>
-                    </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Tipo</th>
-                                    <th>Motorista</th>
-                                    <th>Valor</th>
-                                    <th>Descrição</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="gastosList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-content" id="tab-motoristas">
-                <h3 style="margin-bottom:20px;">Cadastro de Motoristas</h3>
-                <div class="form-group"><label>Nome</label><input type="text" id="motoristaNome"
-                        placeholder="Nome completo"></div>
-                <div class="form-group"><label>CPF</label><input type="text" id="motoristaCpf"
-                        placeholder="000.000.000-00"></div>
-                <div class="form-group"><label>CNH</label><input type="text" id="motoristaCnh"
-                        placeholder="Número da CNH"></div>
-                <div class="form-group"><label>Telefone</label><input type="text" id="motoristaTelefone"
-                        placeholder="(00) 00000-0000"></div>
-                <div class="form-group"><label>Senha</label><input type="password" id="motoristaSenha"
-                        placeholder="Senha do motorista" value="123456"></div>
-                <button class="btn btn-primary" style="width:100%" id="btnCadastrarMotorista">CADASTRAR
-                    MOTORISTA</button>
-
-                <div class="table-container" style="margin-top:30px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>CPF</th>
-                                <th>Telefone</th>
-                                <th>Status</th>
-                                <th>Viagens</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="motoristasList"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="tab-content" id="tab-historico">
-                <div class="export-bar">
-                    <button class="btn btn-secondary btn-sm" id="btnExportarMes">Exportar Mês</button>
-                    <button class="btn btn-secondary btn-sm" id="btnExportarTotal">Exportar Total</button>
-                    <input type="month" id="mesSelecionado"
-                        style="background:#111; border:1px solid #222; color:#fff; padding:8px; border-radius:8px;">
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Cliente</th>
-                                <th>Motorista</th>
-                                <th>Serviço</th>
-                                <th>KM</th>
-                                <th>Valor</th>
-                                <th>Status</th>
-                                <th>Código</th>
-                                <th>Foto</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historicoList"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="map-container">
-            <div id="map"></div>
-            <div class="map-info">
-                <strong>📍 ROTA COMPLETA</strong>
-                <div id="waypointInfo" class="waypoint-list"></div>
-            </div>
-        </div>
+  <div class=dashboard>
+    <div class=header>
+      <div class=logo-area>
+        <p>MONITORAMENTO OPERACIONAL</p>
+        <h1>PAINEL DE CHEGADA</h1>
+      </div>
+      <div class=badge>
+        <strong>CPSZ</strong>
+        <span style=font-size:10px>HUB CENTRAL</span>
+      </div>
+      <div class=clock>
+        <div class=clock-time id=clockTime>--:--:--</div>
+        <div class=clock-date id=clockDate>--</div>
+      </div>
     </div>
-
-    <div id="fotoModal" class="modal">
-        <div class="modal-content">
-            <h3>📸 COMPROVANTE DA VIAGEM</h3>
-            <img id="fotoModalImg" style="max-width:100%; border-radius:12px; margin:15px 0;">
-            <button class="btn btn-secondary"
-                onclick="document.getElementById('fotoModal').style.display='none'">FECHAR</button>
-        </div>
+    <div class=kpi-grid>
+      <div class="kpi-card coletas">
+        <div class=kpi-label>📦 TOTAL COLETAS</div>
+        <div class=kpi-value id=kpiColetas>0</div>
+      </div>
+      <div class="kpi-card embarcadores">
+        <div class=kpi-label>🏭 EMBARCADORES</div>
+        <div class=kpi-value id=kpiEmbarcadores>0</div>
+      </div>
+      <div class="kpi-card veiculos">
+        <div class=kpi-label>🚛 VEÍCULOS</div>
+        <div class=kpi-value id=kpiTotal>0</div>
+      </div>
+      <div class="kpi-card andamento">
+        <div class=kpi-label>⚙️ EM ANDAMENTO</div>
+        <div class=kpi-value id=kpiAndamento>0</div>
+      </div>
+      <div class="kpi-card atrasado">
+        <div class=kpi-label>⚠️ ATRASADOS</div>
+        <div class=kpi-value id=kpiAtrasado>0</div>
+      </div>
+      <div class="kpi-card concluido">
+        <div class=kpi-label>✅ CONCLUÍDOS</div>
+        <div class=kpi-value id=kpiChegaram>0</div>
+      </div>
     </div>
-
-    <script>
-        let viagens = [];
-        let gastos = [];
-        let motoristas = [];
-        let ultimoCalculo = null;
-        let map;
-        let currentRoute = null;
-        let contadorHex = 0;
-        let currentQRCode = null;
-
-        function initMap() {
-            map = L.map('map').setView([-14.2350, -51.9253], 4);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-        }
-
-        function adicionarMarcadores(waypoints) {
-            if (window.markers) {
-                window.markers.forEach(m => map.removeLayer(m));
-            }
-            window.markers = [];
-
-            const icones = {
-                origem: L.divIcon({ html: '🚛', className: 'marker-icon', iconSize: [30, 30] }),
-                cliente: L.divIcon({ html: '📍', className: 'marker-icon', iconSize: [30, 30] }),
-                destino: L.divIcon({ html: '🏁', className: 'marker-icon', iconSize: [30, 30] }),
-                volta: L.divIcon({ html: '🏠', className: 'marker-icon', iconSize: [30, 30] })
-            };
-
-            waypoints.forEach((p, i) => {
-                const marker = L.marker([p.lat, p.lon], { icon: icones[p.tipo] || icones.origem })
-                    .bindPopup(`<strong>${p.label}</strong><br>${p.display_name?.substring(0, 80) || ''}`)
-                    .addTo(map);
-                window.markers.push(marker);
-            });
-        }
-
-        async function geocodificar(endereco) {
-            if (!endereco || endereco.trim() === '') {
-                throw new Error('Endereço vazio');
-            }
-            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco + ', Brasil')}&limit=1`;
-            const response = await fetch(url, { headers: { 'User-Agent': 'BlackTow/1.0' } });
-            const data = await response.json();
-            if (data && data.length > 0) {
-                return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display_name: data[0].display_name };
-            }
-            throw new Error(`Endereço não encontrado: ${endereco}`);
-        }
-
-        async function calcularRotaOSRM(waypoints) {
-            const coords = waypoints.map(w => `${w.lon},${w.lat}`).join(';');
-            const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (!data.routes || data.routes.length === 0) throw new Error('Rota não encontrada');
-            return data.routes[0];
-        }
-
-        function gerarQRCode(texto) {
-            const container = document.getElementById('qrcode');
-            container.innerHTML = '';
-            if (currentQRCode) {
-                currentQRCode.clear();
-            }
-            currentQRCode = new QRCode(container, {
-                text: texto,
-                width: 150,
-                height: 150,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
-        function enviarWhatsApp(telefone, codigo) {
-            let numero = telefone.replace(/\D/g, '');
-            if (numero.length === 10) {
-                numero = '55' + numero;
-            } else if (numero.length === 11) {
-                numero = '55' + numero;
-            }
-            const mensagem = `🔧 *BLACK TOW - GUINCHO* 🔧\n\nSeu código de finalização é: *${codigo}*\n\nMostre este código ao motorista para finalizar o serviço.\n\nObrigado por escolher a Black Tow! 🚛`;
-            const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-            window.open(url, '_blank');
-        }
-
-        async function carregarDadosFirestore() {
-            try {
-                const anoAtual = new Date().getFullYear();
-
-                const viagensSnapshot = await db.collection('viagens').get();
-                viagens = [];
-                viagensSnapshot.forEach(doc => {
-                    viagens.push({ id: doc.id, ...doc.data() });
-                });
-                viagens.sort((a, b) => {
-                    const dateA = a.dataCriacao ? new Date(a.dataCriacao) : new Date(0);
-                    const dateB = b.dataCriacao ? new Date(b.dataCriacao) : new Date(0);
-                    return dateB - dateA;
-                });
-                atualizarHistorico();
-
-                const gastosSnapshot = await db.collection('gastos').get();
-                gastos = [];
-                gastosSnapshot.forEach(doc => {
-                    const gasto = { id: doc.id, ...doc.data() };
-                    if (gasto.ano === anoAtual) {
-                        gastos.push(gasto);
-                    }
-                });
-                gastos.sort((a, b) => {
-                    const dateA = new Date(a.data);
-                    const dateB = new Date(b.data);
-                    return dateB - dateA;
-                });
-                atualizarGastos();
-
-                const motoristasSnapshot = await db.collection('motoristas').get();
-                motoristas = [];
-                motoristasSnapshot.forEach(doc => {
-                    motoristas.push({ id: doc.id, ...doc.data() });
-                });
-                atualizarMotoristas();
-
-                const contadorDoc = await db.collection('config').doc('contador').get();
-                if (contadorDoc.exists) {
-                    contadorHex = contadorDoc.data().valor;
-                } else {
-                    contadorHex = 0;
-                    await db.collection('config').doc('contador').set({ valor: 0 });
-                }
-            } catch (error) {
-                alert('Erro ao carregar dados do Firebase. Verifique as regras do Firestore.');
-            }
-        }
-
-        async function gerarProximoHex() {
-            const hex = (contadorHex + 100000000).toString(16).toUpperCase().slice(-9);
-            contadorHex++;
-            await db.collection('config').doc('contador').update({ valor: contadorHex });
-            return hex;
-        }
-
-        window.calcularRota = async function () {
-            const tipo = document.getElementById('tipoServico').value;
-            if (!tipo) { alert('Selecione o tipo de serviço!'); return; }
-
-            let origem, clienteLocal, destino;
-            if (tipo === 'reboque') {
-                origem = document.getElementById('guinchoLocal').value;
-                clienteLocal = document.getElementById('clienteEndereco').value;
-                destino = document.getElementById('destinoFinal').value;
-                if (!origem || !clienteLocal || !destino) {
-                    alert('Preencha todos os endereços!');
-                    return;
-                }
-            } else {
-                origem = document.getElementById('guinchoLocalAtendimento').value;
-                clienteLocal = document.getElementById('clienteLocalAtendimento').value;
-                destino = origem;
-                if (!origem || !clienteLocal) {
-                    alert('Preencha todos os endereços!');
-                    return;
-                }
-            }
-
-            const loading = document.getElementById('loading');
-            const resultado = document.getElementById('resultado');
-            loading.classList.add('show');
-            resultado.style.display = 'none';
-
-            try {
-                const coordOrigem = await geocodificar(origem);
-                const coordCliente = await geocodificar(clienteLocal);
-                const rotaChegada = await calcularRotaOSRM([coordOrigem, coordCliente]);
-                const kmCliente = rotaChegada.distance / 1000;
-                const tempoChegada = Math.round(rotaChegada.duration / 60) + 5;
-
-                let waypointsCompletos;
-                if (tipo === 'reboque') {
-                    const coordDestino = await geocodificar(destino);
-                    waypointsCompletos = [coordOrigem, coordCliente, coordDestino, coordOrigem];
-                } else {
-                    waypointsCompletos = [coordOrigem, coordCliente, coordOrigem];
-                }
-
-                const rotaTotal = await calcularRotaOSRM(waypointsCompletos);
-                const kmTotal = rotaTotal.distance / 1000;
-                const valorPorKm = parseFloat(document.getElementById('valorPorKm').value);
-                const valorTotal = kmTotal * valorPorKm;
-                const codigoHex = await gerarProximoHex();
-
-                document.getElementById('tempoChegada').textContent = tempoChegada;
-                document.getElementById('kmCliente').textContent = kmCliente.toFixed(1);
-                document.getElementById('kmTotal').textContent = kmTotal.toFixed(1);
-                document.getElementById('valorTotal').textContent = `R$ ${valorTotal.toFixed(2)}`;
-                document.getElementById('qrCodeHex').textContent = codigoHex;
-
-                gerarQRCode(codigoHex);
-
-                const telefone = document.getElementById('clienteTelefone').value;
-                const btnWhatsApp = document.getElementById('btnEnviarWhatsApp');
-                if (telefone) {
-                    btnWhatsApp.style.display = 'flex';
-                    btnWhatsApp.onclick = () => enviarWhatsApp(telefone, codigoHex);
-                } else {
-                    btnWhatsApp.style.display = 'none';
-                }
-
-                resultado.style.display = 'block';
-
-                const todosPontos = waypointsCompletos.map((p, i) => {
-                    let tipoPonto = '', label = '';
-                    if (i === 0) { tipoPonto = 'origem'; label = '🚛 GUINCHO'; }
-                    else if (i === 1) { tipoPonto = 'cliente'; label = '📍 CLIENTE'; }
-                    else if (i === waypointsCompletos.length - 1) { tipoPonto = 'volta'; label = '🏠 RETORNO'; }
-                    else { tipoPonto = 'destino'; label = '🏁 DESTINO'; }
-                    return { ...p, tipo: tipoPonto, label };
-                });
-
-                if (currentRoute) map.removeLayer(currentRoute);
-                currentRoute = L.geoJSON(rotaTotal.geometry, { style: { color: '#ffffff', weight: 4, opacity: 0.8 } }).addTo(map);
-                map.fitBounds(currentRoute.getBounds(), { padding: [50, 50] });
-
-                adicionarMarcadores(todosPontos);
-
-                const waypointHtml = todosPontos.map(p => `<div class="waypoint-item waypoint-${p.tipo}"><strong>${p.label}</strong><br><small>${p.display_name?.substring(0, 50) || ''}</small></div>`).join('');
-                document.getElementById('waypointInfo').innerHTML = waypointHtml;
-
-                ultimoCalculo = { kmCliente, tempoChegada, kmTotal, valorTotal, codigoHex, origem, clienteLocal, destino: tipo === 'reboque' ? destino : origem, tipo };
-            } catch (error) {
-                alert('Erro: ' + error.message);
-            } finally {
-                loading.classList.remove('show');
-            }
-        };
-
-        document.getElementById('btnCriarViagem').addEventListener('click', async () => {
-            if (!ultimoCalculo) { alert('Calcule a rota primeiro!'); return; }
-
-            const clienteNome = document.getElementById('clienteNome').value;
-            const clienteTelefone = document.getElementById('clienteTelefone').value;
-            const veiculoModelo = document.getElementById('veiculoModelo').value;
-            const motoristaId = document.getElementById('motoristaSelecionado').value;
-
-            if (!clienteNome) { alert('Preencha o nome do cliente!'); return; }
-            if (!clienteTelefone) { alert('Preencha o telefone do cliente!'); return; }
-            if (!veiculoModelo) { alert('Preencha a marca/modelo do veículo!'); return; }
-            if (!motoristaId) { alert('Selecione um motorista!'); return; }
-
-            const motorista = motoristas.find(m => m.id === motoristaId);
-
-            const viagem = {
-                cliente: clienteNome,
-                telefone: clienteTelefone,
-                veiculo: veiculoModelo,
-                tipo: ultimoCalculo.tipo,
-                subtipo: ultimoCalculo.tipo === 'reboque' ? document.getElementById('subtipoReboque').value : null,
-                motorista: motorista?.nome || 'Não atribuído',
-                motoristaId: motoristaId,
-                origem: ultimoCalculo.origem,
-                clienteLocal: ultimoCalculo.clienteLocal,
-                destino: ultimoCalculo.destino,
-                tempoPrevisto: ultimoCalculo.tempoChegada,
-                kmCliente: ultimoCalculo.kmCliente,
-                kmTotal: ultimoCalculo.kmTotal,
-                valor: ultimoCalculo.valorTotal,
-                valorPorKm: parseFloat(document.getElementById('valorPorKm').value),
-                status: 'pendente',
-                dataCriacao: new Date().toISOString(),
-                codigoValidacao: ultimoCalculo.codigoHex,
-                fotoComprovante: null,
-                concluidoEm: null,
-                atrasado: false
-            };
-
-            await db.collection('viagens').add(viagem);
-
-            document.getElementById('clienteNome').value = '';
-            document.getElementById('clienteTelefone').value = '';
-            document.getElementById('veiculoModelo').value = '';
-            document.getElementById('guinchoLocal').value = '';
-            document.getElementById('clienteEndereco').value = '';
-            document.getElementById('destinoFinal').value = '';
-            document.getElementById('guinchoLocalAtendimento').value = '';
-            document.getElementById('clienteLocalAtendimento').value = '';
-            document.getElementById('resultado').style.display = 'none';
-            document.getElementById('qrcode').innerHTML = '';
-            ultimoCalculo = null;
-
-            await carregarDadosFirestore();
-            enviarWhatsApp(clienteTelefone, viagem.codigoValidacao);
-            alert(`Viagem criada! Código enviado para o WhatsApp do cliente.`);
-        });
-
-        function atualizarHistorico() {
-            const tbody = document.getElementById('historicoList');
-            if (viagens.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Nenhuma viagem</td></tr>'; return; }
-            tbody.innerHTML = viagens.map(v => `
-                <tr>
-                    <td>${v.id ? v.id.substring(0, 8) : '-'}</td>
-                    <td>${v.cliente || '-'}<br><small>${v.telefone || '-'}</small></td>
-                    <td>${v.motorista || '-'}</td>
-                    <td>${v.tipo || '-'}${v.subtipo ? ` (${v.subtipo})` : ''}</td>
-                    <td>${v.kmTotal ? v.kmTotal.toFixed(1) : 0} km</td>
-                    <td>R$ ${v.valor ? v.valor.toFixed(2) : 0}</td>
-                    <td><span class="status-badge status-${v.status === 'em_andamento' ? 'andamento' : v.status || 'pendente'}">${v.status === 'em_andamento' ? 'em andamento' : v.status || 'pendente'}</span></td>
-                    <td><code>${v.codigoValidacao || '-'}</code></td>
-                    <td>${v.fotoComprovante ? `<button class="btn-secondary btn-sm" onclick="verFoto('${v.fotoComprovante}')">📸 VER</button>` : '-'}</td>
-                </tr>
-            `).join('');
-        }
-
-        function verFoto(fotoBase64) {
-            const modal = document.getElementById('fotoModal');
-            const img = document.getElementById('fotoModalImg');
-            img.src = fotoBase64;
-            modal.style.display = 'flex';
-        }
-        window.verFoto = verFoto;
-
-        function atualizarMotoristas() {
-            const tbody = document.getElementById('motoristasList');
-            const selectMotorista = document.getElementById('motoristaSelecionado');
-            const selectGasto = document.getElementById('gastoMotorista');
-
-            if (motoristas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6">Nenhum motorista</td></tr>';
-                selectMotorista.innerHTML = '<option value="">Selecione um motorista</option>';
-                selectGasto.innerHTML = '<option value="">Selecione o motorista</option>';
-                return;
-            }
-
-            const viagensPorMotorista = {};
-            viagens.forEach(v => {
-                if (v.motoristaId) {
-                    viagensPorMotorista[v.motoristaId] = (viagensPorMotorista[v.motoristaId] || 0) + 1;
-                }
-            });
-
-            tbody.innerHTML = motoristas.map(m => `
-                <tr>
-                    <td><strong>${m.nome || '-'}</strong></td>
-                    <td>${m.cpf || '-'}</td>
-                    <td>${m.telefone || '-'}</td>
-                    <td><span class="status-badge status-ativo">Ativo</span></td>
-                    <td>
-                        <button class="btn-secondary btn-sm" onclick="verViagensMotorista('${m.id}', '${m.nome}')">
-                            🚛 ${viagensPorMotorista[m.id] || 0} viagens
-                        </button>
-                    </td>
-                    <td><button class="btn-danger btn-sm" onclick="removerMotorista('${m.id}')">🗑️</button></td>
-                </tr>
-            `).join('');
-
-            selectMotorista.innerHTML = '<option value="">Selecione um motorista</option>' + motoristas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
-            selectGasto.innerHTML = '<option value="">Selecione o motorista</option>' + motoristas.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
-        }
-
-        function verViagensMotorista(motoristaId, motoristaNome) {
-            const viagensMotorista = viagens.filter(v => v.motoristaId === motoristaId);
-            if (viagensMotorista.length === 0) {
-                alert(`${motoristaNome} não possui viagens.`);
-                return;
-            }
-
-            let mensagem = `📊 VIAGENS DE ${motoristaNome}\n\n`;
-            let totalValor = 0;
-            viagensMotorista.forEach((v, i) => {
-                mensagem += `${i + 1}. ${v.cliente} - ${v.tipo}\n   KM: ${v.kmTotal?.toFixed(1) || 0}km | R$ ${v.valor?.toFixed(2) || 0}\n   Status: ${v.status}\n\n`;
-                totalValor += v.valor || 0;
-            });
-            mensagem += `💰 TOTAL FATURADO: R$ ${totalValor.toFixed(2)}`;
-            alert(mensagem);
-        }
-        window.verViagensMotorista = verViagensMotorista;
-
-        window.removerMotorista = async function (id) {
-            if (confirm('Tem certeza que deseja remover este motorista?')) {
-                await db.collection('motoristas').doc(id).delete();
-                await carregarDadosFirestore();
-            }
-        };
-
-        function atualizarGastos() {
-            const tbody = document.getElementById('gastosList');
-            if (gastos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6">Nenhum gasto</td></tr>';
-            } else {
-                tbody.innerHTML = gastos.map(g => {
-                    const motorista = motoristas.find(m => m.id === g.motoristaId);
-                    return `
-                        <tr>
-                            <td>${g.data || '-'}</td>
-                            <td>${g.tipo || '-'}</td>
-                            <td>${motorista?.nome || '-'}</td>
-                            <td>R$ ${(g.valor || 0).toFixed(2)}</td>
-                            <td>${g.descricao || '-'}</td>
-                            <td><button class="btn-danger btn-sm" onclick="removerGasto('${g.id}')">🗑️</button></td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            const totalCombustivel = gastos.filter(g => g.tipo === 'combustivel').reduce((s, g) => s + (g.valor || 0), 0);
-            const totalManutencao = gastos.filter(g => g.tipo === 'manutencao').reduce((s, g) => s + (g.valor || 0), 0);
-            const totalGeral = gastos.reduce((s, g) => s + (g.valor || 0), 0);
-
-            document.getElementById('totalCombustivel').textContent = `R$ ${totalCombustivel.toFixed(2)}`;
-            document.getElementById('totalManutencao').textContent = `R$ ${totalManutencao.toFixed(2)}`;
-            document.getElementById('totalGastos').textContent = `R$ ${totalGeral.toFixed(2)}`;
-        }
-
-        window.removerGasto = async function (id) {
-            if (confirm('Tem certeza?')) {
-                await db.collection('gastos').doc(id).delete();
-                await carregarDadosFirestore();
-            }
-        };
-
-        function exportarParaExcel(dados, nomeArquivo) {
-            const planilha = dados.map(v => ({
-                'ID': v.id,
-                'Cliente': v.cliente,
-                'Telefone': v.telefone,
-                'Veículo': v.veiculo,
-                'Serviço': v.tipo,
-                'Subtipo': v.subtipo || '-',
-                'Motorista': v.motorista,
-                'Origem': v.origem,
-                'Local Cliente': v.clienteLocal,
-                'Destino': v.destino,
-                'KM Total': v.kmTotal,
-                'Valor (R$)': v.valor,
-                'Status': v.status,
-                'Código': v.codigoValidacao,
-                'Data': v.dataCriacao ? new Date(v.dataCriacao).toLocaleString() : '-'
-            }));
-            const ws = XLSX.utils.json_to_sheet(planilha);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Viagens');
-            XLSX.writeFile(wb, `${nomeArquivo}.xlsx`);
-        }
-
-        document.getElementById('btnExportarMes').addEventListener('click', () => {
-            const mes = document.getElementById('mesSelecionado').value;
-            if (!mes) { alert('Selecione um mês!'); return; }
-            const [ano, mesNum] = mes.split('-');
-            const filtradas = viagens.filter(v => {
-                if (!v.dataCriacao) return false;
-                const data = new Date(v.dataCriacao);
-                return data.getFullYear() == ano && (data.getMonth() + 1) == parseInt(mesNum);
-            });
-            exportarParaExcel(filtradas, `viagens_${mes}`);
-        });
-
-        document.getElementById('btnExportarTotal').addEventListener('click', () => {
-            exportarParaExcel(viagens, 'viagens_completo');
-        });
-
-        document.getElementById('btnCalcular').addEventListener('click', () => window.calcularRota());
-
-        document.getElementById('btnCadastrarMotorista').addEventListener('click', async () => {
-            const nome = document.getElementById('motoristaNome').value;
-            if (!nome) { alert('Nome obrigatório!'); return; }
-            const motorista = {
-                nome: nome,
-                cpf: document.getElementById('motoristaCpf').value,
-                cnh: document.getElementById('motoristaCnh').value,
-                telefone: document.getElementById('motoristaTelefone').value,
-                senha: document.getElementById('motoristaSenha').value || '123456',
-                status: 'ativo',
-                dataCadastro: new Date().toISOString()
-            };
-            await db.collection('motoristas').add(motorista);
-            document.getElementById('motoristaNome').value = '';
-            document.getElementById('motoristaCpf').value = '';
-            document.getElementById('motoristaCnh').value = '';
-            document.getElementById('motoristaTelefone').value = '';
-            document.getElementById('motoristaSenha').value = '123456';
-            await carregarDadosFirestore();
-            alert('Motorista cadastrado!');
-        });
-
-        document.getElementById('btnRegistrarGasto').addEventListener('click', async () => {
-            const anoAtual = new Date().getFullYear();
-            const gasto = {
-                data: document.getElementById('gastoData').value || new Date().toISOString().split('T')[0],
-                tipo: document.getElementById('gastoTipo').value,
-                motoristaId: document.getElementById('gastoMotorista').value || null,
-                valor: parseFloat(document.getElementById('gastoValor').value) || 0,
-                descricao: document.getElementById('gastoDescricao').value,
-                km: parseInt(document.getElementById('gastoKm').value) || 0,
-                ano: anoAtual
-            };
-            await db.collection('gastos').add(gasto);
-            document.getElementById('gastoData').value = '';
-            document.getElementById('gastoValor').value = '';
-            document.getElementById('gastoDescricao').value = '';
-            document.getElementById('gastoKm').value = '';
-            document.getElementById('gastoMotorista').value = '';
-            await carregarDadosFirestore();
-            alert('Gasto registrado!');
-        });
-
-        document.getElementById('tipoServico').addEventListener('change', (e) => {
-            const tipo = e.target.value;
-            const reboqueFields = document.getElementById('reboqueFields');
-            const localFields = document.getElementById('localFields');
-            const subtipoGroup = document.getElementById('subtipoGroup');
-
-            if (tipo === 'reboque') {
-                reboqueFields.style.display = 'block';
-                localFields.style.display = 'none';
-                subtipoGroup.style.display = 'block';
-            } else if (tipo === 'bateria' || tipo === 'pneu' || tipo === 'combustivel') {
-                reboqueFields.style.display = 'none';
-                localFields.style.display = 'block';
-                subtipoGroup.style.display = 'none';
-            } else {
-                reboqueFields.style.display = 'block';
-                localFields.style.display = 'none';
-                subtipoGroup.style.display = 'none';
-            }
-        });
-
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
-            });
-        });
-
-        document.getElementById('fotoModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('fotoModal')) {
-                document.getElementById('fotoModal').style.display = 'none';
-            }
-        });
-
-        initMap();
-        carregarDadosFirestore();
-    </script>
+    <div class=progress-wrapper>
+      <div class=progress-container>
+        <div class=progress-bar id=progressBar style=width:0%></div>
+        <div class=progress-percent id=progressPercent>0%</div>
+      </div>
+      <div class=progress-label>
+        <span>📊 PROGRESSO DE CONCLUSÃO</span>
+        <span id=progressFraction>0 / 0</span>
+      </div>
+    </div>
+    <div class=tabs>
+      <button class="tab-btn active" data-tab=active>🚚 EM OPERAÇÃO</button>
+      <button class=tab-btn data-tab=completed>🏁 CONCLUÍDOS</button>
+    </div>
+    <div class=table-wrapper>
+      <div class=table-container>
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Unidade</th>
+              <th>Viagem</th>
+              <th>Coleta</th>
+              <th>Hub</th>
+              <th>Portador</th>
+              <th>Placa</th>
+              <th>Tipo</th>
+              <th>Selo?</th>
+              <th>Saída Orçada</th>
+              <th>Previsão</th>
+              <th>Chegada Real</th>
+            </tr>
+          </thead>
+          <tbody id=tableBody></tbody>
+        </table>
+      </div>
+      <div class=page-info-bar>
+        <span id=pageInfo>Página 1/1</span>
+      </div>
+    </div>
+    <div class=footer-ticker>
+      <div class=ticker-track>
+        <span class=ticker-content id=tickerText>📢 Painel sincronizado em tempo real • Operação CPSZ</span>
+      </div>
+    </div>
+  </div>
+  <script>const SHEET_ID = "1Z0JxjNzg3Yv8bXzcqEgB2JMBjykqQdAoAWttnYamulU", SHEET_NAME = "Consolidado", DATA_URL = `https://opensheet.elk.sh/${SHEET_ID}/${encodeURIComponent(SHEET_NAME)}`, ROWS_PER_PAGE = 15; let fullData = [], activeTab = "active", currentPage = 0; const normalize = e => String(e ?? "").trim(), parseDateTimeBR = e => { const t = normalize(e); if (!t) return null; if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(t)) { const e = new Date, [a, n, o = "00"] = t.split(":"); return new Date(e.getFullYear(), e.getMonth(), e.getDate(), +a, +n, +o) } const a = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/); if (a) { let [, e, t, n, o = 0, r = 0, l = 0] = a; return n = 2 === n.length ? +n + 2e3 : +n, new Date(n, t - 1, +e, +o, +r, +l) } const n = new Date(t); return isNaN(n) ? null : n }, fmtTime = e => { const t = parseDateTimeBR(e); return t ? t.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "-" }, getStatus = e => { const t = new Date, a = parseDateTimeBR(e["Previsão de Chegada"]), n = parseDateTimeBR(e["Chegada Real"]); return n ? n <= a ? { key: "chegou-prazo", text: "✅ No prazo", rowClass: "" } : { key: "chegou-atrasado", text: "⚠️ Atrasado", rowClass: "" } : a ? t > a ? { key: "atrasado", text: "🔴 ATRASADO", rowClass: "row-atrasado" } : { key: "deslocamento", text: "🚛 Em deslocamento", rowClass: "" } : { key: "andamento", text: "🔄 Em andamento", rowClass: "" } }, getPriority = e => ({ atrasado: 1, andamento: 2, deslocamento: 3, "chegou-atrasado": 4, "chegou-prazo": 5 }[e] || 9), enrichRow = e => { const t = getStatus(e); return { ...e, _status: t, _priority: (a = t.key, { atrasado: 1, andamento: 2, deslocamento: 3, "chegou-atrasado": 4, "chegou-prazo": 5 }[a] || 9), _isCompleted: "chegou-prazo" === t.key || "chegou-atrasado" === t.key }; var a }, getClientesFromColeta = e => normalize(e).split(",").map((e => e.trim())).filter((e => e)); let filteredRows = []; function applyFilterAndSort() { let e = [...fullData]; e = "active" === activeTab ? e.filter((e => !e._isCompleted)) : e.filter((e => e._isCompleted)), e.sort(((e, t) => e._priority - t._priority || (e._previsaoTs || 9e9) - (t._previsaoTs || 9e9))), filteredRows = e } function updateProgressBar() { const e = fullData.length, t = fullData.filter((e => e._isCompleted)).length, a = 0 === e ? 0 : Math.round(t / e * 100), n = document.getElementById("progressBar"), o = document.getElementById("progressPercent"); n.style.width = a + "%", o.textContent = a + "%", document.getElementById("progressFraction").textContent = `${t} / ${e}` } function renderTable() { const e = document.getElementById("tableBody"), t = Math.max(1, Math.ceil(filteredRows.length / 15)); currentPage >= t && (currentPage = t - 1), currentPage < 0 && (currentPage = 0); const a = 15 * currentPage, n = filteredRows.slice(a, a + 15); 0 === n.length ? e.innerHTML = '<tr><td colspan="12" style="text-align:center; padding: 40px;">📭 Nenhuma ocorrência nesta aba</td></tr>' : e.innerHTML = n.map((e => { const t = e._status; let a = ""; return "atrasado" === t.key ? a = "status-atrasado" : "andamento" === t.key ? a = "status-andamento" : "deslocamento" === t.key ? a = "status-deslocamento" : "chegou-prazo" === t.key ? a = "status-chegou-prazo" : "chegou-atrasado" === t.key && (a = "status-chegou-atrasado"), `<tr class="${t.rowClass}">\n          <td><div class="status-pill ${a}"><span class="status-icon"></span><span>${t.text}</span></div></td>\n          <td>${normalize(e.Unidade) || "-"}</td>\n          <td>${normalize(e[" Viagem "]) || "-"}</td>\n          <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${normalize(e.Coleta)}">${normalize(e.Coleta) || "-"}</td>\n          <td>${normalize(e.HUB) || "-"}</td>\n          <td>${normalize(e.Portador) || "-"}</td>\n          <td>${normalize(e.Placa) || "-"}</td>\n          <td>${normalize(e["Tipo Veiculo"]) || normalize(e["Tipo Veículo"]) || "-"}</td>\n          <td>${normalize(e["Possui Selo?"]) || "-"}</td>\n          <td>${fmtTime(e["Saída Orçada"])}</td>\n          <td>${fmtTime(e["Previsão de Chegada"])}</td>\n          <td>${fmtTime(e["Chegada Real"])}</td>\n        </tr>` })).join(""), document.getElementById("pageInfo").innerText = `Página ${currentPage + 1} de ${t}` } function updateKPIs() { const e = fullData.length, t = fullData.filter((e => "andamento" === e._status.key)).length, a = fullData.filter((e => "atrasado" === e._status.key)).length, n = fullData.filter((e => e._isCompleted)).length, o = new Set(fullData.flatMap((e => getClientesFromColeta(e.Coleta))).map((e => e.toUpperCase()))), r = fullData.flatMap((e => getClientesFromColeta(e.Coleta))).length; document.getElementById("kpiColetas").innerText = r, document.getElementById("kpiEmbarcadores").innerText = o.size, document.getElementById("kpiTotal").innerText = e, document.getElementById("kpiAndamento").innerText = t, document.getElementById("kpiAtrasado").innerText = a, document.getElementById("kpiChegaram").innerText = n, updateProgressBar(); const l = fullData.filter((e => "atrasado" === e._status.key)).slice(0, 6); let i = ""; i = l.length ? `⚠️ ATENÇÃO COLETAS ATRASADAS: ${l.map((e => `${normalize(e.Unidade)} (${normalize(e.Coleta).substring(0, 30)})`)).join(" • ")} • ` : "✅ OPERAÇÃO NORMAL • SEM ATRASOS NO MOMENTO • ", i += `🕒 Última atualização: ${(new Date).toLocaleTimeString("pt-BR")} • CPSZ • `, document.getElementById("tickerText").innerText = i } async function loadData() { try { const e = await fetch(DATA_URL, { cache: "no-store" }); if (!e.ok) throw new Error(`HTTP ${e.status}`); const t = await e.json(); if (!Array.isArray(t)) throw new Error("Formato inválido"); fullData = t.filter((e => "CPSZ" === normalize(e.HUB).toUpperCase())).map(enrichRow).map((e => (e._previsaoTs = parseDateTimeBR(e["Previsão de Chegada"])?.getTime() || Number.MAX_SAFE_INTEGER, e))), applyFilterAndSort(), currentPage = 0, updateKPIs(), renderTable() } catch (e) { document.getElementById("tickerText").innerHTML = "⚠️ ERRO ao carregar dados. Verifique planilha." } } function setActiveTab(e) { activeTab = e, document.querySelectorAll(".tab-btn").forEach((t => { "active" === e && "active" === t.getAttribute("data-tab") || "completed" === e && "completed" === t.getAttribute("data-tab") ? t.classList.add("active") : t.classList.remove("active") })), applyFilterAndSort(), currentPage = 0, renderTable() } function nextPage() { const e = Math.max(1, Math.ceil(filteredRows.length / 15)); currentPage + 1 < e && (currentPage++, renderTable()) } function prevPage() { currentPage > 0 && (currentPage--, renderTable()) } function updateClock() { const e = new Date; document.getElementById("clockTime").innerText = e.toLocaleTimeString("pt-BR"), document.getElementById("clockDate").innerText = e.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" }) } document.querySelectorAll(".tab-btn").forEach((e => { e.addEventListener("click", (() => setActiveTab(e.getAttribute("data-tab")))) })), window.addEventListener("keydown", (e => { "ArrowLeft" === e.key && prevPage(), "ArrowRight" === e.key && nextPage() })), updateClock(), setInterval(updateClock, 1e3), loadData(), setInterval(loadData, 6e4)</script>
 </body>
 
 </html>
